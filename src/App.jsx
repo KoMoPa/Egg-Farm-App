@@ -1,58 +1,30 @@
-import { useState, useEffect } from 'react'
-import { supabase } from './supabaseClient'
+import Form07DailyProduction from './components/Form07DailyProduction'
 import './App.css'
 
 function App() {
-  const [farms, setFarms] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    testConnection()
-  }, [])
-
-  async function testConnection() {
-    try {
-      console.log('Testing Supabase connection...')
-      
-      const { data, error } = await supabase
-        .from('farms')
-        .select('*')
-      
-      if (error) throw error
-      
-      console.log('✅ Connected! Farms data:', data)
-      setFarms(data)
-      setLoading(false)
-    } catch (error) {
-      console.error('❌ Connection error:', error.message)
-      setError(error.message)
-      setLoading(false)
-    }
-  }
+  // Test data
+  const testFarmId = 'fbb40bbc-bbaf-40e7-833a-712bbbb65b11'
+  const testFarmName = 'Test Egg Farm'
+  const testBarnNumber = 'Barn 1'
+  const testMonthYear = '2026-03-01' // March 2026
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'system-ui' }}>
-      <h1>🥚 Egg Farm Tracker - Connection Test</h1>
-      
-      {loading && <p>Testing connection to Supabase...</p>}
-      
-      {error && (
-        <div style={{ background: '#fee', padding: '20px', borderRadius: '8px' }}>
-          <p style={{ color: 'red' }}>❌ Error: {error}</p>
-        </div>
-      )}
-      
-      {!loading && !error && (
-        <div style={{ background: '#efe', padding: '20px', borderRadius: '8px' }}>
-          <p style={{ color: 'green', fontSize: '20px', fontWeight: 'bold' }}>
-            ✅ Successfully connected to Supabase!
-          </p>
-          <p>Tables found: farms, production_cooler_records, sanitation_records</p>
-          <p>Farms in database: {farms.length}</p>
-          {farms.length === 0 && <p style={{ color: '#666' }}>(No farms added yet - that's normal!)</p>}
-        </div>
-      )}
+    <div style={{ background: '#f5f5f5', minHeight: '100vh', padding: '20px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '32px' }}>
+          🥚 SCSC Compliance Tracker
+        </h1>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
+          Start Clean - Stay Clean On-Farm Food Safety Program
+        </p>
+
+        <Form07DailyProduction
+          farmId={testFarmId}
+          farmName={testFarmName}
+          barnNumber={testBarnNumber}
+          monthYear={testMonthYear}
+        />
+      </div>
     </div>
   )
 }
