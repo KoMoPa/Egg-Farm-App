@@ -413,11 +413,41 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
     e.preventDefault()
     
     try {
-      // Prepare daily records data (Page 1)
+      // Step 1: Create or get monthly audit record
+      const { data: existingAudit, error: auditCheckError } = await supabase
+        .from('monthly_audits')
+        .select('id')
+        .eq('farm_id', farmId)
+        .eq('month_year', monthYear)
+        .single()
+
+      let auditId
+      if (existingAudit) {
+        auditId = existingAudit.id
+      } else {
+        // Create new audit record
+        const { data: newAudit, error: auditCreateError } = await supabase
+          .from('monthly_audits')
+          .insert([{
+            farm_id: farmId,
+            month_year: monthYear,
+            form_08_completed: true,
+            form_08_completed_date: new Date().toISOString(),
+            final_signature_date: signatureDate || null,
+            final_comments: commentsPage1 || null,
+          }])
+          .select('id')
+          .single()
+
+        if (auditCreateError) throw auditCreateError
+        auditId = newAudit.id
+      }
+
+      // Step 2: Prepare daily records data (Page 1)
       const dailyRecords = Object.values(dayData).map(day => ({
         farm_id: farmId,
+        audit_id: auditId,
         barn_number: barnNumber,
-        month_year: monthYear,
         date: day.date,
         barn_temp_hi: parseFloat(day.barnTempHi) || null,
         barn_temp_lo: parseFloat(day.barnTempLo) || null,
@@ -430,11 +460,11 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
         ammonia_level: day.ammoniaLevel || null,
       }))
 
-      // Prepare equipment inspection records data (Page 2)
+      // Step 3: Prepare equipment inspection records data (Page 2)
       const equipmentRecords = Object.values(dayData).map(day => ({
         farm_id: farmId,
+        audit_id: auditId,
         barn_number: barnNumber,
-        month_year: monthYear,
         date: day.date,
         routine_hen_equip_1st_initial: day.routineHenEquip1stInitial || null,
         routine_hen_equip_1st_daily: day.routineHenEquip1stDaily || null,
@@ -453,23 +483,22 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
         lay_facility_environment: day.layFacilityEnvironment,
       }))
 
-      // Save Page 1 data
+      // Step 4: Save Page 1 data
       const { error: dailyError } = await supabase
         .from('welfare_daily_records')
         .insert(dailyRecords)
 
-      // Save Page 2 data
+      // Step 5: Save Page 2 data
       const { error: equipmentError } = await supabase
         .from('welfare_equipment_inspection')
         .insert(equipmentRecords)
 
-      // Save form-level data
+      // Step 6: Save form-level metadata
       const { error: formError } = await supabase
         .from('welfare_form_metadata')
         .insert([{
           farm_id: farmId,
-          barn_number: barnNumber,
-          month_year: monthYear,
+          audit_id: auditId,
           alarm_check_date: alarmCheckDate || null,
           alarm_check_initials: alarmCheckInitials || null,
           generator_check_date: generatorCheckDate || null,
@@ -478,6 +507,19 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           comments_page_2: commentsPage2 || null,
           signature_date: signatureDate || null,
         }])
+
+      // Step 7: Update audit record as completed
+      if (!existingAudit) {
+        const { error: updateError } = await supabase
+          .from('monthly_audits')
+          .update({
+            form_08_completed: true,
+            form_08_completed_date: new Date().toISOString(),
+          })
+          .eq('id', auditId)
+        
+        if (updateError) throw updateError
+      }
 
       if (dailyError || equipmentError || formError) {
         alert('Error saving: ' + (dailyError?.message || equipmentError?.message || formError?.message))
