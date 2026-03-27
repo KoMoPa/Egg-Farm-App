@@ -133,3 +133,105 @@ CREATE TABLE welfare_form_metadata (
   -- Signature
   signature_date TEXT
 );
+
+-- TABLE 1: Monthly Audits (tracks form completion per month)
+CREATE TABLE monthly_audits (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  month_year TEXT NOT NULL,
+  
+  -- Form completion tracking
+  form_07_completed BOOLEAN DEFAULT FALSE,
+  form_07_completed_date TIMESTAMP,
+  form_08_completed BOOLEAN DEFAULT FALSE,
+  form_08_completed_date TIMESTAMP,
+  
+  -- Signature/metadata
+  final_signature_date TEXT,
+  final_comments TEXT,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  
+  UNIQUE(farm_id, month_year)
+);
+
+-- TABLE 2: Daily Welfare Records (Page 1 data)
+CREATE TABLE welfare_daily_records (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  barn_number TEXT NOT NULL,
+  date INT NOT NULL,
+  
+  -- Barn Temperature
+  barn_temp_hi DECIMAL(5,2),
+  barn_temp_lo DECIMAL(5,2),
+  exterior_temp DECIMAL(5,2),
+  
+  -- Sanitation Checks (checkboxes)
+  floors_checked BOOLEAN DEFAULT FALSE,
+  walls_fans_ceiling_checked BOOLEAN DEFAULT FALSE,
+  manure_checked BOOLEAN DEFAULT FALSE,
+  
+  -- Materials
+  bedding_used TEXT,
+  chemicals_used TEXT,
+  
+  -- Ammonia Level
+  ammonia_level TEXT,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABLE 3: Equipment Inspection Records (Page 2 data)
+CREATE TABLE welfare_equipment_inspection (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  barn_number TEXT NOT NULL,
+  date INT NOT NULL,
+  
+  -- Routine Hen/Equipment Inspection (1st/2nd with Initial/Daily)
+  routine_hen_equip_1st_initial TEXT,
+  routine_hen_equip_1st_daily TEXT,
+  routine_hen_equip_2nd_initial TEXT,
+  routine_hen_equip_2nd_daily TEXT,
+  
+  -- Inspection Criteria (all checkboxes)
+  overall_appearance BOOLEAN DEFAULT FALSE,
+  general_sound BOOLEAN DEFAULT FALSE,
+  abnormal_behavior BOOLEAN DEFAULT FALSE,
+  signs_of_disease BOOLEAN DEFAULT FALSE,
+  injured_birds BOOLEAN DEFAULT FALSE,
+  trapped_birds BOOLEAN DEFAULT FALSE,
+  dead_birds BOOLEAN DEFAULT FALSE,
+  feed_water_available BOOLEAN DEFAULT FALSE,
+  equipment_operating BOOLEAN DEFAULT FALSE,
+  amenities_condition BOOLEAN DEFAULT FALSE,
+  lay_facility_environment BOOLEAN DEFAULT FALSE,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABLE 4: Form Metadata (Signature, checks, comments)
+CREATE TABLE welfare_form_metadata (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  
+  -- Checks
+  alarm_check_date TEXT,
+  alarm_check_initials TEXT,
+  generator_check_date TEXT,
+  generator_check_initials TEXT,
+  
+  -- Comments
+  comments_page_1 TEXT,
+  comments_page_2 TEXT,
+  
+  -- Signature
+  signature_date TEXT,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
