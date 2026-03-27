@@ -1,6 +1,339 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 
+// DAY VIEW COMPONENT
+const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
+  <div style={{ marginBottom: '30px' }}>
+    <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+      Daily Tracking - Day {day}
+    </h3>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
+        <input type="number" step="0.1" value={data.barnTempHi}
+          onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
+        <input type="number" step="0.1" value={data.barnTempLo}
+          onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
+        <input type="number" step="0.1" value={data.exteriorTemp}
+          onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+    </div>
+
+    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Sanitation Checks</h4>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.floorsChecked}
+          onChange={() => onDayCheckbox(day, 'floorsChecked')} />
+        Floors Checked
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.wallsFansCeilingChecked}
+          onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
+        Walls/Fans/Ceiling Checked
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.manureChecked}
+          onChange={() => onDayCheckbox(day, 'manureChecked')} />
+        Manure Checked
+      </label>
+    </div>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
+        <input type="text" value={data.beddingUsed}
+          onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
+          placeholder="eg. straw"
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
+        <input type="text" value={data.chemicalsUsed}
+          onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
+          placeholder="eg. disinfectant"
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ammonia Level</label>
+        <select value={data.ammoniaLevel}
+          onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
+          <option value="">Select...</option>
+          <option value="0-5">0-5</option>
+          <option value="5-10">5-10</option>
+          <option value="10-15">10-15</option>
+          <option value="15-20">15-20</option>
+          <option value="20+">20+</option>
+        </select>
+      </div>
+    </div>
+
+    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Weekly Welfare Inspection</h4>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px', marginBottom: '30px' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Initial</label>
+        <input type="text" maxLength="3" value={data.routineHenEquip1stInitial}
+          onChange={(e) => onDayChange(day, 'routineHenEquip1stInitial', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Daily</label>
+        <input type="text" maxLength="3" value={data.routineHenEquip1stDaily}
+          onChange={(e) => onDayChange(day, 'routineHenEquip1stDaily', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Initial</label>
+        <input type="text" maxLength="3" value={data.routineHenEquip2ndInitial}
+          onChange={(e) => onDayChange(day, 'routineHenEquip2ndInitial', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Daily</label>
+        <input type="text" maxLength="3" value={data.routineHenEquip2ndDaily}
+          onChange={(e) => onDayChange(day, 'routineHenEquip2ndDaily', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+    </div>
+
+    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Inspection Criteria (Check as applicable)</h4>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.overallAppearance}
+          onChange={() => onDayCheckbox(day, 'overallAppearance')} />
+        Overall appearance of birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.generalSound}
+          onChange={() => onDayCheckbox(day, 'generalSound')} />
+        General sound of flock
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.abnormalBehavior}
+          onChange={() => onDayCheckbox(day, 'abnormalBehavior')} />
+        Abnormal Behavior
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.signsOfDisease}
+          onChange={() => onDayCheckbox(day, 'signsOfDisease')} />
+        Signs of Disease/Illness
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.injuredBirds}
+          onChange={() => onDayCheckbox(day, 'injuredBirds')} />
+        Injured Birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.trappedBirds}
+          onChange={() => onDayCheckbox(day, 'trappedBirds')} />
+        Trapped Birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.deadBirds}
+          onChange={() => onDayCheckbox(day, 'deadBirds')} />
+        Dead Birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.feedWaterAvailable}
+          onChange={() => onDayCheckbox(day, 'feedWaterAvailable')} />
+        Feed & Water Available
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.equipmentOperating}
+          onChange={() => onDayCheckbox(day, 'equipmentOperating')} />
+        Equipment Operating
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.amenitiesCondition}
+          onChange={() => onDayCheckbox(day, 'amenitiesCondition')} />
+        Condition of Amenities/Housing
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.layFacilityEnvironment}
+          onChange={() => onDayCheckbox(day, 'layFacilityEnvironment')} />
+        Lay Facility Environment
+      </label>
+    </div>
+  </div>
+)
+
+// WEEK VIEW TABLE
+const WeekViewTable = ({ startDay, dayData, onDayChange, onDayCheckbox }) => {
+  const endDay = Math.min(startDay + 6, 31)
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '12px' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#e8e8e8' }}>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Ext Temp</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
+            <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...Array(endDay - startDay + 1)].map((_, i) => {
+            const day = startDay + i
+            const data = dayData[day]
+            return (
+              <tr key={day}>
+                <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
+                <td style={{ border: '1px solid #333', padding: '2px' }}>
+                  <input type="number" step="0.1" value={data.barnTempHi}
+                    onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
+                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '2px' }}>
+                  <input type="number" step="0.1" value={data.barnTempLo}
+                    onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
+                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '2px' }}>
+                  <input type="number" step="0.1" value={data.exteriorTemp}
+                    onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
+                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
+                  <input type="checkbox" checked={data.floorsChecked}
+                    onChange={() => onDayCheckbox(day, 'floorsChecked')} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
+                  <input type="checkbox" checked={data.wallsFansCeilingChecked}
+                    onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
+                  <input type="checkbox" checked={data.manureChecked}
+                    onChange={() => onDayCheckbox(day, 'manureChecked')} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '2px' }}>
+                  <input type="text" value={data.beddingUsed}
+                    onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
+                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '2px' }}>
+                  <input type="text" value={data.chemicalsUsed}
+                    onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
+                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+                </td>
+                <td style={{ border: '1px solid #333', padding: '2px' }}>
+                  <select value={data.ammoniaLevel}
+                    onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
+                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '11px' }}>
+                    <option value="">--</option>
+                    <option value="0-5">0-5</option>
+                    <option value="5-10">5-10</option>
+                    <option value="10-15">10-15</option>
+                    <option value="15-20">15-20</option>
+                    <option value="20+">20+</option>
+                  </select>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// MONTH VIEW TABLE
+const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
+  <div style={{ overflowX: 'auto' }}>
+    <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '11px' }}>
+      <thead>
+        <tr style={{ backgroundColor: '#e8e8e8' }}>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Ext</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
+          <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {[...Array(31)].map((_, i) => {
+          const day = i + 1
+          const data = dayData[day]
+          return (
+            <tr key={day}>
+              <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
+              <td style={{ border: '1px solid #333', padding: '2px' }}>
+                <input type="number" step="0.1" value={data.barnTempHi}
+                  onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
+                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '2px' }}>
+                <input type="number" step="0.1" value={data.barnTempLo}
+                  onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
+                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '2px' }}>
+                <input type="number" step="0.1" value={data.exteriorTemp}
+                  onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
+                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
+                <input type="checkbox" checked={data.floorsChecked}
+                  onChange={() => onDayCheckbox(day, 'floorsChecked')} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
+                <input type="checkbox" checked={data.wallsFansCeilingChecked}
+                  onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
+                <input type="checkbox" checked={data.manureChecked}
+                  onChange={() => onDayCheckbox(day, 'manureChecked')} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '2px' }}>
+                <input type="text" value={data.beddingUsed}
+                  onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
+                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '2px' }}>
+                <input type="text" value={data.chemicalsUsed}
+                  onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
+                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
+              </td>
+              <td style={{ border: '1px solid #333', padding: '2px' }}>
+                <select value={data.ammoniaLevel}
+                  onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
+                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '10px' }}>
+                  <option value="">--</option>
+                  <option value="0-5">0-5</option>
+                  <option value="5-10">5-10</option>
+                  <option value="10-15">10-15</option>
+                  <option value="15-20">15-20</option>
+                  <option value="20+">20+</option>
+                </select>
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  </div>
+)
+
 export default function Form08WelfareRecords({ farmId, farmName, barnNumber, monthYear }) {
   // Initialize form data for 31 days
   const initializeDayData = () => {
@@ -75,339 +408,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
       }
     }))
   }
-
-  // DAY VIEW COMPONENT
-  const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
-    <div style={{ marginBottom: '30px' }}>
-      <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
-        Daily Tracking - Day {day}
-      </h3>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
-          <input type="number" step="0.1" value={data.barnTempHi}
-            onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
-          <input type="number" step="0.1" value={data.barnTempLo}
-            onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
-          <input type="number" step="0.1" value={data.exteriorTemp}
-            onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-      </div>
-
-      <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Sanitation Checks</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.floorsChecked}
-            onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-          Floors Checked
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.wallsFansCeilingChecked}
-            onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-          Walls/Fans/Ceiling Checked
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.manureChecked}
-            onChange={() => onDayCheckbox(day, 'manureChecked')} />
-          Manure Checked
-        </label>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
-          <input type="text" value={data.beddingUsed}
-            onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-            placeholder="eg. straw"
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
-          <input type="text" value={data.chemicalsUsed}
-            onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-            placeholder="eg. disinfectant"
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ammonia Level</label>
-          <select value={data.ammoniaLevel}
-            onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
-            <option value="">Select...</option>
-            <option value="0-5">0-5</option>
-            <option value="5-10">5-10</option>
-            <option value="10-15">10-15</option>
-            <option value="15-20">15-20</option>
-            <option value="20+">20+</option>
-          </select>
-        </div>
-      </div>
-
-      <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Weekly Welfare Inspection</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px', marginBottom: '30px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Initial</label>
-          <input type="text" maxLength="3" value={data.routineHenEquip1stInitial}
-            onChange={(e) => onDayChange(day, 'routineHenEquip1stInitial', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Daily</label>
-          <input type="text" maxLength="3" value={data.routineHenEquip1stDaily}
-            onChange={(e) => onDayChange(day, 'routineHenEquip1stDaily', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Initial</label>
-          <input type="text" maxLength="3" value={data.routineHenEquip2ndInitial}
-            onChange={(e) => onDayChange(day, 'routineHenEquip2ndInitial', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Daily</label>
-          <input type="text" maxLength="3" value={data.routineHenEquip2ndDaily}
-            onChange={(e) => onDayChange(day, 'routineHenEquip2ndDaily', e.target.value)}
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-        </div>
-      </div>
-
-      <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Inspection Criteria (Check as applicable)</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.overallAppearance}
-            onChange={() => onDayCheckbox(day, 'overallAppearance')} />
-          Overall appearance of birds
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.generalSound}
-            onChange={() => onDayCheckbox(day, 'generalSound')} />
-          General sound of flock
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.abnormalBehavior}
-            onChange={() => onDayCheckbox(day, 'abnormalBehavior')} />
-          Abnormal Behavior
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.signsOfDisease}
-            onChange={() => onDayCheckbox(day, 'signsOfDisease')} />
-          Signs of Disease/Illness
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.injuredBirds}
-            onChange={() => onDayCheckbox(day, 'injuredBirds')} />
-          Injured Birds
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.trappedBirds}
-            onChange={() => onDayCheckbox(day, 'trappedBirds')} />
-          Trapped Birds
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.deadBirds}
-            onChange={() => onDayCheckbox(day, 'deadBirds')} />
-          Dead Birds
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.feedWaterAvailable}
-            onChange={() => onDayCheckbox(day, 'feedWaterAvailable')} />
-          Feed & Water Available
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.equipmentOperating}
-            onChange={() => onDayCheckbox(day, 'equipmentOperating')} />
-          Equipment Operating
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.amenitiesCondition}
-            onChange={() => onDayCheckbox(day, 'amenitiesCondition')} />
-          Condition of Amenities/Housing
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" checked={data.layFacilityEnvironment}
-            onChange={() => onDayCheckbox(day, 'layFacilityEnvironment')} />
-          Lay Facility Environment
-        </label>
-      </div>
-    </div>
-  )
-
-  // WEEK VIEW TABLE
-  const WeekViewTable = ({ startDay, dayData, onDayChange, onDayCheckbox }) => {
-    const endDay = Math.min(startDay + 6, 31)
-    return (
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '12px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#e8e8e8' }}>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Ext Temp</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-              <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(endDay - startDay + 1)].map((_, i) => {
-              const day = startDay + i
-              const data = dayData[day]
-              return (
-                <tr key={day}>
-                  <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
-                  <td style={{ border: '1px solid #333', padding: '2px' }}>
-                    <input type="number" step="0.1" value={data.barnTempHi}
-                      onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                      style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '2px' }}>
-                    <input type="number" step="0.1" value={data.barnTempLo}
-                      onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                      style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '2px' }}>
-                    <input type="number" step="0.1" value={data.exteriorTemp}
-                      onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                      style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                    <input type="checkbox" checked={data.floorsChecked}
-                      onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                    <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                      onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                    <input type="checkbox" checked={data.manureChecked}
-                      onChange={() => onDayCheckbox(day, 'manureChecked')} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '2px' }}>
-                    <input type="text" value={data.beddingUsed}
-                      onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-                      style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '2px' }}>
-                    <input type="text" value={data.chemicalsUsed}
-                      onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-                      style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                  </td>
-                  <td style={{ border: '1px solid #333', padding: '2px' }}>
-                    <select value={data.ammoniaLevel}
-                      onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-                      style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '11px' }}>
-                      <option value="">--</option>
-                      <option value="0-5">0-5</option>
-                      <option value="5-10">5-10</option>
-                      <option value="10-15">10-15</option>
-                      <option value="15-20">15-20</option>
-                      <option value="20+">20+</option>
-                    </select>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-
-  // MONTH VIEW TABLE
-  const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '11px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#e8e8e8' }}>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Ext</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {[...Array(31)].map((_, i) => {
-            const day = i + 1
-            const data = dayData[day]
-            return (
-              <tr key={day}>
-                <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.barnTempHi}
-                    onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.barnTempLo}
-                    onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.exteriorTemp}
-                    onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.floorsChecked}
-                    onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                    onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.manureChecked}
-                    onChange={() => onDayCheckbox(day, 'manureChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="text" value={data.beddingUsed}
-                    onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="text" value={data.chemicalsUsed}
-                    onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <select value={data.ammoniaLevel}
-                    onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '10px' }}>
-                    <option value="">--</option>
-                    <option value="0-5">0-5</option>
-                    <option value="5-10">5-10</option>
-                    <option value="10-15">10-15</option>
-                    <option value="15-20">15-20</option>
-                    <option value="20+">20+</option>
-                  </select>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
 
   const handleSubmit = async (e) => {
     e.preventDefault()
