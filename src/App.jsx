@@ -24,7 +24,7 @@ function App() {
 
         {/* Form Navigation */}
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '30px' }}>
-          <button 
+          <button
             onClick={() => setCurrentForm('form07')}
             style={{
               padding: '10px 20px',
@@ -38,7 +38,7 @@ function App() {
             }}>
             Form 07 - Production
           </button>
-          <button 
+          <button
             onClick={() => setCurrentForm('form08')}
             style={{
               padding: '10px 20px',
