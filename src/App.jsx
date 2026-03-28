@@ -1,26 +1,58 @@
 import { useState } from 'react'
+import { useAuth } from './contexts/AuthContext'
+import Login from './components/Login'
 import Form07DailyProduction from './components/Form07DailyProduction'
 import Form08WelfareRecords from './components/Form08WelfareRecords'
 import './App.css'
 
 function App() {
   const [currentForm, setCurrentForm] = useState('form07')
+  const { user, signOut } = useAuth()
 
-  // Test data
+  // Test data (will be replaced with real farms from DB in future)
   const testFarmId = 'fbb40bbc-bbaf-40e7-833a-712bbbb65b11'
   const testFarmName = 'Test Egg Farm'
   const testBarnNumber = 'Barn 1'
-  const testMonthYear = '2026-03-01' // March 2026
+  const testMonthYear = '2026-03-01'
 
+  // If not logged in, show login page
+  if (!user) {
+    return <Login />
+  }
+
+  // User is logged in, show forms
   return (
     <div style={{ background: '#f5f5f5', minHeight: '100vh', padding: '20px' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '32px' }}>
-          🥚 SCSC Compliance Tracker
-        </h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
-          Start Clean - Stay Clean On-Farm Food Safety Program
-        </p>
+        {/* Header with user info and logout */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+          <div>
+            <h1 style={{ margin: '0 0 5px 0', fontSize: '32px' }}>
+              🥚 SCSC Compliance Tracker
+            </h1>
+            <p style={{ color: '#666', margin: 0 }}>
+              Start Clean - Stay Clean On-Farm Food Safety Program
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
+              Logged in as: <strong>{user.email}</strong>
+            </p>
+            <button
+              onClick={signOut}
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+              Logout
+            </button>
+          </div>
+        </div>
 
         {/* Form Navigation */}
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '30px' }}>

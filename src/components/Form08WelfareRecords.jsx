@@ -133,7 +133,12 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
         Signs of Disease/Illness
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.injuredBirds}
+        <input type="checkbox" checked={data.injuredBirds}        <select value={data.beddingUsed ? 'true' : 'false'}
+          onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value === 'true')}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
           onChange={() => onDayCheckbox(day, 'injuredBirds')} />
         Injured Birds
       </label>

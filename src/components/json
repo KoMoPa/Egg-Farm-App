@@ -1,0 +1,462 @@
+[
+  {
+    "table_name": "farms",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "farms",
+    "column_name": "farm_name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "farms",
+    "column_name": "barn_number",
+    "data_type": "text"
+  },
+  {
+    "table_name": "farms",
+    "column_name": "owner_email",
+    "data_type": "text"
+  },
+  {
+    "table_name": "farms",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "farms",
+    "column_name": "user_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "farm_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "month_year",
+    "data_type": "text"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "form_07_completed",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "form_07_completed_date",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "form_08_completed",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "form_08_completed_date",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "final_signature_date",
+    "data_type": "text"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "final_comments",
+    "data_type": "text"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "monthly_audits",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "farm_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "barn_number",
+    "data_type": "text"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "flock_age_weeks",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "floor_eggs_collection_1",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "floor_eggs_collection_2",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "floor_eggs_total",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "egg_production_1",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "egg_production_2",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "egg_production_daily",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "egg_production_percent",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "cooler_temp_hi_celsius",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "cooler_temp_lo_celsius",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "cooler_rh_hi_percent",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "cooler_rh_lo_percent",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "cooler_check_time",
+    "data_type": "time without time zone"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "production_cooler_records",
+    "column_name": "audit_id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "farm_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "barn_number",
+    "data_type": "text"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "dirty_trays_count",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "egg_cooler_cleaned",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "pack_room_cleaned",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "tables_packing_equip_cleaned",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "corrective_actions",
+    "data_type": "text"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "sanitation_records",
+    "column_name": "audit_id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "farm_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "audit_id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "barn_number",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "date",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "barn_temp_hi",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "barn_temp_lo",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "exterior_temp",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "floors_checked",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "walls_fans_ceiling_checked",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "manure_checked",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "bedding_used",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "chemicals_used",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "ammonia_level",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_daily_records",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "farm_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "audit_id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "barn_number",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "date",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "routine_hen_equip_1st_initial",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "routine_hen_equip_1st_daily",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "routine_hen_equip_2nd_initial",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "routine_hen_equip_2nd_daily",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "overall_appearance",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "general_sound",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "abnormal_behavior",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "signs_of_disease",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "injured_birds",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "trapped_birds",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "dead_birds",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "feed_water_available",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "equipment_operating",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "amenities_condition",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "lay_facility_environment",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "welfare_equipment_inspection",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "farm_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "audit_id",
+    "data_type": "bigint"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "alarm_check_date",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "alarm_check_initials",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "generator_check_date",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "generator_check_initials",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "comments_page_1",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "comments_page_2",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "signature_date",
+    "data_type": "text"
+  },
+  {
+    "table_name": "welfare_form_metadata",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  }
+]
