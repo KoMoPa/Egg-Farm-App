@@ -388,6 +388,9 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
   const [commentsPage1, setCommentsPage1] = useState('')
   const [commentsPage2, setCommentsPage2] = useState('')
   const [signatureDate, setSignatureDate] = useState('')
+  const [recordDate, setRecordDate] = useState(
+    newDate().toISOString().split('T')[0]
+  )
 
   // View toggle: 'day', 'week', 'month'
   const [viewMode, setViewMode] = useState('day')
