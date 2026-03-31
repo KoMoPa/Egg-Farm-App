@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
 import Form07DailyProduction from './components/Form07DailyProduction'
 import Form08WelfareRecords from './components/Form08WelfareRecords'
+import Form09FeedWaterRecords from './components/Form09FeedWaterRecords'
 import './App.css'
 
 function App() {
@@ -84,6 +85,21 @@ function App() {
             }}>
             Form 08 - Welfare
           </button>
+
+          <button
+            onClick={() => setCurrentForm('form09')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              backgroundColor: currentForm === 'form09' ? '#0066cc' : '#ccc',
+              color: currentForm === 'form09' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+            Form 09 - Feed Water
+          </button>
         </div>
 
         {/* Forms */}
@@ -104,6 +120,16 @@ function App() {
             monthYear={testMonthYear}
           />
         )}
+
+        {currentForm === 'form09' && (
+          <Form09FeedWaterRecords
+            farmId={testFarmId}
+            farmName={testFarmName}
+            barnNumber={testBarnNumber}
+            monthYear={testMonthYear}
+          />
+        )}
+
       </div>
     </div>
   )
