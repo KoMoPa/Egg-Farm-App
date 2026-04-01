@@ -1,28 +1,52 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../supabaseClient'
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isSignUp, setIsSignUp] = useState(false)
+    const [isForgotPassword, setIsForgotPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [message, setMessage] = useState('')
     const { signUp, signIn } = useAuth()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+        setMessage('')
         setLoading(true)
 
         try {
             if (isSignUp) {
                 await signUp(email, password)
-                setError('✅ Signup successful! Please check your email to confirm.')
+                setMessage('✅ Signup successful! Please check your email to confirm.')
             } else {
                 await signIn(email, password)
             }
             setEmail('')
             setPassword('')
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault()
+        setError('')
+        setMessage('')
+        setLoading(true)
+
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            })
+            if (error) throw error
+            setMessage('✅ Password reset email sent! Check your inbox.')
+            setEmail('')
         } catch (err) {
             setError(err.message)
         } finally {
@@ -50,7 +74,8 @@ export default function Login() {
                 <h1 style={{
                     textAlign: 'center',
                     fontSize: '28px',
-                    marginBottom: '10px'
+                    marginBottom: '10px',
+                    color: '#000'
                 }}>
                     🥚 SCSC Compliance Tracker
                 </h1>
@@ -59,10 +84,10 @@ export default function Login() {
                     color: '#666',
                     marginBottom: '30px'
                 }}>
-                    {isSignUp ? 'Create an Account' : 'Login to Your Farm'}
+                    {isForgotPassword ? 'Reset Your Password' : (isSignUp ? 'Create an Account' : 'Login to Your Farm')}
                 </p>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit}>
                     <div style={{ marginBottom: '20px' }}>
                         <label style={{
                             display: 'block',
@@ -89,42 +114,57 @@ export default function Login() {
                         />
                     </div>
 
-                    <div style={{ marginBottom: '30px' }}>
-                        <label style={{
-                            display: 'block',
-                            marginBottom: '8px',
-                            fontWeight: 'bold',
-                            fontSize: '14px'
-                        }}>
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '10px',
-                                border: '1px solid #ccc',
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                boxSizing: 'border-box'
-                            }}
-                        />
-                    </div>
+                    {!isForgotPassword && (
+                        <div style={{ marginBottom: '30px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}>
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    fontSize: '14px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                    )}
 
                     {error && (
                         <div style={{
                             marginBottom: '20px',
                             padding: '10px',
-                            backgroundColor: error.includes('successful') ? '#d4edda' : '#f8d7da',
-                            color: error.includes('successful') ? '#155724' : '#721c24',
+                            backgroundColor: '#f8d7da',
+                            color: '#721c24',
                             borderRadius: '4px',
                             fontSize: '14px'
                         }}>
                             {error}
+                        </div>
+                    )}
+
+                    {message && (
+                        <div style={{
+                            marginBottom: '20px',
+                            padding: '10px',
+                            backgroundColor: '#d4edda',
+                            color: '#155724',
+                            borderRadius: '4px',
+                            fontSize: '14px'
+                        }}>
+                            {message}
                         </div>
                     )}
 
@@ -144,7 +184,7 @@ export default function Login() {
                             opacity: loading ? 0.7 : 1
                         }}
                     >
-                        {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Login')}
+                        {loading ? 'Loading...' : (isForgotPassword ? 'Send Reset Email' : (isSignUp ? 'Sign Up' : 'Login'))}
                     </button>
                 </form>
 
@@ -154,24 +194,76 @@ export default function Login() {
                     fontSize: '14px',
                     color: '#666'
                 }}>
-                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setIsSignUp(!isSignUp)
-                            setError('')
-                        }}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#0066cc',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            textDecoration: 'underline'
-                        }}
-                    >
-                        {isSignUp ? 'Login' : 'Sign Up'}
-                    </button>
+                    {isForgotPassword ? (
+                        <>
+                            Remember your password?{' '}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsForgotPassword(false)
+                                    setError('')
+                                    setMessage('')
+                                    setEmail('')
+                                }}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#0066cc',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    textDecoration: 'underline'
+                                }}
+                            >
+                                Back to Login
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsSignUp(!isSignUp)
+                                    setError('')
+                                    setMessage('')
+                                }}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#0066cc',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    textDecoration: 'underline'
+                                }}
+                            >
+                                {isSignUp ? 'Login' : 'Sign Up'}
+                            </button>
+                            {!isSignUp && (
+                                <>
+                                    <br />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsForgotPassword(true)
+                                            setError('')
+                                            setMessage('')
+                                        }}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#0066cc',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold',
+                                            textDecoration: 'underline',
+                                            marginTop: '10px'
+                                        }}
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </div>

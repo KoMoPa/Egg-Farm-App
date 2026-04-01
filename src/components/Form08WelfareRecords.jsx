@@ -389,7 +389,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
   const [commentsPage2, setCommentsPage2] = useState('')
   const [signatureDate, setSignatureDate] = useState('')
   const [recordDate, setRecordDate] = useState(
-    newDate().toISOString().split('T')[0]
+    new Date().toISOString().split('T')[0]
   )
 
   // View toggle: 'day', 'week', 'month'
@@ -545,7 +545,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
 
       {/* FORM HEADER */}
       <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 08 - Welfare Records
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>

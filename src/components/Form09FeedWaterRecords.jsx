@@ -428,7 +428,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
 
             {/* FORM HEADER */}
             <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
-                <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
                     Form 09 - Feed Water Records
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
