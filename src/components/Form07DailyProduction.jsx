@@ -1,29 +1,29 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 
-export default function Form07DailyProduction({ farmId,farmName, barnNumber, monthYear }) {
+export default function Form07DailyProduction({ farmId, farmName, barnNumber, monthYear }) {
   const today = new Date().getDate() // Gets today's day (1-31)
-  
+
   const [formData, setFormData] = useState({
     date: today,
     age: '',
-    
+
     // Floor eggs
     floorEggs1: '',
     floorEggs2: '',
-    
+
     // Nest eggs
     eggProduction1: '',
     eggProduction2: '',
     eggProductionPercent: '',
-    
+
     // Cooler monitoring
     coolerTempHi: '',
     coolerTempLo: '',
     coolerRhHi: '',
     coolerRhLo: '',
     coolerCheckTime: '',
-    
+
     // PAGE 2 - Sanitation
     dirtyTrays: '',
     eggCoolerCleaned: false,
@@ -33,17 +33,17 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
   })
 
   // Auto-calculate totals
-  const floorEggsTotal = 
-    (parseInt(formData.floorEggs1) || 0) + 
+  const floorEggsTotal =
+    (parseInt(formData.floorEggs1) || 0) +
     (parseInt(formData.floorEggs2) || 0)
-  
-  const eggProductionDaily = 
-    (parseInt(formData.eggProduction1) || 0) + 
+
+  const eggProductionDaily =
+    (parseInt(formData.eggProduction1) || 0) +
     (parseInt(formData.eggProduction2) || 0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     // Save Page 1 data
     const { data: prodData, error: prodError } = await supabase
       .from('production_cooler_records')
@@ -53,23 +53,23 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         month_year: monthYear,
         date: formData.date,
         flock_age_weeks: parseInt(formData.age) || null,
-        
+
         floor_eggs_collection_1: parseInt(formData.floorEggs1) || 0,
         floor_eggs_collection_2: parseInt(formData.floorEggs2) || 0,
         floor_eggs_total: floorEggsTotal,
-        
+
         egg_production_1: parseInt(formData.eggProduction1) || 0,
         egg_production_2: parseInt(formData.eggProduction2) || 0,
         egg_production_daily: eggProductionDaily,
         egg_production_percent: parseFloat(formData.eggProductionPercent) || null,
-        
+
         cooler_temp_hi_celsius: parseFloat(formData.coolerTempHi) || null,
         cooler_temp_lo_celsius: parseFloat(formData.coolerTempLo) || null,
         cooler_rh_hi_percent: parseFloat(formData.coolerRhHi) || null,
         cooler_rh_lo_percent: parseFloat(formData.coolerRhLo) || null,
         cooler_check_time: formData.coolerCheckTime || null
       }])
-    
+
     // Save Page 2 data
     const { data: sanitData, error: sanitError } = await supabase
       .from('sanitation_records')
@@ -78,14 +78,14 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         barn_number: barnNumber,
         month_year: monthYear,
         date: formData.date,
-        
+
         dirty_trays_count: parseInt(formData.dirtyTrays) || 0,
         egg_cooler_cleaned: formData.eggCoolerCleaned,
         pack_room_cleaned: formData.packRoomCleaned,
         tables_packing_equip_cleaned: formData.tablesPackingEquipCleaned,
         corrective_actions: formData.correctiveActions || null
       }])
-    
+
     if (prodError || sanitError) {
       alert('Error saving: ' + (prodError?.message || sanitError?.message))
       console.error('Error:', prodError, sanitError)
@@ -98,7 +98,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
 
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
-      
+
       {/* FORM HEADER - Matches top of official form */}
       <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
@@ -121,7 +121,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
       </div>
 
       {/* ============ PAGE 1 FIELDS ============ */}
-      
+
       {/* Age */}
       <div style={{ marginBottom: '30px' }}>
         <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
@@ -130,7 +130,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         <input
           type="number"
           value={formData.age}
-          onChange={(e) => setFormData({...formData, age: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, age: e.target.value })}
           style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
           placeholder="25"
         />
@@ -141,7 +141,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
           Floor Eggs
         </h3>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
@@ -150,7 +150,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="number"
               value={formData.floorEggs1}
-              onChange={(e) => setFormData({...formData, floorEggs1: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, floorEggs1: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="150"
             />
@@ -163,7 +163,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="number"
               value={formData.floorEggs2}
-              onChange={(e) => setFormData({...formData, floorEggs2: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, floorEggs2: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="120"
             />
@@ -185,7 +185,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #28a745', paddingBottom: '8px' }}>
           Egg Production
         </h3>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
@@ -194,7 +194,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="number"
               value={formData.eggProduction1}
-              onChange={(e) => setFormData({...formData, eggProduction1: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, eggProduction1: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="6000"
             />
@@ -207,7 +207,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="number"
               value={formData.eggProduction2}
-              onChange={(e) => setFormData({...formData, eggProduction2: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, eggProduction2: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="6500"
             />
@@ -230,7 +230,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
               type="number"
               step="0.1"
               value={formData.eggProductionPercent}
-              onChange={(e) => setFormData({...formData, eggProductionPercent: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, eggProductionPercent: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="92.5"
             />
@@ -243,7 +243,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
           Cooler Temperature & RH%
         </h3>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '15px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
@@ -253,7 +253,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
               type="number"
               step="0.1"
               value={formData.coolerTempHi}
-              onChange={(e) => setFormData({...formData, coolerTempHi: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, coolerTempHi: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="4.5"
             />
@@ -267,7 +267,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
               type="number"
               step="0.1"
               value={formData.coolerTempLo}
-              onChange={(e) => setFormData({...formData, coolerTempLo: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, coolerTempLo: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="3.8"
             />
@@ -281,7 +281,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
               type="number"
               step="0.1"
               value={formData.coolerRhHi}
-              onChange={(e) => setFormData({...formData, coolerRhHi: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, coolerRhHi: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="75.0"
             />
@@ -295,7 +295,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
               type="number"
               step="0.1"
               value={formData.coolerRhLo}
-              onChange={(e) => setFormData({...formData, coolerRhLo: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, coolerRhLo: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
               placeholder="70.0"
             />
@@ -308,7 +308,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="time"
               value={formData.coolerCheckTime}
-              onChange={(e) => setFormData({...formData, coolerCheckTime: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, coolerCheckTime: e.target.value })}
               style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
             />
           </div>
@@ -330,7 +330,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         <input
           type="number"
           value={formData.dirtyTrays}
-          onChange={(e) => setFormData({...formData, dirtyTrays: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, dirtyTrays: e.target.value })}
           style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
           placeholder="5"
         />
@@ -341,13 +341,13 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0066cc', paddingBottom: '8px' }}>
           Sanitation - As Completed
         </h3>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={formData.eggCoolerCleaned}
-              onChange={(e) => setFormData({...formData, eggCoolerCleaned: e.target.checked})}
+              onChange={(e) => setFormData({ ...formData, eggCoolerCleaned: e.target.checked })}
               style={{ width: '24px', height: '24px', marginRight: '12px' }}
             />
             <span style={{ fontSize: '18px' }}>Egg Cooler</span>
@@ -357,7 +357,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="checkbox"
               checked={formData.packRoomCleaned}
-              onChange={(e) => setFormData({...formData, packRoomCleaned: e.target.checked})}
+              onChange={(e) => setFormData({ ...formData, packRoomCleaned: e.target.checked })}
               style={{ width: '24px', height: '24px', marginRight: '12px' }}
             />
             <span style={{ fontSize: '18px' }}>Pack Room</span>
@@ -367,7 +367,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
             <input
               type="checkbox"
               checked={formData.tablesPackingEquipCleaned}
-              onChange={(e) => setFormData({...formData, tablesPackingEquipCleaned: e.target.checked})}
+              onChange={(e) => setFormData({ ...formData, tablesPackingEquipCleaned: e.target.checked })}
               style={{ width: '24px', height: '24px', marginRight: '12px' }}
             />
             <span style={{ fontSize: '18px' }}>Tables/Packing Equip</span>
@@ -382,7 +382,7 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
         </label>
         <textarea
           value={formData.correctiveActions}
-          onChange={(e) => setFormData({...formData, correctiveActions: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, correctiveActions: e.target.value })}
           style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit' }}
           rows="4"
           placeholder="Describe any issues found and corrective actions taken..."
@@ -390,16 +390,16 @@ export default function Form07DailyProduction({ farmId,farmName, barnNumber, mon
       </div>
 
       {/* Submit Button */}
-      <button 
+      <button
         type="submit"
-        style={{ 
-          width: '100%', 
-          padding: '20px', 
-          fontSize: '22px', 
-          fontWeight: 'bold', 
-          background: '#28a745', 
-          color: 'white', 
-          border: 'none', 
+        style={{
+          width: '100%',
+          padding: '20px',
+          fontSize: '22px',
+          fontWeight: 'bold',
+          background: '#28a745',
+          color: 'white',
+          border: 'none',
           borderRadius: '8px',
           cursor: 'pointer'
         }}

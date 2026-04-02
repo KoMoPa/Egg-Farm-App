@@ -573,21 +573,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           </button>
           <button
             type="button"
-            onClick={() => setViewMode('week')}
-            style={{
-              padding: '8px 16px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              backgroundColor: viewMode === 'week' ? '#0066cc' : '#ddd',
-              color: viewMode === 'week' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-            Week View
-          </button>
-          <button
-            type="button"
             onClick={() => setViewMode('month')}
             style={{
               padding: '8px 16px',
@@ -621,28 +606,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           <DayViewForm
             day={selectedDay}
             data={dayData[selectedDay]}
-            onDayChange={handleDayChange}
-            onDayCheckbox={handleDayCheckbox} />
-        </div>
-      )}
-
-      {/* WEEK VIEW */}
-      {viewMode === 'week' && (
-        <div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold', marginRight: '10px' }}>Select Week Start Day:</label>
-            <select defaultValue="1"
-              onChange={(e) => setSelectedDay(parseInt(e.target.value))}
-              style={{ padding: '8px', border: '1px solid #ccc', fontSize: '14px' }}>
-              {[1, 8, 15, 22, 29].map(day => (
-                <option key={day} value={day}>Week of Day {day}</option>
-              ))}
-            </select>
-          </div>
-
-          <WeekViewTable
-            startDay={selectedDay}
-            dayData={dayData}
             onDayChange={handleDayChange}
             onDayCheckbox={handleDayCheckbox} />
         </div>

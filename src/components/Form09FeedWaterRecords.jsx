@@ -312,6 +312,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
     const [dayData, setDayData] = useState(initializeDayData())
     const [viewMode, setViewMode] = useState('day')
     const [selectedDay, setSelectedDay] = useState(1)
+    const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0])
     const [feedTarget, setFeedTarget] = useState('')
     const [monthlyMortalityPercent, setMonthlyMortalityPercent] = useState('')
     const [comments, setComments] = useState('')
@@ -393,6 +394,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                 .insert([{
                     farm_id: farmId,
                     audit_id: auditId,
+                    record_date: recordDate,
                     feed_target: feedTarget || null,
                     monthly_mortality_percent: monthlyMortalityPercent || null,
                     comments: comments || null,
@@ -431,10 +433,16 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                 <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
                     Form 09 - Feed Water Records
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
                     <div><strong>Farm Name:</strong> {farmName}</div>
                     <div><strong>Barn #:</strong> {barnNumber}</div>
                     <div><strong>Month/Year:</strong> {monthYear}</div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
+                        <input type="date" value={recordDate}
+                            onChange={(e) => setRecordDate(e.target.value)}
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                    </div>
                 </div>
 
                 {/* VIEW TOGGLE */}
@@ -453,21 +461,6 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                             cursor: 'pointer'
                         }}>
                         Day View
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setViewMode('week')}
-                        style={{
-                            padding: '8px 16px',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
-                            backgroundColor: viewMode === 'week' ? '#0066cc' : '#ddd',
-                            color: viewMode === 'week' ? 'white' : '#333',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}>
-                        Week View
                     </button>
                     <button
                         type="button"
@@ -504,27 +497,6 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                     <DayViewForm
                         day={selectedDay}
                         data={dayData[selectedDay]}
-                        onDayChange={handleDayChange} />
-                </div>
-            )}
-
-            {/* WEEK VIEW */}
-            {viewMode === 'week' && (
-                <div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ fontWeight: 'bold', marginRight: '10px' }}>Select Week Start Day:</label>
-                        <select defaultValue="1"
-                            onChange={(e) => setSelectedDay(parseInt(e.target.value))}
-                            style={{ padding: '8px', border: '1px solid #ccc', fontSize: '14px' }}>
-                            {[1, 8, 15, 22, 29].map(day => (
-                                <option key={day} value={day}>Week of Day {day}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <WeekViewTable
-                        startDay={selectedDay}
-                        dayData={dayData}
                         onDayChange={handleDayChange} />
                 </div>
             )}
