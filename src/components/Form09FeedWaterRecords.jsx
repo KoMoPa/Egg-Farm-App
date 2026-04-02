@@ -483,20 +483,9 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
             {/* DAY VIEW */}
             {viewMode === 'day' && (
                 <div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ fontWeight: 'bold', marginRight: '10px' }}>Select Day:</label>
-                        <select value={selectedDay}
-                            onChange={(e) => setSelectedDay(parseInt(e.target.value))}
-                            style={{ padding: '8px', border: '1px solid #ccc', fontSize: '14px' }}>
-                            {[...Array(31)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>Day {i + 1}</option>
-                            ))}
-                        </select>
-                    </div>
-
                     <DayViewForm
-                        day={selectedDay}
-                        data={dayData[selectedDay]}
+                        day={parseInt(recordDate.split('-')[2])}
+                        data={dayData[parseInt(recordDate.split('-')[2])]}
                         onDayChange={handleDayChange} />
                 </div>
             )}

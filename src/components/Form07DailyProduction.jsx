@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 
 export default function Form07DailyProduction({ farmId, farmName, barnNumber, monthYear }) {
-  const today = new Date().getDate() // Gets today's day (1-31)
+  const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0])
 
   const [formData, setFormData] = useState({
-    date: today,
     age: '',
 
     // Floor eggs
@@ -51,7 +50,7 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
         farm_id: farmId, // Using farmName as ID for now
         barn_number: barnNumber,
         month_year: monthYear,
-        date: formData.date,
+        record_date: recordDate,
         flock_age_weeks: parseInt(formData.age) || null,
 
         floor_eggs_collection_1: parseInt(formData.floorEggs1) || 0,
@@ -77,7 +76,7 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
         farm_id: farmId,
         barn_number: barnNumber,
         month_year: monthYear,
-        date: formData.date,
+        record_date: recordDate,
 
         dirty_trays_count: parseInt(formData.dirtyTrays) || 0,
         egg_cooler_cleaned: formData.eggCoolerCleaned,
@@ -90,7 +89,7 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
       alert('Error saving: ' + (prodError?.message || sanitError?.message))
       console.error('Error:', prodError, sanitError)
     } else {
-      alert('✅ Form 07 record saved for day ' + formData.date + '!')
+      alert('✅ Form 07 record saved for ' + recordDate + '!')
       console.log('Saved production:', prodData)
       console.log('Saved sanitation:', sanitData)
     }
@@ -104,7 +103,7 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 07 - Egg Production & Cooler Records
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
           <div>
             <strong>Farm Name:</strong> {farmName}
           </div>
@@ -114,9 +113,12 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
           <div>
             <strong>Month/Year:</strong> {monthYear}
           </div>
-        </div>
-        <div style={{ marginTop: '15px', fontSize: '18px', fontWeight: 'bold', color: '#0066cc' }}>
-          Daily Entry for Day: {formData.date}
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
+            <input type="date" value={recordDate}
+              onChange={(e) => setRecordDate(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+          </div>
         </div>
       </div>
 

@@ -276,6 +276,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
 
     const [dayData, setDayData] = useState(initializeDayData())
     const [viewMode, setViewMode] = useState('day')
+    const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0])
     const [selectedDay, setSelectedDay] = useState(1)
 
     // SIDE AUDIT SECTIONS
@@ -418,10 +419,16 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                 <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
                     Form 10 - Pest Control Records
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
                     <div><strong>Farm Name:</strong> {farmName}</div>
                     <div><strong>Barn #:</strong> {barnNumber}</div>
                     <div><strong>Month/Year:</strong> {monthYear}</div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
+                        <input type="date" value={recordDate}
+                            onChange={(e) => setRecordDate(e.target.value)}
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                    </div>
                 </div>
 
                 {/* VIEW TOGGLE */}
@@ -462,19 +469,9 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
             {/* DAY VIEW */}
             {viewMode === 'day' && (
                 <div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ fontWeight: 'bold', marginRight: '10px' }}>Select Day:</label>
-                        <select value={selectedDay}
-                            onChange={(e) => setSelectedDay(parseInt(e.target.value))}
-                            style={{ padding: '8px', border: '1px solid #ccc', fontSize: '14px' }}>
-                            {[...Array(31)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>Day {i + 1}</option>
-                            ))}
-                        </select>
-                    </div>
                     <DayViewForm
-                        day={selectedDay}
-                        data={dayData[selectedDay]}
+                        day={parseInt(recordDate.split('-')[2])}
+                        data={dayData[parseInt(recordDate.split('-')[2])]}
                         onDayChange={handleDayChange} />
                 </div>
             )}
