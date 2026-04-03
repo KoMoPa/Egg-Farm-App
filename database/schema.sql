@@ -142,6 +142,7 @@ CREATE TABLE feed_water_records (
   feed_actual NUMERIC,
   water_daily NUMERIC,
   water_actual NUMERIC,
+  auger_run_time_minutes INTEGER,
   flush BOOLEAN,
   meds_vit BOOLEAN,
   treatment BOOLEAN,
@@ -309,3 +310,15 @@ CREATE INDEX idx_feed_water_farm_id ON feed_water_records(farm_id);
 CREATE INDEX idx_feed_water_audit_id ON feed_water_records(audit_id);
 CREATE INDEX idx_pest_control_farm_id ON pest_control_records(farm_id);
 CREATE INDEX idx_pest_control_audit_id ON pest_control_records(audit_id);
+
+-- Index for monthly audits lookup by farm and month
+CREATE INDEX idx_monthly_audits_farm_month 
+ON monthly_audits(farm_id, month_year);
+
+-- Index for analyzing auger runtime by audit
+CREATE INDEX idx_feed_water_auger_runtime 
+ON feed_water_records(audit_id, auger_run_time_minutes);
+
+-- Combined index for efficiency analysis (farm + audit + auger runtime)
+CREATE INDEX idx_feed_water_farm_auger 
+ON feed_water_records(farm_id, audit_id, auger_run_time_minutes);

@@ -38,6 +38,15 @@ const DayViewForm = ({ day, data, onDayChange }) => (
             </div>
         </div>
 
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '30px' }}>
+            <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Auger Run Time (minutes)</label>
+                <input type="number" value={data.augerRunTimeMinutes}
+                    onChange={(e) => onDayChange(day, 'augerRunTimeMinutes', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+            </div>
+        </div>
+
         <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Water Treatments</h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
             <div>
@@ -297,6 +306,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                 feedActual: '',
                 waterDaily: '',
                 waterActual: '',
+                augerRunTimeMinutes: '',
                 flush: false,
                 medsVit: false,
                 treatment: false,
@@ -368,10 +378,12 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                 farm_id: farmId,
                 audit_id: auditId,
                 day_of_month: day,
+                record_date: recordDate,
                 feed_daily: dayData[day].feedDaily || null,
                 feed_actual: dayData[day].feedActual || null,
                 water_daily: dayData[day].waterDaily || null,
                 water_actual: dayData[day].waterActual || null,
+                auger_run_time_minutes: dayData[day].augerRunTimeMinutes || null,
                 flush: dayData[day].flush,
                 meds_vit: dayData[day].medsVit,
                 treatment: dayData[day].treatment,
