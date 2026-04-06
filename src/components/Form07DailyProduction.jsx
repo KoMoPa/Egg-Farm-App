@@ -43,55 +43,91 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Save Page 1 data
-    const { data: prodData, error: prodError } = await supabase
-      .from('production_cooler_records')
-      .insert([{
-        farm_id: farmId, // Using farmName as ID for now
-        barn_number: barnNumber,
-        month_year: monthYear,
-        record_date: recordDate,
-        flock_age_weeks: parseInt(formData.age) || null,
+    // Helper to safely convert to number or null
+    const toNumber = (val) => {
+      if (!val) return null
+      const num = parseFloat(val)
+      return isNaN(num) ? null : num
+    }
 
-        floor_eggs_collection_1: parseInt(formData.floorEggs1) || 0,
-        floor_eggs_collection_2: parseInt(formData.floorEggs2) || 0,
-        floor_eggs_total: floorEggsTotal,
+    try {
+      // Step 1: Create or get monthly audit record
+      const { data: existingAudit, error: auditCheckError } = await supabase
+        .from('monthly_audits')
+        .select('id')
+        .eq('farm_id', farmId)
+        .eq('month_year', monthYear)
+        .single()
 
-        egg_production_1: parseInt(formData.eggProduction1) || 0,
-        egg_production_2: parseInt(formData.eggProduction2) || 0,
-        egg_production_daily: eggProductionDaily,
-        egg_production_percent: parseFloat(formData.eggProductionPercent) || null,
+      let auditId
+      if (existingAudit) {
+        auditId = existingAudit.id
+      } else {
+        const { data: newAudit, error: newAuditError } = await supabase
+          .from('monthly_audits')
+          .insert([{
+            farm_id: farmId,
+            month_year: monthYear,
+            form_07_completed: false,
+          }])
+          .select()
 
-        cooler_temp_hi_celsius: parseFloat(formData.coolerTempHi) || null,
-        cooler_temp_lo_celsius: parseFloat(formData.coolerTempLo) || null,
-        cooler_rh_hi_percent: parseFloat(formData.coolerRhHi) || null,
-        cooler_rh_lo_percent: parseFloat(formData.coolerRhLo) || null,
-        cooler_check_time: formData.coolerCheckTime || null
-      }])
+        if (newAuditError) throw newAuditError
+        auditId = newAudit[0].id
+      }
 
-    // Save Page 2 data
-    const { data: sanitData, error: sanitError } = await supabase
-      .from('sanitation_records')
-      .insert([{
-        farm_id: farmId,
-        barn_number: barnNumber,
-        month_year: monthYear,
-        record_date: recordDate,
+      // Step 2: Save Production Cooler Records
+      const { data: prodData, error: prodError } = await supabase
+        .from('production_cooler_records')
+        .insert([{
+          farm_id: farmId,
+          audit_id: auditId,
+          barn_number: barnNumber,
+          record_date: recordDate,
+          flock_age_weeks: toNumber(formData.age),
 
-        dirty_trays_count: parseInt(formData.dirtyTrays) || 0,
-        egg_cooler_cleaned: formData.eggCoolerCleaned,
-        pack_room_cleaned: formData.packRoomCleaned,
-        tables_packing_equip_cleaned: formData.tablesPackingEquipCleaned,
-        corrective_actions: formData.correctiveActions || null
-      }])
+          floor_eggs_collection_1: parseInt(formData.floorEggs1) || 0,
+          floor_eggs_collection_2: parseInt(formData.floorEggs2) || 0,
+          floor_eggs_total: floorEggsTotal,
 
-    if (prodError || sanitError) {
-      alert('Error saving: ' + (prodError?.message || sanitError?.message))
-      console.error('Error:', prodError, sanitError)
-    } else {
+          egg_production_1: parseInt(formData.eggProduction1) || 0,
+          egg_production_2: parseInt(formData.eggProduction2) || 0,
+          egg_production_daily: eggProductionDaily,
+          egg_production_percent: toNumber(formData.eggProductionPercent),
+
+          cooler_temp_hi_celsius: toNumber(formData.coolerTempHi),
+          cooler_temp_lo_celsius: toNumber(formData.coolerTempLo),
+          cooler_rh_hi_percent: toNumber(formData.coolerRhHi),
+          cooler_rh_lo_percent: toNumber(formData.coolerRhLo),
+          cooler_check_time: formData.coolerCheckTime || null
+        }])
+
+      if (prodError) throw prodError
+
+      // Step 3: Save Sanitation Records
+      const { data: sanitData, error: sanitError } = await supabase
+        .from('sanitation_records')
+        .insert([{
+          farm_id: farmId,
+          audit_id: auditId,
+          barn_number: barnNumber,
+          record_date: recordDate,
+
+          dirty_trays_count: parseInt(formData.dirtyTrays) || 0,
+          egg_cooler_cleaned: formData.eggCoolerCleaned,
+          pack_room_cleaned: formData.packRoomCleaned,
+          tables_packing_equip_cleaned: formData.tablesPackingEquipCleaned,
+          corrective_actions: formData.correctiveActions || null
+        }])
+
+      if (sanitError) throw sanitError
+
       alert('✅ Form 07 record saved for ' + recordDate + '!')
       console.log('Saved production:', prodData)
       console.log('Saved sanitation:', sanitData)
+    } catch (err) {
+      alert('Error saving: ' + err.message)
+      console.error('Error:', err)
     }
   }
 

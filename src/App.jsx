@@ -5,6 +5,7 @@ import Form07DailyProduction from './components/Form07DailyProduction'
 import Form08WelfareRecords from './components/Form08WelfareRecords'
 import Form09FeedWaterRecords from './components/Form09FeedWaterRecords'
 import Form10PestControlRecords from './components/Form10PestControlRecords'
+import Reports from './components/Reports'
 import './App.css'
 
 function App() {
@@ -115,6 +116,20 @@ function App() {
             }}>
             Form 10 - Pest Control
           </button>
+          <button
+            onClick={() => setCurrentForm('reports')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              backgroundColor: currentForm === 'reports' ? '#28a745' : '#ccc',
+              color: currentForm === 'reports' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+            📊 Reports
+          </button>
         </div>
 
         {/* Forms */}
@@ -151,6 +166,13 @@ function App() {
             farmName={testFarmName}
             barnNumber={testBarnNumber}
             monthYear={testMonthYear}
+          />
+        )}
+
+        {currentForm === 'reports' && (
+          <Reports
+            farmId={testFarmId}
+            farmName={testFarmName}
           />
         )}
 
