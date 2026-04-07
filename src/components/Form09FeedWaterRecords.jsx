@@ -412,18 +412,8 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                     comments: comments || null,
                 }])
 
-            // Step 6: Update audit record as completed
-            if (!existingAudit) {
-                const { error: updateError } = await supabase
-                    .from('monthly_audits')
-                    .update({
-                        form_09_completed: true,
-                        form_09_completed_date: new Date().toISOString(),
-                    })
-                    .eq('id', auditId)
-
-                if (updateError) throw updateError
-            }
+            // Step 6: Don't auto-complete - user must manually mark as complete
+            // This allows users to save daily records without marking month done yet
 
             if (recordError || metaError) {
                 alert('Error saving: ' + (recordError?.message || metaError?.message))
@@ -434,6 +424,23 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
         } catch (error) {
             alert('Error: ' + error.message)
             console.error(error)
+        }
+    }
+
+    const handleMarkMonthComplete = async () => {
+        try {
+            const { error } = await supabase
+                .from('monthly_audits')
+                .update({
+                    form_09_completed: true,
+                    form_09_completed_date: new Date().toISOString()
+                })
+                .eq('id', auditId)
+
+            if (error) throw error
+            alert('✅ Form 09 marked as complete for ' + monthYear)
+        } catch (err) {
+            alert('Error marking complete: ' + err.message)
         }
     }
 
@@ -538,7 +545,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
                     <button type="submit" style={{
                         padding: '12px 40px',
                         fontSize: '16px',
@@ -550,6 +557,18 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                         cursor: 'pointer'
                     }}>
                         Save Form 09 - Feed Water Records
+                    </button>
+                    <button type="button" onClick={handleMarkMonthComplete} style={{
+                        padding: '12px 40px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        backgroundColor: '#0066cc',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                        ✓ Mark Month Complete
                     </button>
                 </div>
             </div>

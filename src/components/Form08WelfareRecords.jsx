@@ -515,18 +515,8 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           signature_date: signatureDate || null,
         }])
 
-      // Step 7: Update audit record as completed
-      if (!existingAudit) {
-        const { error: updateError } = await supabase
-          .from('monthly_audits')
-          .update({
-            form_08_completed: true,
-            form_08_completed_date: new Date().toISOString(),
-          })
-          .eq('id', auditId)
-
-        if (updateError) throw updateError
-      }
+      // Step 7: Don't auto-complete - user must manually mark as complete
+      // This allows users to save daily records without marking month done yet
 
       if (dailyError || equipmentError || formError) {
         alert('Error saving: ' + (dailyError?.message || equipmentError?.message || formError?.message))
@@ -537,6 +527,23 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
     } catch (error) {
       alert('Error: ' + error.message)
       console.error(error)
+    }
+  }
+
+  const handleMarkMonthComplete = async () => {
+    try {
+      const { error } = await supabase
+        .from('monthly_audits')
+        .update({
+          form_08_completed: true,
+          form_08_completed_date: new Date().toISOString()
+        })
+        .eq('id', auditId)
+
+      if (error) throw error
+      alert('✅ Form 08 marked as complete for ' + monthYear)
+    } catch (err) {
+      alert('Error marking complete: ' + err.message)
     }
   }
 
@@ -673,7 +680,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
             style={{ padding: '8px', border: '1px solid #ccc' }} />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
           <button type="submit" style={{
             padding: '12px 40px',
             fontSize: '16px',
@@ -685,6 +692,18 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
             cursor: 'pointer'
           }}>
             Save Form 08 - Welfare Records
+          </button>
+          <button type="button" onClick={handleMarkMonthComplete} style={{
+            padding: '12px 40px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: '#0066cc',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            ✓ Mark Month Complete
           </button>
         </div>
       </div>

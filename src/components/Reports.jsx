@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import MonthlyAuditSummary from './MonthlyAuditSummary'
 
 function Reports({ farmId, farmName }) {
     const [audits, setAudits] = useState([])
     const [filteredAudits, setFilteredAudits] = useState([])
     const [searchMonth, setSearchMonth] = useState('')
     const [loading, setLoading] = useState(true)
+    const [selectedAuditId, setSelectedAuditId] = useState(null)
+    const [selectedMonth, setSelectedMonth] = useState(null)
 
     // Fetch all monthly audits for the farm
     useEffect(() => {
@@ -170,6 +173,9 @@ function Reports({ farmId, farmName }) {
                                 <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
                                     Overall Status
                                 </th>
+                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
+                                    Action
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -230,6 +236,25 @@ function Reports({ farmId, farmName }) {
                                                 {allComplete ? '✓ All Complete' : `${completedCount}/4 Forms`}
                                             </div>
                                         </td>
+                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedAuditId(audit.id)
+                                                    setSelectedMonth(audit.month_year)
+                                                }}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 'bold',
+                                                    backgroundColor: '#0066cc',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                🖨 Print
+                                            </button>
+                                        </td>
                                     </tr>
                                 )
                             })}
@@ -249,6 +274,17 @@ function Reports({ farmId, farmName }) {
                         <strong>{filteredAudits.filter(a => a.form_07_completed && a.form_08_completed && a.form_09_completed && a.form_10_completed).length}</strong> fully completed
                     </p>
                 </div>
+            )}
+
+            {/* Monthly Audit Summary Modal */}
+            {selectedAuditId && (
+                <MonthlyAuditSummary
+                    farmId={farmId}
+                    farmName={farmName}
+                    auditId={selectedAuditId}
+                    monthYear={selectedMonth}
+                    onClose={() => setSelectedAuditId(null)}
+                />
             )}
         </div>
     )

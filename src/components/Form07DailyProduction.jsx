@@ -122,6 +122,17 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
 
       if (sanitError) throw sanitError
 
+      // Step 4: Mark form as completed
+      const { error: updateError } = await supabase
+        .from('monthly_audits')
+        .update({
+          form_07_completed: true,
+          form_07_completed_date: new Date().toISOString()
+        })
+        .eq('id', auditId)
+
+      if (updateError) throw updateError
+
       alert('✅ Form 07 record saved for ' + recordDate + '!')
       console.log('Saved production:', prodData)
       console.log('Saved sanitation:', sanitData)
