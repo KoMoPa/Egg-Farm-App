@@ -278,6 +278,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
     const [viewMode, setViewMode] = useState('day')
     const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0])
     const [selectedDay, setSelectedDay] = useState(1)
+    const [auditId, setAuditId] = useState(null)
 
     // SIDE AUDIT SECTIONS
     const [exteriorInspectionDate, setExteriorInspectionDate] = useState('')
@@ -319,9 +320,9 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                 .eq('month_year', monthYear)
                 .single()
 
-            let auditId
+            let currentAuditId
             if (existingAudit) {
-                auditId = existingAudit.id
+                currentAuditId = existingAudit.id
             } else {
                 const { data: newAudit, error: newAuditError } = await supabase
                     .from('monthly_audits')
@@ -333,8 +334,9 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                     .select()
 
                 if (newAuditError) throw newAuditError
-                auditId = newAudit[0].id
+                currentAuditId = newAudit[0].id
             }
+            setAuditId(currentAuditId)
 
             // Step 2: Filter out empty days
             const daysWithData = Object.keys(dayData)
@@ -346,7 +348,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
             // Step 3: Prepare daily records
             const pestControlRecords = daysWithData.map(day => ({
                 farm_id: farmId,
-                audit_id: auditId,
+                audit_id: currentAuditId,
                 day_of_month: day,
                 live_traps_findings: dayData[day].liveTrapsFindings || null,
                 live_traps_location: dayData[day].liveTrapsLocation || null,
@@ -358,19 +360,19 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                 frequency_monthly: dayData[day].frequencyMonthly || null,
             }))
 
-            // Step 4: Save daily records
+            // Step 4: Save daily records (upsert)
             const { error: recordError } = await supabase
                 .from('pest_control_records')
-                .insert(pestControlRecords)
+                .upsert(pestControlRecords, { onConflict: 'audit_id,day_of_month' })
 
             if (recordError) throw recordError
 
-            // Step 5: Save audit sections
+            // Step 5: Save audit sections (upsert)
             const { error: auditError } = await supabase
                 .from('pest_control_audit_sections')
-                .insert([{
+                .upsert([{
                     farm_id: farmId,
-                    audit_id: auditId,
+                    audit_id: currentAuditId,
                     exterior_inspection_date: exteriorInspectionDate || null,
                     exterior_inspection_observation: exteriorInspectionObservation || null,
                     wild_birds_observation: wildBirdsObservation || null,
@@ -387,7 +389,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                     comments: comments || null,
                     signature: signature || null,
                     signature_date: signatureDate || null,
-                }])
+                }], { onConflict: 'audit_id' })
 
             if (auditError) throw auditError
 

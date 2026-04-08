@@ -381,13 +381,8 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
   }
 
   const [dayData, setDayData] = useState(initializeDayData())
-  const [alarmCheckDate, setAlarmCheckDate] = useState('')
-  const [alarmCheckInitials, setAlarmCheckInitials] = useState('')
-  const [generatorCheckDate, setGeneratorCheckDate] = useState('')
-  const [generatorCheckInitials, setGeneratorCheckInitials] = useState('')
   const [commentsPage1, setCommentsPage1] = useState('')
   const [commentsPage2, setCommentsPage2] = useState('')
-  const [signatureDate, setSignatureDate] = useState('')
   const [recordDate, setRecordDate] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -451,69 +446,70 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
       }
 
       // Step 2: Prepare daily records data (Page 1)
-      const dailyRecords = Object.values(dayData).map(day => ({
-        farm_id: farmId,
-        audit_id: auditId,
-        barn_number: barnNumber,
-        date: day.date,
-        barn_temp_hi: parseFloat(day.barnTempHi) || null,
-        barn_temp_lo: parseFloat(day.barnTempLo) || null,
-        exterior_temp: parseFloat(day.exteriorTemp) || null,
-        floors_checked: day.floorsChecked,
-        walls_fans_ceiling_checked: day.wallsFansCeilingChecked,
-        manure_checked: day.manureChecked,
-        bedding_used: day.beddingUsed || null,
-        chemicals_used: day.chemicalsUsed || null,
-        ammonia_level: day.ammoniaLevel || null,
-      }))
-
-      // Step 3: Prepare equipment inspection records data (Page 2)
-      const equipmentRecords = Object.values(dayData).map(day => ({
-        farm_id: farmId,
-        audit_id: auditId,
-        barn_number: barnNumber,
-        date: day.date,
-        routine_hen_equip_1st_initial: day.routineHenEquip1stInitial || null,
-        routine_hen_equip_1st_daily: day.routineHenEquip1stDaily || null,
-        routine_hen_equip_2nd_initial: day.routineHenEquip2ndInitial || null,
-        routine_hen_equip_2nd_daily: day.routineHenEquip2ndDaily || null,
-        overall_appearance: day.overallAppearance,
-        general_sound: day.generalSound,
-        abnormal_behavior: day.abnormalBehavior,
-        signs_of_disease: day.signsOfDisease,
-        injured_birds: day.injuredBirds,
-        trapped_birds: day.trappedBirds,
-        dead_birds: day.deadBirds,
-        feed_water_available: day.feedWaterAvailable,
-        equipment_operating: day.equipmentOperating,
-        amenities_condition: day.amenitiesCondition,
-        lay_facility_environment: day.layFacilityEnvironment,
-      }))
-
-      // Step 4: Save Page 1 data
-      const { error: dailyError } = await supabase
-        .from('welfare_daily_records')
-        .insert(dailyRecords)
-
-      // Step 5: Save Page 2 data
-      const { error: equipmentError } = await supabase
-        .from('welfare_equipment_inspection')
-        .insert(equipmentRecords)
-
-      // Step 6: Save form-level metadata
-      const { error: formError } = await supabase
-        .from('welfare_form_metadata')
-        .insert([{
+      const dailyRecords = Object.entries(dayData)
+        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked)
+        .map(([dayNum, day]) => ({
           farm_id: farmId,
           audit_id: auditId,
-          alarm_check_date: alarmCheckDate || null,
-          alarm_check_initials: alarmCheckInitials || null,
-          generator_check_date: generatorCheckDate || null,
-          generator_check_initials: generatorCheckInitials || null,
+          barn_number: barnNumber,
+          date: recordDate,
+          record_date: recordDate,
+          barn_temp_hi: parseFloat(day.barnTempHi) || null,
+          barn_temp_lo: parseFloat(day.barnTempLo) || null,
+          exterior_temp: parseFloat(day.exteriorTemp) || null,
+          floors_checked: day.floorsChecked,
+          walls_fans_ceiling_checked: day.wallsFansCeilingChecked,
+          manure_checked: day.manureChecked,
+          bedding_used: day.beddingUsed || null,
+          chemicals_used: day.chemicalsUsed || null,
+          ammonia_level: day.ammoniaLevel || null,
+        }))
+
+      // Step 3: Prepare equipment inspection records data (Page 2)
+      const equipmentRecords = Object.entries(dayData)
+        .filter(([, day]) => day.routineHenEquip1stInitial || day.routineHenEquip1stDaily || day.routineHenEquip2ndInitial || day.routineHenEquip2ndDaily)
+        .map(([dayNum, day]) => ({
+          farm_id: farmId,
+          audit_id: auditId,
+          barn_number: barnNumber,
+          record_date: recordDate,
+          routine_hen_equip_1st_initial: day.routineHenEquip1stInitial || null,
+          routine_hen_equip_1st_daily: day.routineHenEquip1stDaily || null,
+          routine_hen_equip_2nd_initial: day.routineHenEquip2ndInitial || null,
+          routine_hen_equip_2nd_daily: day.routineHenEquip2ndDaily || null,
+          overall_appearance: day.overallAppearance,
+          general_sound: day.generalSound,
+          abnormal_behavior: day.abnormalBehavior,
+          signs_of_disease: day.signsOfDisease,
+          injured_birds: day.injuredBirds,
+          trapped_birds: day.trappedBirds,
+          dead_birds: day.deadBirds,
+          feed_water_available: day.feedWaterAvailable,
+          equipment_operating: day.equipmentOperating,
+          amenities_condition: day.amenitiesCondition,
+          lay_facility_environment: day.layFacilityEnvironment,
+        }))
+
+      // Step 4: Save Page 1 data (upsert)
+      const { error: dailyError } = await supabase
+        .from('welfare_daily_records')
+        .upsert(dailyRecords, { onConflict: 'audit_id,date' })
+
+      // Step 5: Save Page 2 data (upsert)
+      const { error: equipmentError } = await supabase
+        .from('welfare_equipment_inspection')
+        .upsert(equipmentRecords, { onConflict: 'audit_id,record_date' })
+
+      // Step 6: Save form-level metadata (upsert)
+      const { error: formError } = await supabase
+        .from('welfare_form_metadata')
+        .upsert([{
+          farm_id: farmId,
+          audit_id: auditId,
+          signature_date: recordDate,
           comments_page_1: commentsPage1 || null,
           comments_page_2: commentsPage2 || null,
-          signature_date: signatureDate || null,
-        }])
+        }], { onConflict: 'audit_id' })
 
       // Step 7: Don't auto-complete - user must manually mark as complete
       // This allows users to save daily records without marking month done yet
@@ -627,36 +623,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Alarm Checks</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <input type="date" value={alarmCheckDate}
-                onChange={(e) => setAlarmCheckDate(e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ccc' }} />
-              <input type="text" value={alarmCheckInitials}
-                onChange={(e) => setAlarmCheckInitials(e.target.value)}
-                placeholder="Initials"
-                maxLength="3"
-                style={{ padding: '8px', border: '1px solid #ccc' }} />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Generator Checks</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <input type="date" value={generatorCheckDate}
-                onChange={(e) => setGeneratorCheckDate(e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ccc' }} />
-              <input type="text" value={generatorCheckInitials}
-                onChange={(e) => setGeneratorCheckInitials(e.target.value)}
-                placeholder="Initials"
-                maxLength="3"
-                style={{ padding: '8px', border: '1px solid #ccc' }} />
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
-          <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Page 1 Comments</label>
             <textarea value={commentsPage1}
               onChange={(e) => setCommentsPage1(e.target.value)}
@@ -671,13 +637,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
               rows="4"
               style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
           </div>
-        </div>
-
-        <div style={{ marginBottom: '30px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature Date</label>
-          <input type="date" value={signatureDate}
-            onChange={(e) => setSignatureDate(e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ccc' }} />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>

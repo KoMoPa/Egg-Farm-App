@@ -341,6 +341,19 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
         e.preventDefault()
 
         try {
+            // DEBUG: Check logged-in user and farm
+            const { data: { user }, error: userError } = await supabase.auth.getUser()
+            console.log('📊 DEBUG INFO:')
+            console.log('  Logged-in User ID:', user?.id)
+            console.log('  User Email:', user?.email)
+            console.log('  Farm ID being used:', farmId)
+            console.log('  Farm Name:', farmName)
+
+            if (!user) {
+                alert('❌ Not logged in! Please log in first.')
+                return
+            }
+
             // Step 1: Create or get monthly audit record
             const { data: existingAudit, error: auditCheckError } = await supabase
                 .from('monthly_audits')
@@ -373,6 +386,9 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                     return d.feedDaily || d.feedActual || d.waterDaily || d.waterActual || d.mortalityDaily || d.inventory
                 }).map(day => parseInt(day))
 
+            console.log('📝 Days being saved:', daysWithData)
+            console.log('📝 Total days with data:', daysWithData.length)
+
             // Step 3: Prepare daily records
             const feedWaterRecords = daysWithData.map(day => ({
                 farm_id: farmId,
@@ -393,24 +409,24 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                 inventory: dayData[day].inventory || null,
             }))
 
-            // Step 4: Save daily records
+            // Step 4: Save daily records with UPSERT (allows re-saving same days)
             const { error: recordError } = await supabase
                 .from('feed_water_records')
-                .insert(feedWaterRecords)
+                .upsert(feedWaterRecords, { onConflict: 'audit_id,day_of_month' })
 
             if (recordError) throw recordError
 
-            // Step 5: Save form-level metadata
+            // Step 5: Save form-level metadata (upsert to allow re-saving)
             const { error: metaError } = await supabase
                 .from('feed_water_form_metadata')
-                .insert([{
+                .upsert([{
                     farm_id: farmId,
                     audit_id: auditId,
                     record_date: recordDate,
                     feed_target: feedTarget || null,
                     monthly_mortality_percent: monthlyMortalityPercent || null,
                     comments: comments || null,
-                }])
+                }], { onConflict: 'audit_id' })
 
             // Step 6: Don't auto-complete - user must manually mark as complete
             // This allows users to save daily records without marking month done yet
