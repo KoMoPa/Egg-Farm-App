@@ -18,27 +18,36 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .select('*')
                     .eq('audit_id', auditId)
 
-                const { data: sanit } = await supabase
+                const { data: sanit, error: sanitError } = await supabase
                     .from('sanitation_records')
                     .select('*')
                     .eq('audit_id', auditId)
 
                 // Form 08 - Welfare
-                const { data: welfare } = await supabase
+                const { data: welfare, error: welfareError } = await supabase
                     .from('welfare_daily_records')
                     .select('*')
                     .eq('audit_id', auditId)
-                    .order('day_of_month')
+                    .order('date')
+
+                console.log('📊 MonthlyAuditSummary Debug:')
+                console.log('  Audit ID:', auditId)
+                console.log('  Form 08 Welfare Data:', welfare)
+                console.log('  Form 08 Error:', welfareError)
+                if (welfareError) {
+                  console.log('  Error Details:', welfareError.message)
+                  console.log('  Full Error:', JSON.stringify(welfareError, null, 2))
+                }
 
                 // Form 09 - Feed & Water
-                const { data: feed } = await supabase
+                const { data: feed, error: feedError } = await supabase
                     .from('feed_water_records')
                     .select('*')
                     .eq('audit_id', auditId)
                     .order('day_of_month')
 
                 // Form 10 - Pest Control
-                const { data: pest } = await supabase
+                const { data: pest, error: pestError } = await supabase
                     .from('pest_control_records')
                     .select('*')
                     .eq('audit_id', auditId)
