@@ -412,7 +412,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
             // Step 4: Save daily records with UPSERT (allows re-saving same days)
             const { error: recordError } = await supabase
                 .from('feed_water_records')
-                .upsert(feedWaterRecords, { onConflict: 'audit_id,day_of_month' })
+                .upsert(feedWaterRecords)
 
             if (recordError) throw recordError
 
@@ -426,7 +426,7 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                     feed_target: feedTarget || null,
                     monthly_mortality_percent: monthlyMortalityPercent || null,
                     comments: comments || null,
-                }], { onConflict: 'audit_id' })
+                }])
 
             // Step 6: Don't auto-complete - user must manually mark as complete
             // This allows users to save daily records without marking month done yet

@@ -472,6 +472,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           farm_id: farmId,
           audit_id: auditId,
           barn_number: barnNumber,
+          date: parseInt(dayNum),
           record_date: recordDate,
           routine_hen_equip_1st_initial: day.routineHenEquip1stInitial || null,
           routine_hen_equip_1st_daily: day.routineHenEquip1stDaily || null,
@@ -493,12 +494,12 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
       // Step 4: Save Page 1 data (upsert)
       const { error: dailyError } = await supabase
         .from('welfare_daily_records')
-        .upsert(dailyRecords, { onConflict: 'audit_id,date' })
+        .upsert(dailyRecords)
 
       // Step 5: Save Page 2 data (upsert)
       const { error: equipmentError } = await supabase
         .from('welfare_equipment_inspection')
-        .upsert(equipmentRecords, { onConflict: 'audit_id,record_date' })
+        .upsert(equipmentRecords)
 
       // Step 6: Save form-level metadata (upsert)
       const { error: formError } = await supabase
@@ -509,7 +510,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           signature_date: recordDate,
           comments_page_1: commentsPage1 || null,
           comments_page_2: commentsPage2 || null,
-        }], { onConflict: 'audit_id' })
+        }])
 
       // Step 7: Don't auto-complete - user must manually mark as complete
       // This allows users to save daily records without marking month done yet

@@ -363,7 +363,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
             // Step 4: Save daily records (upsert)
             const { error: recordError } = await supabase
                 .from('pest_control_records')
-                .upsert(pestControlRecords, { onConflict: 'audit_id,day_of_month' })
+                .upsert(pestControlRecords)
 
             if (recordError) throw recordError
 
@@ -389,7 +389,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                     comments: comments || null,
                     signature: signature || null,
                     signature_date: signatureDate || null,
-                }], { onConflict: 'audit_id' })
+                }])
 
             if (auditError) throw auditError
 
