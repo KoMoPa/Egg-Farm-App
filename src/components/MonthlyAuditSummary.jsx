@@ -35,8 +35,8 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 console.log('  Form 08 Welfare Data:', welfare)
                 console.log('  Form 08 Error:', welfareError)
                 if (welfareError) {
-                  console.log('  Error Details:', welfareError.message)
-                  console.log('  Full Error:', JSON.stringify(welfareError, null, 2))
+                    console.log('  Error Details:', welfareError.message)
+                    console.log('  Full Error:', JSON.stringify(welfareError, null, 2))
                 }
 
                 // Form 09 - Feed & Water
@@ -94,7 +94,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
             {/* Form 07 */}
             <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
+                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
                     Form 07 - Egg Production & Cooler Records
                 </h2>
                 {form07Data.production && form07Data.production.length > 0 ? (
@@ -129,7 +129,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
             {/* Form 08 */}
             <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
+                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
                     Form 08 - Welfare Records ({form08Data.length} days)
                 </h2>
                 {form08Data.length > 0 ? (
@@ -164,7 +164,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
             {/* Form 09 */}
             <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
+                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
                     Form 09 - Feed & Water Records ({form09Data.length} days)
                 </h2>
                 {form09Data.length > 0 ? (
@@ -199,7 +199,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
             {/* Form 10 */}
             <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
+                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
                     Form 10 - Pest Control Records ({form10Data.length} days)
                 </h2>
                 {form10Data.length > 0 ? (
