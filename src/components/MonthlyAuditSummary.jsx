@@ -7,6 +7,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
     const [form09Data, setForm09Data] = useState([])
     const [form10Data, setForm10Data] = useState([])
     const [loading, setLoading] = useState(true)
+    const [selectedForm, setSelectedForm] = useState('form08')
 
     useEffect(() => {
         const fetchData = async () => {
@@ -98,141 +99,209 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 </p>
             </div>
 
-            {/* Form 07 */}
-            <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                    Form 07 - Egg Production & Cooler Records
-                </h2>
-                {form07Data.production && form07Data.production.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Date</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Age (wks)</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Floor Eggs</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Prod Daily</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Temp HI</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Temp LO</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {form07Data.production.map((record) => (
-                                <tr key={record.id}>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px' }}>{record.record_date}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px' }}>{record.flock_age_weeks}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.floor_eggs_total}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.egg_production_daily}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.cooler_temp_hi_celsius}°C</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.cooler_temp_lo_celsius}°C</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p style={{ color: '#999', fontStyle: 'italic' }}>No production records entered</p>
-                )}
+            {/* Form Selector */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '30px' }}>
+                <button
+                    onClick={() => setSelectedForm('form07')}
+                    style={{
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        backgroundColor: selectedForm === 'form07' ? '#0066cc' : '#ddd',
+                        color: selectedForm === 'form07' ? 'white' : '#333',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                    Form 07 - Production
+                </button>
+                <button
+                    onClick={() => setSelectedForm('form08')}
+                    style={{
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        backgroundColor: selectedForm === 'form08' ? '#0066cc' : '#ddd',
+                        color: selectedForm === 'form08' ? 'white' : '#333',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                    Form 08 - Welfare
+                </button>
+                <button
+                    onClick={() => setSelectedForm('form09')}
+                    style={{
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        backgroundColor: selectedForm === 'form09' ? '#0066cc' : '#ddd',
+                        color: selectedForm === 'form09' ? 'white' : '#333',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                    Form 09 - Feed Water
+                </button>
+                <button
+                    onClick={() => setSelectedForm('form10')}
+                    style={{
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        backgroundColor: selectedForm === 'form10' ? '#0066cc' : '#ddd',
+                        color: selectedForm === 'form10' ? 'white' : '#333',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                    Form 10 - Pest Control
+                </button>
             </div>
+
+            {/* Form 07 */}
+            {selectedForm === 'form07' && (
+                <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+                    <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                        Form 07 - Egg Production & Cooler Records
+                    </h2>
+                    {form07Data.production && form07Data.production.length > 0 ? (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
+                            <thead>
+                                <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Date</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Age (wks)</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Floor Eggs</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Prod Daily</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Temp HI</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Temp LO</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {form07Data.production.map((record) => (
+                                    <tr key={record.id}>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px' }}>{record.record_date}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px' }}>{record.flock_age_weeks}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.floor_eggs_total}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.egg_production_daily}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.cooler_temp_hi_celsius}°C</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.cooler_temp_lo_celsius}°C</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p style={{ color: '#999', fontStyle: 'italic' }}>No production records entered</p>
+                    )}
+                </div>
+            )}
 
             {/* Form 08 */}
-            <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                    Form 08 - Welfare Records ({form08Data.length} days)
-                </h2>
-                {form08Data.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Date</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Barn HI</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Barn LO</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Ext Temp</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Floors</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Manure</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {form08Data.map((record) => (
-                                <tr key={record.id}>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.record_date}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.barn_temp_hi}°C</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.barn_temp_lo}°C</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.exterior_temp}°C</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.floors_checked ? '✓' : ''}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.manure_checked ? '✓' : ''}</td>
+            {selectedForm === 'form08' && (
+                <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+                    <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                        Form 08 - Welfare Records ({form08Data.length} days)
+                    </h2>
+                    {form08Data.length > 0 ? (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
+                            <thead>
+                                <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Date</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Barn HI</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Barn LO</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Ext Temp</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Floors</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Manure</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p style={{ color: '#999', fontStyle: 'italic' }}>No welfare records entered</p>
-                )}
-            </div>
+                            </thead>
+                            <tbody>
+                                {form08Data.map((record) => (
+                                    <tr key={record.id}>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.record_date}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.barn_temp_hi}°C</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.barn_temp_lo}°C</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.exterior_temp}°C</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.floors_checked ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.manure_checked ? '✓' : ''}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p style={{ color: '#999', fontStyle: 'italic' }}>No welfare records entered</p>
+                    )}
+                </div>
+            )}
 
             {/* Form 09 */}
-            <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                    Form 09 - Feed & Water Records ({form09Data.length} days)
-                </h2>
-                {form09Data.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Day</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Feed Actual</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Water Actual</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Auger (min)</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Mortality</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Meds/Vit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {form09Data.map((record) => (
-                                <tr key={record.id}>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.day_of_month}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.feed_actual}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.water_actual}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.auger_run_time_minutes}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.mortality_daily}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.meds_vit ? '✓' : ''}</td>
+            {selectedForm === 'form09' && (
+                <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+                    <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                        Form 09 - Feed & Water Records ({form09Data.length} days)
+                    </h2>
+                    {form09Data.length > 0 ? (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
+                            <thead>
+                                <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Day</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Feed Actual</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Water Actual</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Auger (min)</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Mortality</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Meds/Vit</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p style={{ color: '#999', fontStyle: 'italic' }}>No feed & water records entered</p>
-                )}
-            </div>
+                            </thead>
+                            <tbody>
+                                {form09Data.map((record) => (
+                                    <tr key={record.id}>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.day_of_month}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.feed_actual}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.water_actual}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.auger_run_time_minutes}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.mortality_daily}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.meds_vit ? '✓' : ''}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p style={{ color: '#999', fontStyle: 'italic' }}>No feed & water records entered</p>
+                    )}
+                </div>
+            )}
 
             {/* Form 10 */}
-            <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                    Form 10 - Pest Control Records ({form10Data.length} days)
-                </h2>
-                {form10Data.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Day</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Traps Findings</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Bait Product</th>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Corrective Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {form10Data.map((record) => (
-                                <tr key={record.id}>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.day_of_month}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', fontSize: '9px' }}>{record.live_traps_findings}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', fontSize: '9px' }}>{record.bait_product}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', fontSize: '9px' }}>{record.corrective_actions}</td>
+            {selectedForm === 'form10' && (
+                <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+                    <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                        Form 10 - Pest Control Records ({form10Data.length} days)
+                    </h2>
+                    {form10Data.length > 0 ? (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
+                            <thead>
+                                <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Day</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Traps Findings</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Bait Product</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Corrective Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p style={{ color: '#999', fontStyle: 'italic' }}>No pest control records entered</p>
-                )}
-            </div>
+                            </thead>
+                            <tbody>
+                                {form10Data.map((record) => (
+                                    <tr key={record.id}>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.day_of_month}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', fontSize: '9px' }}>{record.live_traps_findings}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', fontSize: '9px' }}>{record.bait_product}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '5px', fontSize: '9px' }}>{record.corrective_actions}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p style={{ color: '#999', fontStyle: 'italic' }}>No pest control records entered</p>
+                    )}
+                </div>
+            )}
 
             {/* Print Button */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '40px', borderTop: '2px solid #ccc', paddingTop: '20px' }}>
