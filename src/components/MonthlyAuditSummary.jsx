@@ -24,10 +24,16 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .eq('audit_id', auditId)
 
                 // Form 08 - Welfare
+                const monthStart = `${monthYear}-01`
+                const monthEnd = new Date(`${monthYear}-01T23:59:59`).toISOString().split('T')[0]
+                const nextMonth = new Date(new Date(`${monthYear}-01`).setMonth(new Date(`${monthYear}-01`).getMonth() + 1)).toISOString().split('T')[0]
+
                 const { data: welfare, error: welfareError } = await supabase
                     .from('welfare_daily_records')
                     .select('*')
                     .eq('audit_id', auditId)
+                    .gte('record_date', monthStart)
+                    .lt('record_date', nextMonth)
                     .order('date')
 
                 console.log('📊 MonthlyAuditSummary Debug:')
@@ -136,7 +142,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
                         <thead>
                             <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Day</th>
+                                <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Date</th>
                                 <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Barn HI</th>
                                 <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Barn LO</th>
                                 <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Ext Temp</th>
@@ -147,7 +153,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                         <tbody>
                             {form08Data.map((record) => (
                                 <tr key={record.id}>
-                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.day_of_month}</td>
+                                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.record_date}</td>
                                     <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.barn_temp_hi}°C</td>
                                     <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.barn_temp_lo}°C</td>
                                     <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.exterior_temp}°C</td>

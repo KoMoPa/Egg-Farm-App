@@ -16,7 +16,7 @@ function App() {
   const testFarmId = 'fbb40bbc-bbaf-40e7-833a-712bbbb65b11'
   const testFarmName = 'Test Egg Farm'
   const testBarnNumber = 'Barn 1'
-  const testMonthYear = '2026-03-01'
+  const testMonthYear = '2026-04'
 
   // If not logged in, show login page
   if (!user) {
