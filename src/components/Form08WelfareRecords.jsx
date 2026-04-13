@@ -435,8 +435,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
             month_year: monthYear,
             form_08_completed: true,
             form_08_completed_date: new Date().toISOString(),
-            final_signature_date: signatureDate || null,
-            final_comments: commentsPage1 || null,
           }])
           .select('id')
           .single()
