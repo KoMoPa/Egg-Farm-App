@@ -381,8 +381,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
   }
 
   const [dayData, setDayData] = useState(initializeDayData())
-  const [commentsPage1, setCommentsPage1] = useState('')
-  const [commentsPage2, setCommentsPage2] = useState('')
+  const [comments, setComments] = useState('')
   const [recordDate, setRecordDate] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -506,8 +505,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           farm_id: farmId,
           audit_id: auditId,
           signature_date: recordDate,
-          comments_page_1: commentsPage1 || null,
-          comments_page_2: commentsPage2 || null,
+          comments_page_1: comments || null,
         }])
 
       // Step 7: Don't auto-complete - user must manually mark as complete
@@ -620,22 +618,12 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
       <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #666' }}>
         <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Form-Level Data</h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Page 1 Comments</label>
-            <textarea value={commentsPage1}
-              onChange={(e) => setCommentsPage1(e.target.value)}
-              rows="4"
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Page 2 Comments</label>
-            <textarea value={commentsPage2}
-              onChange={(e) => setCommentsPage2(e.target.value)}
-              rows="4"
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-          </div>
+        <div style={{ marginBottom: '30px', maxWidth: '600px', margin: '0 auto' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
+          <textarea value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            rows="4"
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>

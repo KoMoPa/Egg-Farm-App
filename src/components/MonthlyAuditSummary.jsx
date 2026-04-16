@@ -37,14 +37,24 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .lt('record_date', nextMonth)
                     .order('date')
 
+                // Fetch Page 2 equipment inspection data
+                const { data: equipmentInspection, error: equipmentError } = await supabase
+                    .from('welfare_equipment_inspection')
+                    .select('*')
+                    .eq('audit_id', auditId)
+
+                // Merge equipment data into welfare records
+                const mergedWelfareData = (welfare || []).map(record => {
+                    const equipmentData = (equipmentInspection || []).find(eq => eq.record_date === record.record_date)
+                    return { ...record, ...equipmentData }
+                })
+
                 console.log('📊 MonthlyAuditSummary Debug:')
                 console.log('  Audit ID:', auditId)
                 console.log('  Form 08 Welfare Data:', welfare)
-                console.log('  Form 08 Error:', welfareError)
-                if (welfareError) {
-                    console.log('  Error Details:', welfareError.message)
-                    console.log('  Full Error:', JSON.stringify(welfareError, null, 2))
-                }
+                console.log('  Form 08 Equipment Data:', equipmentInspection)
+                console.log('  Form 08 Merged Data:', mergedWelfareData)
+                console.log('  Form 08 Error:', welfareError || equipmentError)
 
                 // Form 09 - Feed & Water
                 const { data: feed, error: feedError } = await supabase
@@ -61,7 +71,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .order('day_of_month')
 
                 setForm07Data({ production: prod || [], sanitation: sanit || [] })
-                setForm08Data(welfare || [])
+                setForm08Data(mergedWelfareData || [])
                 setForm09Data(feed || [])
                 setForm10Data(pest || [])
             } catch (err) {
@@ -294,6 +304,20 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     ) : (
                         <p style={{ color: '#999', fontStyle: 'italic' }}>No inspection records entered</p>
                     )}
+
+                    {/* Signature Section */}
+                    <div style={{ marginTop: '50px', pageBreakInside: 'avoid' }}>
+                        <div style={{ display: 'flex', gap: '100px' }}>
+                            <div style={{ flex: '1' }}>
+                                <div style={{ borderBottom: '1px solid #333', height: '50px', marginBottom: '8px' }} />
+                                <p style={{ margin: '0', fontSize: '11px', fontWeight: 'bold' }}>Signature</p>
+                            </div>
+                            <div style={{ flex: '1' }}>
+                                <div style={{ borderBottom: '1px solid #333', height: '50px', marginBottom: '8px' }} />
+                                <p style={{ margin: '0', fontSize: '11px', fontWeight: 'bold' }}>Date</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
