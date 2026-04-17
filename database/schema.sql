@@ -77,54 +77,68 @@ CREATE TABLE sanitation_records (
 );
 
 -- =============================================
--- FORM 08 - WELFARE RECORDS
+-- FORM 08 - WELFARE RECORDS (Consolidated)
 -- =============================================
 
-CREATE TABLE welfare_daily_records (
-  id BIGSERIAL PRIMARY KEY,
-  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+-- Consolidated daily records (Page 1 + Page 2 data)
+CREATE TABLE form_08_daily_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
-  day_of_month INTEGER,
-  record_date DATE,
-  barn_number VARCHAR(100),
+  record_date DATE NOT NULL,
+  
+  -- Page 1: Daily tracking
   barn_temp_hi NUMERIC,
   barn_temp_lo NUMERIC,
   exterior_temp NUMERIC,
-  floors_checked BOOLEAN,
-  walls_fans_ceiling_checked BOOLEAN,
-  manure_checked BOOLEAN,
+  floors_checked BOOLEAN DEFAULT FALSE,
+  walls_fans_ceiling_checked BOOLEAN DEFAULT FALSE,
+  manure_checked BOOLEAN DEFAULT FALSE,
   bedding_used BOOLEAN,
   chemicals_used BOOLEAN,
-  ammonia_level VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  
+  -- Page 2: Weekly equipment & inspection
+  routine_hen_equip_1st_initial VARCHAR(10),
+  routine_hen_equip_1st_daily VARCHAR(10),
+  routine_hen_equip_2nd_initial VARCHAR(10),
+  routine_hen_equip_2nd_daily VARCHAR(10),
+  
+  -- Inspection criteria (11 items)
+  overall_appearance BOOLEAN DEFAULT FALSE,
+  general_sound BOOLEAN DEFAULT FALSE,
+  abnormal_behavior BOOLEAN DEFAULT FALSE,
+  signs_of_disease BOOLEAN DEFAULT FALSE,
+  injured_birds BOOLEAN DEFAULT FALSE,
+  trapped_birds BOOLEAN DEFAULT FALSE,
+  dead_birds BOOLEAN DEFAULT FALSE,
+  feed_water_available BOOLEAN DEFAULT FALSE,
+  equipment_operating BOOLEAN DEFAULT FALSE,
+  amenities_condition BOOLEAN DEFAULT FALSE,
+  lay_facility_environment BOOLEAN DEFAULT FALSE,
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(audit_id, record_date)
 );
 
-CREATE TABLE welfare_equipment_inspection (
-  id BIGSERIAL PRIMARY KEY,
-  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
-  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
-  record_date DATE,
-  routine_hen_equip_1st_initial VARCHAR(3),
-  routine_hen_equip_1st_daily VARCHAR(3),
-  routine_hen_equip_2nd_initial VARCHAR(3),
-  routine_hen_equip_2nd_daily VARCHAR(3),
-  water_lines_checked BOOLEAN,
-  feed_lines_checked BOOLEAN,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE welfare_form_metadata (
-  id BIGSERIAL PRIMARY KEY,
-  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
-  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+-- Monthly inspections (ammonia + monthly checks)
+CREATE TABLE form_08_monthly_inspections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  audit_id BIGINT NOT NULL UNIQUE REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  ammonia_range VARCHAR(50),
+  ammonia_range_date DATE,
   alarm_check_date DATE,
   alarm_check_initials VARCHAR(10),
   generator_check_date DATE,
   generator_check_initials VARCHAR(10),
-  comments VARCHAR(500),
-  signature_date DATE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(audit_id)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Timestamped comments
+CREATE TABLE form_08_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  comment_date DATE NOT NULL,
+  comment_text TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =============================================
@@ -221,9 +235,9 @@ ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_audits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE production_cooler_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sanitation_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_daily_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_equipment_inspection ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_form_metadata ENABLE ROW LEVEL SECURITY;
+ALTER TABLE form_08_daily_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE form_08_monthly_inspections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE form_08_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_form_metadata ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pest_control_records ENABLE ROW LEVEL SECURITY;
@@ -251,22 +265,34 @@ CREATE POLICY "Users can only access their farm records" ON sanitation_records
     (SELECT user_id FROM farms WHERE id = sanitation_records.farm_id) = auth.uid()
   );
 
--- Welfare daily records
-CREATE POLICY "Users can only access their farm records" ON welfare_daily_records
+-- Form 08 daily records
+CREATE POLICY "Users can only access their farm records" ON form_08_daily_records
   FOR ALL USING (
-    (SELECT user_id FROM farms WHERE id = welfare_daily_records.farm_id) = auth.uid()
+    EXISTS (
+      SELECT 1 FROM monthly_audits ma
+      JOIN farms f ON ma.farm_id = f.id
+      WHERE ma.id = form_08_daily_records.audit_id AND f.user_id = auth.uid()
+    )
   );
 
--- Welfare equipment inspection
-CREATE POLICY "Users can only access their farm records" ON welfare_equipment_inspection
+-- Form 08 monthly inspections
+CREATE POLICY "Users can only access their farm records" ON form_08_monthly_inspections
   FOR ALL USING (
-    (SELECT user_id FROM farms WHERE id = welfare_equipment_inspection.farm_id) = auth.uid()
+    EXISTS (
+      SELECT 1 FROM monthly_audits ma
+      JOIN farms f ON ma.farm_id = f.id
+      WHERE ma.id = form_08_monthly_inspections.audit_id AND f.user_id = auth.uid()
+    )
   );
 
--- Welfare form metadata
-CREATE POLICY "Users can only access their farm records" ON welfare_form_metadata
+-- Form 08 comments
+CREATE POLICY "Users can only access their farm records" ON form_08_comments
   FOR ALL USING (
-    (SELECT user_id FROM farms WHERE id = welfare_form_metadata.farm_id) = auth.uid()
+    EXISTS (
+      SELECT 1 FROM monthly_audits ma
+      JOIN farms f ON ma.farm_id = f.id
+      WHERE ma.id = form_08_comments.audit_id AND f.user_id = auth.uid()
+    )
   );
 
 -- Feed water records
@@ -303,8 +329,10 @@ CREATE INDEX idx_monthly_audits_month_year ON monthly_audits(month_year);
 CREATE INDEX idx_production_cooler_farm_id ON production_cooler_records(farm_id);
 CREATE INDEX idx_production_cooler_audit_id ON production_cooler_records(audit_id);
 CREATE INDEX idx_sanitation_farm_id ON sanitation_records(farm_id);
-CREATE INDEX idx_welfare_daily_farm_id ON welfare_daily_records(farm_id);
-CREATE INDEX idx_welfare_daily_audit_id ON welfare_daily_records(audit_id);
+CREATE INDEX idx_form_08_daily_audit_id ON form_08_daily_records(audit_id);
+CREATE INDEX idx_form_08_daily_record_date ON form_08_daily_records(record_date);
+CREATE INDEX idx_form_08_monthly_audit_id ON form_08_monthly_inspections(audit_id);
+CREATE INDEX idx_form_08_comments_audit_id ON form_08_comments(audit_id);
 CREATE INDEX idx_feed_water_farm_id ON feed_water_records(farm_id);
 CREATE INDEX idx_feed_water_audit_id ON feed_water_records(audit_id);
 CREATE INDEX idx_pest_control_farm_id ON pest_control_records(farm_id);
