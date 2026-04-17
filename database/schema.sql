@@ -121,8 +121,7 @@ CREATE TABLE welfare_form_metadata (
   alarm_check_initials VARCHAR(10),
   generator_check_date DATE,
   generator_check_initials VARCHAR(10),
-  comments_page_1 VARCHAR(500),
-  comments_page_2 VARCHAR(500),
+  comments VARCHAR(500),
   signature_date DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(audit_id)

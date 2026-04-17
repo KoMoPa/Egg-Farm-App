@@ -4,6 +4,8 @@ import { supabase } from '../supabaseClient'
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
     const [form07Data, setForm07Data] = useState([])
     const [form08Data, setForm08Data] = useState([])
+    const [form08Comments, setForm08Comments] = useState([])
+    const [form08MonthlyInspections, setForm08MonthlyInspections] = useState(null)
     const [form09Data, setForm09Data] = useState([])
     const [form10Data, setForm10Data] = useState([])
     const [loading, setLoading] = useState(true)
@@ -26,35 +28,37 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
                 // Form 08 - Welfare
                 const monthStart = `${monthYear}-01`
-                const monthEnd = new Date(`${monthYear}-01T23:59:59`).toISOString().split('T')[0]
                 const nextMonth = new Date(new Date(`${monthYear}-01`).setMonth(new Date(`${monthYear}-01`).getMonth() + 1)).toISOString().split('T')[0]
 
+                // Fetch consolidated daily records (includes equipment data)
                 const { data: welfare, error: welfareError } = await supabase
-                    .from('welfare_daily_records')
+                    .from('form_08_daily_records')
                     .select('*')
                     .eq('audit_id', auditId)
                     .gte('record_date', monthStart)
                     .lt('record_date', nextMonth)
-                    .order('date')
+                    .order('record_date')
 
-                // Fetch Page 2 equipment inspection data
-                const { data: equipmentInspection, error: equipmentError } = await supabase
-                    .from('welfare_equipment_inspection')
+                // Fetch Form 08 timestamped comments
+                const { data: commentsList, error: commentsError } = await supabase
+                    .from('form_08_comments')
                     .select('*')
                     .eq('audit_id', auditId)
+                    .order('comment_date', { ascending: true })
 
-                // Merge equipment data into welfare records
-                const mergedWelfareData = (welfare || []).map(record => {
-                    const equipmentData = (equipmentInspection || []).find(eq => eq.record_date === record.record_date)
-                    return { ...record, ...equipmentData }
-                })
+                // Fetch Form 08 monthly inspections
+                const { data: monthlyInspections, error: inspectionsError } = await supabase
+                    .from('form_08_monthly_inspections')
+                    .select('*')
+                    .eq('audit_id', auditId)
+                    .single()
 
                 console.log('📊 MonthlyAuditSummary Debug:')
                 console.log('  Audit ID:', auditId)
-                console.log('  Form 08 Welfare Data:', welfare)
-                console.log('  Form 08 Equipment Data:', equipmentInspection)
-                console.log('  Form 08 Merged Data:', mergedWelfareData)
-                console.log('  Form 08 Error:', welfareError || equipmentError)
+                console.log('  Form 08 Daily Records:', welfare)
+                console.log('  Form 08 Comments:', commentsList)
+                console.log('  Form 08 Monthly Inspections:', monthlyInspections)
+                console.log('  Form 08 Errors:', { welfareError, commentsError, inspectionsError })
 
                 // Form 09 - Feed & Water
                 const { data: feed, error: feedError } = await supabase
@@ -71,7 +75,9 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .order('day_of_month')
 
                 setForm07Data({ production: prod || [], sanitation: sanit || [] })
-                setForm08Data(mergedWelfareData || [])
+                setForm08Data(welfare || [])
+                setForm08Comments(commentsList || [])
+                setForm08MonthlyInspections(monthlyInspections || null)
                 setForm09Data(feed || [])
                 setForm10Data(pest || [])
             } catch (err) {
@@ -220,12 +226,11 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Barn HI</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Barn LO</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Ext Temp</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Floors</th>
+
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Walls</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Manure</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Bedding</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Chemicals</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Ammonia</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -240,7 +245,6 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.manure_checked ? '✓' : ''}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.bedding_used || ''}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.chemicals_used || ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.ammonia_level || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -303,6 +307,39 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                         </table>
                     ) : (
                         <p style={{ color: '#999', fontStyle: 'italic' }}>No inspection records entered</p>
+                    )}
+
+                    {/* Monthly Inspections Section */}
+                    {form08MonthlyInspections && (
+                        <div style={{ marginTop: '30px', marginBottom: '30px', pageBreakInside: 'avoid' }}>
+                            <h3 style={{ fontSize: '12px', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                                Monthly Inspections
+                            </h3>
+                            <div style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '10px', borderRadius: '4px', fontSize: '10px', lineHeight: '1.8' }}>
+                                {form08MonthlyInspections.ammonia_range && (
+                                    <div style={{ marginBottom: '8px' }}>Ammonia Range: <strong>{form08MonthlyInspections.ammonia_range}</strong> - Checked: {form08MonthlyInspections.ammonia_range_date || 'N/A'}</div>
+                                )}
+                                {form08MonthlyInspections.alarm_check_date && (
+                                    <div style={{ marginBottom: '8px' }}>Alarm Check: {form08MonthlyInspections.alarm_check_date} (Initials: {form08MonthlyInspections.alarm_check_initials || '--'})</div>
+                                )}
+                                {form08MonthlyInspections.generator_check_date && (
+                                    <div style={{ marginBottom: '8px' }}>Generator Check: {form08MonthlyInspections.generator_check_date} (Initials: {form08MonthlyInspections.generator_check_initials || '--'})</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {form08Comments && form08Comments.length > 0 && (
+                        <div style={{ marginTop: '30px', marginBottom: '30px', pageBreakInside: 'avoid' }}>
+                            <h3 style={{ fontSize: '12px', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                                Comments
+                            </h3>
+                            {form08Comments.map((comment, index) => (
+                                <div key={comment.id || index} style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '10px', borderRadius: '4px', fontSize: '10px', lineHeight: '1.6', marginBottom: '10px' }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>{comment.comment_date}</div>
+                                    <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{comment.comment_text}</div>
+                                </div>
+                            ))}
+                        </div>
                     )}
 
                     {/* Signature Section */}

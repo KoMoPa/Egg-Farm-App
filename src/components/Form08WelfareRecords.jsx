@@ -48,7 +48,7 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
       </label>
     </div>
 
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
       <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
         <select value={data.beddingUsed ? 'true' : 'false'}
@@ -65,19 +65,6 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
           style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
           <option value="false">No</option>
           <option value="true">Yes</option>
-        </select>
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ammonia Level</label>
-        <select value={data.ammoniaLevel}
-          onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
-          <option value="">Select...</option>
-          <option value="0-5">0-5</option>
-          <option value="5-10">5-10</option>
-          <option value="10-15">10-15</option>
-          <option value="15-20">15-20</option>
-          <option value="20+">20+</option>
         </select>
       </div>
     </div>
@@ -235,18 +222,6 @@ const WeekViewTable = ({ startDay, dayData, onDayChange, onDayCheckbox }) => {
                     onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
                     style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
                 </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <select value={data.ammoniaLevel}
-                    onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '11px' }}>
-                    <option value="">--</option>
-                    <option value="0-5">0-5</option>
-                    <option value="5-10">5-10</option>
-                    <option value="10-15">10-15</option>
-                    <option value="15-20">15-20</option>
-                    <option value="20+">20+</option>
-                  </select>
-                </td>
               </tr>
             )
           })}
@@ -271,7 +246,6 @@ const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
           <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
           <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
           <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
         </tr>
       </thead>
       <tbody>
@@ -318,18 +292,6 @@ const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
                   onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
                   style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
               </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <select value={data.ammoniaLevel}
-                  onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '10px' }}>
-                  <option value="">--</option>
-                  <option value="0-5">0-5</option>
-                  <option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option>
-                  <option value="15-20">15-20</option>
-                  <option value="20+">20+</option>
-                </select>
-              </td>
             </tr>
           )
         })}
@@ -338,7 +300,7 @@ const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
   </div>
 )
 
-export default function Form08WelfareRecords({ farmId, farmName, barnNumber, monthYear }) {
+export default function Form08WelfareRecords({ auditId, farmName }) {
   // Initialize form data for 31 days
   const initializeDayData = () => {
     const days = {}
@@ -355,7 +317,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
         manureChecked: false,
         beddingUsed: false,
         chemicalsUsed: false,
-        ammoniaLevel: '', // 0-5, 5-10, 10-15, 15-20, 20+
 
         // PAGE 2 - Weekly Inspections
         routineHenEquip1stInitial: '',
@@ -414,106 +375,93 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
     e.preventDefault()
 
     try {
-      // Step 1: Create or get monthly audit record
+      // Validate we have a valid audit ID
+      if (!auditId) {
+        alert('Error: Could not find audit record for this farm and month. Please reload the page.')
+        console.error('auditId is not set')
+        return
+      }
+
+      // Step 1: Verify audit record exists
       const { data: existingAudit, error: auditCheckError } = await supabase
         .from('monthly_audits')
         .select('id')
-        .eq('farm_id', farmId)
-        .eq('month_year', monthYear)
+        .eq('id', auditId)
         .single()
 
-      let auditId
-      if (existingAudit) {
-        auditId = existingAudit.id
-      } else {
-        // Create new audit record
-        const { data: newAudit, error: auditCreateError } = await supabase
-          .from('monthly_audits')
-          .insert([{
-            farm_id: farmId,
-            month_year: monthYear,
-            form_08_completed: true,
-            form_08_completed_date: new Date().toISOString(),
-          }])
-          .select('id')
-          .single()
-
-        if (auditCreateError) throw auditCreateError
-        auditId = newAudit.id
+      if (auditCheckError || !existingAudit) {
+        alert('Error: Could not find audit record. Please reload and try again.')
+        return
       }
 
-      // Step 2: Prepare daily records data (Page 1)
-      const dailyRecords = Object.entries(dayData)
-        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked)
+      // Step 2: Prepare consolidated daily records (combines Page 1 + Page 2 data)
+      const consolidatedRecords = Object.entries(dayData)
+        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked || day.routineHenEquip1stInitial || day.routineHenEquip1stDaily || day.routineHenEquip2ndInitial || day.routineHenEquip2ndDaily)
         .map(([dayNum, day]) => ({
-          farm_id: farmId,
           audit_id: auditId,
-          barn_number: barnNumber,
-          date: recordDate,
           record_date: recordDate,
-          barn_temp_hi: parseFloat(day.barnTempHi) || null,
-          barn_temp_lo: parseFloat(day.barnTempLo) || null,
-          exterior_temp: parseFloat(day.exteriorTemp) || null,
-          floors_checked: day.floorsChecked,
-          walls_fans_ceiling_checked: day.wallsFansCeilingChecked,
-          manure_checked: day.manureChecked,
+          barn_temp_hi: day.barnTempHi ? parseFloat(day.barnTempHi) : null,
+          barn_temp_lo: day.barnTempLo ? parseFloat(day.barnTempLo) : null,
+          exterior_temp: day.exteriorTemp ? parseFloat(day.exteriorTemp) : null,
+          floors_checked: Boolean(day.floorsChecked),
+          walls_fans_ceiling_checked: Boolean(day.wallsFansCeilingChecked),
+          manure_checked: Boolean(day.manureChecked),
           bedding_used: day.beddingUsed || null,
           chemicals_used: day.chemicalsUsed || null,
-          ammonia_level: day.ammoniaLevel || null,
-        }))
-
-      // Step 3: Prepare equipment inspection records data (Page 2)
-      const equipmentRecords = Object.entries(dayData)
-        .filter(([, day]) => day.routineHenEquip1stInitial || day.routineHenEquip1stDaily || day.routineHenEquip2ndInitial || day.routineHenEquip2ndDaily)
-        .map(([dayNum, day]) => ({
-          farm_id: farmId,
-          audit_id: auditId,
-          barn_number: barnNumber,
-          date: parseInt(dayNum),
-          record_date: recordDate,
           routine_hen_equip_1st_initial: day.routineHenEquip1stInitial || null,
           routine_hen_equip_1st_daily: day.routineHenEquip1stDaily || null,
           routine_hen_equip_2nd_initial: day.routineHenEquip2ndInitial || null,
           routine_hen_equip_2nd_daily: day.routineHenEquip2ndDaily || null,
-          overall_appearance: day.overallAppearance,
-          general_sound: day.generalSound,
-          abnormal_behavior: day.abnormalBehavior,
-          signs_of_disease: day.signsOfDisease,
-          injured_birds: day.injuredBirds,
-          trapped_birds: day.trappedBirds,
-          dead_birds: day.deadBirds,
-          feed_water_available: day.feedWaterAvailable,
-          equipment_operating: day.equipmentOperating,
-          amenities_condition: day.amenitiesCondition,
-          lay_facility_environment: day.layFacilityEnvironment,
+          overall_appearance: Boolean(day.overallAppearance),
+          general_sound: Boolean(day.generalSound),
+          abnormal_behavior: Boolean(day.abnormalBehavior),
+          signs_of_disease: Boolean(day.signsOfDisease),
+          injured_birds: Boolean(day.injuredBirds),
+          trapped_birds: Boolean(day.trappedBirds),
+          dead_birds: Boolean(day.deadBirds),
+          feed_water_available: Boolean(day.feedWaterAvailable),
+          equipment_operating: Boolean(day.equipmentOperating),
+          amenities_condition: Boolean(day.amenitiesCondition),
+          lay_facility_environment: Boolean(day.layFacilityEnvironment),
         }))
 
-      // Step 4: Save Page 1 data (upsert)
-      const { error: dailyError } = await supabase
-        .from('welfare_daily_records')
-        .upsert(dailyRecords)
+      // Step 3: Delete old records for this date then insert new ones
+      let dailyError = null
+      if (consolidatedRecords.length > 0) {
+        // Delete existing records for this date to avoid duplicates
+        await supabase
+          .from('form_08_daily_records')
+          .delete()
+          .eq('audit_id', auditId)
+          .eq('record_date', recordDate)
 
-      // Step 5: Save Page 2 data (upsert)
-      const { error: equipmentError } = await supabase
-        .from('welfare_equipment_inspection')
-        .upsert(equipmentRecords)
+        // Insert new records
+        const { error: insertError } = await supabase
+          .from('form_08_daily_records')
+          .insert(consolidatedRecords)
+        dailyError = insertError
+      }
 
-      // Step 6: Save form-level metadata (upsert)
-      const { error: formError } = await supabase
-        .from('welfare_form_metadata')
-        .upsert([{
-          farm_id: farmId,
-          audit_id: auditId,
-          signature_date: recordDate,
-          comments_page_1: comments || null,
-        }])
+      // Step 4: Save comments (if any) to form_08_comments table
+      let commentsError = null
+      if (comments && comments.trim()) {
+        const { error: commentInsertError } = await supabase
+          .from('form_08_comments')
+          .insert([{
+            audit_id: auditId,
+            comment_date: recordDate,
+            comment_text: comments,
+          }])
+        commentsError = commentInsertError
+      }
 
-      // Step 7: Don't auto-complete - user must manually mark as complete
-      // This allows users to save daily records without marking month done yet
-
-      if (dailyError || equipmentError || formError) {
-        alert('Error saving: ' + (dailyError?.message || equipmentError?.message || formError?.message))
-        console.error('Errors:', dailyError, equipmentError, formError)
+      // Step 5: Report results
+      if (dailyError || commentsError) {
+        const errorMsg = dailyError?.message || commentsError?.message || 'Unknown error'
+        alert('Error saving: ' + errorMsg)
+        console.error('Errors:', { dailyError, commentsError, auditId, recordDate })
+      } else if (consolidatedRecords.length === 0) {
+        alert('⚠️ No data entered to save. Please fill in at least one field.')
       } else {
         alert('✅ Form 08 records saved for month!')
       }
@@ -534,7 +482,7 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
         .eq('id', auditId)
 
       if (error) throw error
-      alert('✅ Form 08 marked as complete for ' + monthYear)
+      alert('✅ Form 08 marked as complete!')
     } catch (err) {
       alert('Error marking complete: ' + err.message)
     }
@@ -548,10 +496,8 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 08 - Welfare Records
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
           <div><strong>Farm Name:</strong> {farmName}</div>
-          <div><strong>Barn #:</strong> {barnNumber}</div>
-          <div><strong>Month/Year:</strong> {monthYear}</div>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
             <input type="date" value={recordDate}

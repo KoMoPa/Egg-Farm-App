@@ -15,7 +15,7 @@ function App() {
   // Test data (will be replaced with real farms from DB in future)
   const testFarmId = 'fbb40bbc-bbaf-40e7-833a-712bbbb65b11'
   const testFarmName = 'Test Egg Farm'
-  const testBarnNumber = 'Barn 1'
+  const testBarnNumber = 1  // Changed from 'Barn 1' to just the number
   const testMonthYear = '2026-04'
 
   // If not logged in, show login page
@@ -144,10 +144,8 @@ function App() {
 
         {currentForm === 'form08' && (
           <Form08WelfareRecords
-            farmId={testFarmId}
+            auditId={1}
             farmName={testFarmName}
-            barnNumber={testBarnNumber}
-            monthYear={testMonthYear}
           />
         )}
 
