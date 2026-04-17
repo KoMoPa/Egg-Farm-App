@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { pdf } from '@react-pdf/renderer'
 import { supabase } from '../supabaseClient'
+import { AuditReportPDF } from './AuditReportPDF'
 
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
     const [form07Data, setForm07Data] = useState([])
@@ -96,6 +98,30 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
     }
 
     if (loading) return <p style={{ textAlign: 'center', padding: '40px' }}>Loading audit data...</p>
+
+    const handleDownloadPDF = async () => {
+        try {
+            const doc = <AuditReportPDF
+                farmName={farmName}
+                monthYear={monthYear}
+                form08Data={form08Data}
+                form08Comments={form08Comments}
+                form08MonthlyInspections={form08MonthlyInspections}
+            />
+            const asPdf = pdf(doc)
+            asPdf.toBlob().then((blob) => {
+                const url = URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = url
+                link.download = `Audit_${farmName}_${monthYear}.pdf`
+                link.click()
+                URL.revokeObjectURL(url)
+            })
+        } catch (error) {
+            console.error('Error generating PDF:', error)
+            alert('Error generating PDF: ' + error.message)
+        }
+    }
 
     return (
         <div style={{
@@ -430,6 +456,18 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
             {/* Print Button */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '40px', borderTop: '2px solid #ccc', paddingTop: '20px' }}>
+                <button onClick={handleDownloadPDF} style={{
+                    padding: '10px 30px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                }}>
+                    📥 Download as PDF
+                </button>
                 <button onClick={() => window.print()} style={{
                     padding: '10px 30px',
                     fontSize: '14px',
@@ -440,7 +478,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     borderRadius: '4px',
                     cursor: 'pointer'
                 }}>
-                    🖨 Print / Save as PDF
+                    🖨 Print to Paper
                 </button>
                 <button onClick={onClose} style={{
                     padding: '10px 30px',
