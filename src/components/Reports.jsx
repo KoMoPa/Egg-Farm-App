@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
+import { useFarmContext } from '../contexts/FarmContext'
 import MonthlyAuditSummary from './MonthlyAuditSummary'
 
-function Reports({ farmId, farmName }) {
+function Reports() {
+    const supabase = useSupabase()
+    const { farm } = useFarmContext()
     const [audits, setAudits] = useState([])
     const [filteredAudits, setFilteredAudits] = useState([])
     const [searchMonth, setSearchMonth] = useState('')
@@ -18,7 +21,7 @@ function Reports({ farmId, farmName }) {
                 const { data, error } = await supabase
                     .from('monthly_audits')
                     .select('*')
-                    .eq('farm_id', farmId)
+                    .eq('farm_id', farm.id)
                     .order('month_year', { ascending: false })
 
                 if (error) throw error
@@ -32,7 +35,7 @@ function Reports({ farmId, farmName }) {
         }
 
         fetchAudits()
-    }, [farmId])
+    }, [farm?.id])
 
     // Filter audits by month search
     const handleSearch = (e) => {
@@ -110,7 +113,7 @@ function Reports({ farmId, farmName }) {
     return (
         <div style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2 style={{ margin: '0 0 20px 0', fontSize: '24px' }}>
-                📊 Monthly Compliance Reports - {farmName}
+                📊 Monthly Compliance Reports - {farm?.farm_name}
             </h2>
 
             {/* Search */}
@@ -280,7 +283,7 @@ function Reports({ farmId, farmName }) {
             {selectedAuditId && (
                 <MonthlyAuditSummary
                     farmId={farmId}
-                    farmName={farmName}
+                    farmName={farm?.farm_name}
                     auditId={selectedAuditId}
                     monthYear={selectedMonth}
                     onClose={() => setSelectedAuditId(null)}

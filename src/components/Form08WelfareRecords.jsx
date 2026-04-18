@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
+import { getOrCreateMonthlyAudit, getOrCreateWelfareRecord } from '../utils/farmBarnOps'
+import { useFarmContext } from '../contexts/FarmContext'
 
 // DAY VIEW COMPONENT
 const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
@@ -338,7 +340,9 @@ const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
   </div>
 )
 
-export default function Form08WelfareRecords({ farmId, farmName, barnNumber, monthYear }) {
+export default function Form08WelfareRecords() {
+  const supabase = useSupabase()
+  const { farm, selectedBarn, monthYear } = useFarmContext()
   // Initialize form data for 31 days
   const initializeDayData = () => {
     const days = {}
@@ -415,121 +419,133 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
     e.preventDefault()
 
     try {
-      // Step 1: Create or get monthly audit record
-      const { data: existingAudit, error: auditCheckError } = await supabase
-        .from('monthly_audits')
-        .select('id')
-        .eq('farm_id', farmId)
-        .eq('month_year', monthYear)
-        .single()
+      // Step 1: Get or create monthly audit record
+      const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+      const auditId = audit.id
 
-      let auditId
-      if (existingAudit) {
-        auditId = existingAudit.id
-      } else {
-        // Create new audit record
-        const { data: newAudit, error: auditCreateError } = await supabase
-          .from('monthly_audits')
-          .insert([{
-            farm_id: farmId,
-            month_year: monthYear,
-            form_08_completed: true,
-            form_08_completed_date: new Date().toISOString(),
-            final_signature_date: signatureDate || null,
-            final_comments: commentsPage1 || null,
-          }])
-          .select('id')
-          .single()
+      // Step 2: Get or create welfare records parent
+      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, auditId)
+      const welfareId = welfareRecord.id
 
-        if (auditCreateError) throw auditCreateError
-        auditId = newAudit.id
-      }
-
-      // Step 2: Prepare daily records data (Page 1)
-      const dailyRecords = Object.entries(dayData)
+      // Step 3: Insert daily checks for each day with data
+      const dailyChecksData = Object.entries(dayData)
         .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked)
-        .map(([dayNum, day]) => ({
-          farm_id: farmId,
-          audit_id: auditId,
-          barn_number: barnNumber,
-          date: recordDate,
-          record_date: recordDate,
-          barn_temp_hi: parseFloat(day.barnTempHi) || null,
-          barn_temp_lo: parseFloat(day.barnTempLo) || null,
-          exterior_temp: parseFloat(day.exteriorTemp) || null,
-          floors_checked: day.floorsChecked,
-          walls_fans_ceiling_checked: day.wallsFansCeilingChecked,
-          manure_checked: day.manureChecked,
-          bedding_used: day.beddingUsed || null,
-          chemicals_used: day.chemicalsUsed || null,
-          ammonia_level: day.ammoniaLevel || null,
-        }))
+        .map(([dayNum, day]) => {
+          // Create record_date from dayNum
+          const dateObj = new Date(monthYear)
+          dateObj.setDate(parseInt(dayNum))
+          const recordDateForDay = dateObj.toISOString().split('T')[0]
 
-      // Step 3: Prepare equipment inspection records data (Page 2)
-      const equipmentRecords = Object.entries(dayData)
-        .filter(([, day]) => day.routineHenEquip1stInitial || day.routineHenEquip1stDaily || day.routineHenEquip2ndInitial || day.routineHenEquip2ndDaily)
-        .map(([dayNum, day]) => ({
-          farm_id: farmId,
-          audit_id: auditId,
-          barn_number: barnNumber,
-          date: parseInt(dayNum),
-          record_date: recordDate,
-          routine_hen_equip_1st_initial: day.routineHenEquip1stInitial || null,
-          routine_hen_equip_1st_daily: day.routineHenEquip1stDaily || null,
-          routine_hen_equip_2nd_initial: day.routineHenEquip2ndInitial || null,
-          routine_hen_equip_2nd_daily: day.routineHenEquip2ndDaily || null,
-          overall_appearance: day.overallAppearance,
-          general_sound: day.generalSound,
-          abnormal_behavior: day.abnormalBehavior,
-          signs_of_disease: day.signsOfDisease,
-          injured_birds: day.injuredBirds,
-          trapped_birds: day.trappedBirds,
-          dead_birds: day.deadBirds,
-          feed_water_available: day.feedWaterAvailable,
-          equipment_operating: day.equipmentOperating,
-          amenities_condition: day.amenitiesCondition,
-          lay_facility_environment: day.layFacilityEnvironment,
-        }))
+          // Map sanitation codes: B=blow, C=cleanout, S=sweep, W=wash
+          let floorSanitationCode = null
+          let wallsSanitationCode = null
+          let manureSanitationCode = null
+          
+          if (day.floorsChecked) floorSanitationCode = 'B'
+          if (day.wallsFansCeilingChecked) wallsSanitationCode = 'B'
+          if (day.manureChecked) manureSanitationCode = 'B'
 
-      // Step 4: Save Page 1 data (upsert)
-      const { error: dailyError } = await supabase
-        .from('welfare_daily_records')
-        .upsert(dailyRecords)
+          return {
+            welfare_id: welfareId,
+            record_date: recordDateForDay,
+            barn_temp_hi: parseFloat(day.barnTempHi) || null,
+            barn_temp_lo: parseFloat(day.barnTempLo) || null,
+            exterior_temp: parseFloat(day.exteriorTemp) || null,
+            floor_sanitation_code: floorSanitationCode,
+            walls_sanitation_code: wallsSanitationCode,
+            manure_sanitation_code: manureSanitationCode,
+            bedding_notes: day.beddingUsed ? 'Used' : null,
+            chemicals_notes: day.chemicalsUsed ? 'Used' : null
+          }
+        })
 
-      // Step 5: Save Page 2 data (upsert)
-      const { error: equipmentError } = await supabase
-        .from('welfare_equipment_inspection')
-        .upsert(equipmentRecords)
+      // Insert daily checks
+      if (dailyChecksData.length > 0) {
+        const { error: dailyError } = await supabase
+          .from('welfare_daily_checks')
+          .upsert(dailyChecksData, { onConflict: 'welfare_id, record_date' })
 
-      // Step 6: Save form-level metadata (upsert)
-      const { error: formError } = await supabase
-        .from('welfare_form_metadata')
-        .upsert([{
-          farm_id: farmId,
-          audit_id: auditId,
-          signature_date: recordDate,
-          comments_page_1: commentsPage1 || null,
-          comments_page_2: commentsPage2 || null,
-        }])
-
-      // Step 7: Don't auto-complete - user must manually mark as complete
-      // This allows users to save daily records without marking month done yet
-
-      if (dailyError || equipmentError || formError) {
-        alert('Error saving: ' + (dailyError?.message || equipmentError?.message || formError?.message))
-        console.error('Errors:', dailyError, equipmentError, formError)
-      } else {
-        alert('✅ Form 08 records saved for month!')
+        if (dailyError) throw dailyError
       }
-    } catch (error) {
-      alert('Error: ' + error.message)
-      console.error(error)
-    }
-  }
 
-  const handleMarkMonthComplete = async () => {
-    try {
-      const { error } = await supabase
+      // Step 4: Insert weekly inspections for each day with inspection data
+      const weeklyInspectionsData = Object.entries(dayData)
+        .filter(([, day]) => day.routineHenEquip1stInitial || day.routineHenEquip1stDaily || day.routineHenEquip2ndInitial || day.routineHenEquip2ndDaily || 
+                             day.overallAppearance || day.generalSound || day.abnormalBehavior || day.signsOfDisease)
+        .map(([dayNum, day]) => {
+          const dateObj = new Date(monthYear)
+          dateObj.setDate(parseInt(dayNum))
+          const recordDateForDay = dateObj.toISOString().split('T')[0]
+
+          return {
+            welfare_id: welfareId,
+            inspection_date: recordDateForDay,
+            check_overall_appearance: day.overallAppearance,
+            check_general_sound: day.generalSound,
+            check_abnormal_behavior: day.abnormalBehavior,
+            check_disease_illness: day.signsOfDisease,
+            check_injured_birds: day.injuredBirds,
+            check_respiratory: false,
+            check_panting_huddling: false,
+            check_lameness: false,
+            check_feather_pecking: false,
+            check_trapped_birds: day.trappedBirds,
+            check_dead_birds: day.deadBirds,
+            check_feed_water_available: day.feedWaterAvailable,
+            check_equipment_operating: day.equipmentOperating,
+            check_amenities_condition: day.amenitiesCondition,
+            check_lay_facility: day.layFacilityEnvironment,
+            weekly_initials: day.routineHenEquip1stInitial || null,
+            comments: commentsPage1 || null
+          }
+        })
+
+      // Insert weekly inspections
+      if (weeklyInspectionsData.length > 0) {
+        const { error: weeklyError } = await supabase
+          .from('welfare_weekly_inspections')
+          .upsert(weeklyInspectionsData, { onConflict: 'welfare_id, inspection_date' })
+
+        if (weeklyError) throw weeklyError
+      }
+
+      // Step 5: Handle ammonia tests if ammonia data was recorded
+      const ammoniaData = Object.entries(dayData)
+        .filter(([, day]) => day.ammoniaLevel)
+        .map(([dayNum, day]) => {
+          const dateObj = new Date(monthYear)
+          dateObj.setDate(parseInt(dayNum))
+          const recordDateForDay = dateObj.toISOString().split('T')[0]
+
+          return {
+            welfare_id: welfareId,
+            test_date: recordDateForDay,
+            ppm_range: day.ammoniaLevel,
+            distilled_water_used: false,
+            initials: null,
+            notes: null
+          }
+        })
+
+      // Insert ammonia tests
+      if (ammoniaData.length > 0) {
+        const { error: ammoniaError } = await supabase
+          .from('welfare_ammonia_tests')
+          .upsert(ammoniaData, { onConflict: 'welfare_id, test_date' })
+
+        if (ammoniaError) throw ammoniaError
+      }
+
+      // Step 6: Update welfare records with comments
+      const { error: updateError } = await supabase
+        .from('welfare_records')
+        .update({ monthly_comments: commentsPage1 || null })
+        .eq('id', welfareId)
+
+      if (updateError) throw updateError
+
+      // Step 7: Mark form as completed
+      const { error: auditUpdateError } = await supabase
         .from('monthly_audits')
         .update({
           form_08_completed: true,
@@ -537,10 +553,12 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
         })
         .eq('id', auditId)
 
-      if (error) throw error
-      alert('✅ Form 08 marked as complete for ' + monthYear)
-    } catch (err) {
-      alert('Error marking complete: ' + err.message)
+      if (auditUpdateError) throw auditUpdateError
+
+      alert('✅ Form 08 records saved successfully!')
+    } catch (error) {
+      alert('Error saving: ' + error.message)
+      console.error('Error:', error)
     }
   }
 
@@ -553,9 +571,9 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
           Form 08 - Welfare Records
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
-          <div><strong>Farm Name:</strong> {farmName}</div>
-          <div><strong>Barn #:</strong> {barnNumber}</div>
-          <div><strong>Month/Year:</strong> {monthYear}</div>
+          <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
+          <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
+          <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
             <input type="date" value={recordDate}
@@ -652,18 +670,6 @@ export default function Form08WelfareRecords({ farmId, farmName, barnNumber, mon
             cursor: 'pointer'
           }}>
             Save Form 08 - Welfare Records
-          </button>
-          <button type="button" onClick={handleMarkMonthComplete} style={{
-            padding: '12px 40px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: '#0066cc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            ✓ Mark Month Complete
           </button>
         </div>
       </div>

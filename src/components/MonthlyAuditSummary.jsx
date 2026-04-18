@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
 
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
+    const supabase = useSupabase()
     const [form07Data, setForm07Data] = useState([])
     const [form08Data, setForm08Data] = useState([])
     const [form09Data, setForm09Data] = useState([])
