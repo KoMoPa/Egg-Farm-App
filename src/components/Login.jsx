@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../supabaseClient'
 
 export default function Login() {
+    const { signUp, signIn } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isSignUp, setIsSignUp] = useState(false)
@@ -10,7 +10,6 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
-    const { signUp, signIn } = useAuth()
 
     const handleSubmit = async (e) => {
         e.preventDefault()

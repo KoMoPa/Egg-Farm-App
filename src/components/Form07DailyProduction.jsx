@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
+import { getOrCreateMonthlyAudit, getOrCreateProductionRecord } from '../utils/farmBarnOps'
+import { useFarmContext } from '../contexts/FarmContext'
 
-export default function Form07DailyProduction({ farmId, farmName, barnNumber, monthYear }) {
+export default function Form07DailyProduction() {
+  const supabase = useSupabase()
+  const { farm, selectedBarn, monthYear } = useFarmContext()
   const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0])
 
   const [formData, setFormData] = useState({
@@ -51,50 +55,47 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
     }
 
     try {
-      // Step 1: Create or get monthly audit record
-      const { data: existingAudit, error: auditCheckError } = await supabase
-        .from('monthly_audits')
-        .select('id')
-        .eq('farm_id', farmId)
-        .eq('month_year', monthYear)
-        .single()
+      // Step 1: Get or create monthly audit record
+      const { audit, created: auditCreated } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+      const auditId = audit.id
 
-      let auditId
-      if (existingAudit) {
-        auditId = existingAudit.id
-      } else {
-        const { data: newAudit, error: newAuditError } = await supabase
-          .from('monthly_audits')
-          .insert([{
-            farm_id: farmId,
-            month_year: monthYear,
-            form_07_completed: false,
-          }])
-          .select()
+      // Step 2: Get or create production cooler records parent
+      const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, auditId)
+      const productionId = productionRecord.id
 
-        if (newAuditError) throw newAuditError
-        auditId = newAudit[0].id
-      }
-
-      // Step 2: Save Production Cooler Records
-      const { data: prodData, error: prodError } = await supabase
-        .from('production_cooler_records')
+      // Step 3: Insert floor eggs record
+      const { error: floorEggsError } = await supabase
+        .from('production_floor_eggs')
         .insert([{
-          farm_id: farmId,
-          audit_id: auditId,
-          barn_number: barnNumber,
+          production_id: productionId,
           record_date: recordDate,
-          flock_age_weeks: toNumber(formData.age),
+          collection_1: parseInt(formData.floorEggs1) || null,
+          collection_2: parseInt(formData.floorEggs2) || null,
+          floor_eggs_total: floorEggsTotal
+        }])
 
-          floor_eggs_collection_1: parseInt(formData.floorEggs1) || 0,
-          floor_eggs_collection_2: parseInt(formData.floorEggs2) || 0,
-          floor_eggs_total: floorEggsTotal,
+      if (floorEggsError) throw floorEggsError
 
-          egg_production_1: parseInt(formData.eggProduction1) || 0,
-          egg_production_2: parseInt(formData.eggProduction2) || 0,
+      // Step 4: Insert egg production record
+      const { error: eggOutputError } = await supabase
+        .from('production_egg_output')
+        .insert([{
+          production_id: productionId,
+          record_date: recordDate,
+          egg_production_1: parseInt(formData.eggProduction1) || null,
+          egg_production_2: parseInt(formData.eggProduction2) || null,
           egg_production_daily: eggProductionDaily,
-          egg_production_percent: toNumber(formData.eggProductionPercent),
+          egg_production_percent: toNumber(formData.eggProductionPercent)
+        }])
 
+      if (eggOutputError) throw eggOutputError
+
+      // Step 5: Insert cooler temps record
+      const { error: coolerTempsError } = await supabase
+        .from('production_cooler_temps')
+        .insert([{
+          production_id: productionId,
+          record_date: recordDate,
           cooler_temp_hi_celsius: toNumber(formData.coolerTempHi),
           cooler_temp_lo_celsius: toNumber(formData.coolerTempLo),
           cooler_rh_hi_percent: toNumber(formData.coolerRhHi),
@@ -102,27 +103,42 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
           cooler_check_time: formData.coolerCheckTime || null
         }])
 
-      if (prodError) throw prodError
+      if (coolerTempsError) throw coolerTempsError
 
-      // Step 3: Save Sanitation Records
-      const { data: sanitData, error: sanitError } = await supabase
-        .from('sanitation_records')
+      // Step 6: Insert sanitation record
+      const sanitationCodes = []
+      if (formData.eggCoolerCleaned) sanitationCodes.push('B') // B = blow/cleaned
+      if (formData.packRoomCleaned) sanitationCodes.push('W')  // W = wash
+      if (formData.tablesPackingEquipCleaned) sanitationCodes.push('S') // S = sweep
+
+      const { error: sanitationError } = await supabase
+        .from('production_sanitation')
         .insert([{
-          farm_id: farmId,
-          audit_id: auditId,
-          barn_number: barnNumber,
+          production_id: productionId,
           record_date: recordDate,
-
           dirty_trays_count: parseInt(formData.dirtyTrays) || 0,
-          egg_cooler_cleaned: formData.eggCoolerCleaned,
-          pack_room_cleaned: formData.packRoomCleaned,
-          tables_packing_equip_cleaned: formData.tablesPackingEquipCleaned,
+          egg_cooler_sanitation_code: sanitationCodes.includes('B') ? 'B' : null,
+          pack_room_sanitation_code: sanitationCodes.includes('W') ? 'W' : null,
+          equip_sanitation_code: sanitationCodes.includes('S') ? 'S' : null,
           corrective_actions: formData.correctiveActions || null
         }])
 
-      if (sanitError) throw sanitError
+      if (sanitationError) throw sanitationError
 
-      // Step 4: Mark form as completed
+      // Step 7: Insert flock age record (if provided)
+      if (formData.age) {
+        const { error: flockAgeError } = await supabase
+          .from('production_flock_age')
+          .insert([{
+            production_id: productionId,
+            record_date: recordDate,
+            flock_age_weeks: parseInt(formData.age)
+          }])
+
+        if (flockAgeError) throw flockAgeError
+      }
+
+      // Step 8: Mark form as completed in monthly audit
       const { error: updateError } = await supabase
         .from('monthly_audits')
         .update({
@@ -134,8 +150,26 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
       if (updateError) throw updateError
 
       alert('✅ Form 07 record saved for ' + recordDate + '!')
-      console.log('Saved production:', prodData)
-      console.log('Saved sanitation:', sanitData)
+      // Reset form
+      setFormData({
+        age: '',
+        floorEggs1: '',
+        floorEggs2: '',
+        eggProduction1: '',
+        eggProduction2: '',
+        eggProductionPercent: '',
+        coolerTempHi: '',
+        coolerTempLo: '',
+        coolerRhHi: '',
+        coolerRhLo: '',
+        coolerCheckTime: '',
+        dirtyTrays: '',
+        eggCoolerCleaned: false,
+        packRoomCleaned: false,
+        tablesPackingEquipCleaned: false,
+        correctiveActions: ''
+      })
+      setRecordDate(new Date().toISOString().split('T')[0])
     } catch (err) {
       alert('Error saving: ' + err.message)
       console.error('Error:', err)
@@ -152,13 +186,13 @@ export default function Form07DailyProduction({ farmId, farmName, barnNumber, mo
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
           <div>
-            <strong>Farm Name:</strong> {farmName}
+            <strong>Farm Name:</strong> {farm?.farm_name}
           </div>
           <div>
-            <strong>Barn #:</strong> {barnNumber}
+            <strong>Barn:</strong> {selectedBarn?.barn_name}
           </div>
           <div>
-            <strong>Month/Year:</strong> {monthYear}
+            <strong>Month/Year:</strong> {monthYear.substring(0, 7)}
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>

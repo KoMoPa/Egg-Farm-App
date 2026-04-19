@@ -1,0 +1,275 @@
+import { supabase } from '../supabaseClient'
+
+/**
+ * Get or create the user's farm
+ * Since the schema has a 1:1 relationship (user_id -> farm), 
+ * we create one if it doesn't exist
+ */
+export async function getOrCreateUserFarm(userId, farmName = 'My Farm') {
+  try {
+    // Try to get existing farm
+    const { data: existingFarm, error: fetchError } = await supabase
+      .from('farms')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (existingFarm) {
+      return { farm: existingFarm, created: false }
+    }
+
+    // Farm doesn't exist, create it
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      // PGRST116 = not found, which is expected
+      throw fetchError
+    }
+
+    const { data: newFarm, error: createError } = await supabase
+      .from('farms')
+      .insert([{
+        user_id: userId,
+        farm_name: farmName,
+        owner_email: ''
+      }])
+      .select()
+      .single()
+
+    if (createError) throw createError
+    return { farm: newFarm, created: true }
+  } catch (err) {
+    console.error('Error getting/creating farm:', err)
+    throw err
+  }
+}
+
+/**
+ * Get all barns for a farm
+ */
+export async function getFarmBarns(farmId) {
+  try {
+    const { data: barns, error } = await supabase
+      .from('barns')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('barn_number', { ascending: true })
+
+    if (error) throw error
+    return barns || []
+  } catch (err) {
+    console.error('Error fetching barns:', err)
+    throw err
+  }
+}
+
+/**
+ * Create a new barn
+ */
+export async function createBarn(farmId, barnName, barnNumber) {
+  try {
+    const { data: newBarn, error } = await supabase
+      .from('barns')
+      .insert([{
+        farm_id: farmId,
+        barn_name: barnName,
+        barn_number: barnNumber
+      }])
+      .select()
+      .single()
+
+    if (error) throw error
+    return newBarn
+  } catch (err) {
+    console.error('Error creating barn:', err)
+    throw err
+  }
+}
+
+/**
+ * Get or create monthly audit record for a barn
+ */
+export async function getOrCreateMonthlyAudit(farmId, monthYear) {
+  try {
+    const monthDateObj = new Date(monthYear)
+    const monthYearFormatted = monthDateObj.toISOString().split('T')[0]
+
+    // Try to get existing audit
+    const { data: existingAudit, error: fetchError } = await supabase
+      .from('monthly_audits')
+      .select('*')
+      .eq('farm_id', farmId)
+      .eq('month_year', monthYearFormatted)
+      .single()
+
+    if (existingAudit) {
+      return { audit: existingAudit, created: false }
+    }
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError
+    }
+
+    // Create new audit
+    const { data: newAudit, error: createError } = await supabase
+      .from('monthly_audits')
+      .insert([{
+        farm_id: farmId,
+        month_year: monthYearFormatted
+      }])
+      .select()
+      .single()
+
+    if (createError) throw createError
+    return { audit: newAudit, created: true }
+  } catch (err) {
+    console.error('Error getting/creating monthly audit:', err)
+    throw err
+  }
+}
+
+/**
+ * Get or create production cooler records parent
+ */
+export async function getOrCreateProductionRecord(barnId, auditId) {
+  try {
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from('production_cooler_records')
+      .select('*')
+      .eq('barn_id', barnId)
+      .eq('audit_id', auditId)
+      .single()
+
+    if (existingRecord) {
+      return { record: existingRecord, created: false }
+    }
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError
+    }
+
+    const { data: newRecord, error: createError } = await supabase
+      .from('production_cooler_records')
+      .insert([{
+        barn_id: barnId,
+        audit_id: auditId
+      }])
+      .select()
+      .single()
+
+    if (createError) throw createError
+    return { record: newRecord, created: true }
+  } catch (err) {
+    console.error('Error getting/creating production record:', err)
+    throw err
+  }
+}
+
+/**
+ * Get or create welfare records parent
+ */
+export async function getOrCreateWelfareRecord(barnId, auditId) {
+  try {
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from('welfare_records')
+      .select('*')
+      .eq('barn_id', barnId)
+      .eq('audit_id', auditId)
+      .single()
+
+    if (existingRecord) {
+      return { record: existingRecord, created: false }
+    }
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError
+    }
+
+    const { data: newRecord, error: createError } = await supabase
+      .from('welfare_records')
+      .insert([{
+        barn_id: barnId,
+        audit_id: auditId
+      }])
+      .select()
+      .single()
+
+    if (createError) throw createError
+    return { record: newRecord, created: true }
+  } catch (err) {
+    console.error('Error getting/creating welfare record:', err)
+    throw err
+  }
+}
+
+/**
+ * Get or create feed/water records parent
+ */
+export async function getOrCreateFeedWaterRecord(barnId, auditId) {
+  try {
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from('feed_water_records')
+      .select('*')
+      .eq('barn_id', barnId)
+      .eq('audit_id', auditId)
+      .single()
+
+    if (existingRecord) {
+      return { record: existingRecord, created: false }
+    }
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError
+    }
+
+    const { data: newRecord, error: createError } = await supabase
+      .from('feed_water_records')
+      .insert([{
+        barn_id: barnId,
+        audit_id: auditId
+      }])
+      .select()
+      .single()
+
+    if (createError) throw createError
+    return { record: newRecord, created: true }
+  } catch (err) {
+    console.error('Error getting/creating feed/water record:', err)
+    throw err
+  }
+}
+
+/**
+ * Get or create pest control records parent
+ */
+export async function getOrCreatePestControlRecord(barnId, auditId) {
+  try {
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from('pest_control_records')
+      .select('*')
+      .eq('barn_id', barnId)
+      .eq('audit_id', auditId)
+      .single()
+
+    if (existingRecord) {
+      return { record: existingRecord, created: false }
+    }
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError
+    }
+
+    const { data: newRecord, error: createError } = await supabase
+      .from('pest_control_records')
+      .insert([{
+        barn_id: barnId,
+        audit_id: auditId
+      }])
+      .select()
+      .single()
+
+    if (createError) throw createError
+    return { record: newRecord, created: true }
+  } catch (err) {
+    console.error('Error getting/creating pest control record:', err)
+    throw err
+  }
+}

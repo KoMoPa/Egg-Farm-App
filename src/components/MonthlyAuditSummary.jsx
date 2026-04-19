@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { AuditReportPDF } from './AuditReportPDF'
 
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
+    const supabase = useSupabase()
     const [form07Data, setForm07Data] = useState([])
     const [form08Data, setForm08Data] = useState([])
     const [form08Comments, setForm08Comments] = useState([])

@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
+import { getOrCreateMonthlyAudit, getOrCreateFeedWaterRecord } from '../utils/farmBarnOps'
+import { useFarmContext } from '../contexts/FarmContext'
 
 // DAY VIEW COMPONENT
 const DayViewForm = ({ day, data, onDayChange }) => (
@@ -296,7 +298,9 @@ const MonthViewTable = ({ dayData, onDayChange }) => (
     </div>
 )
 
-export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, monthYear }) {
+export default function Form09FeedWaterRecords() {
+    const supabase = useSupabase()
+    const { farm, selectedBarn, monthYear } = useFarmContext()
     // Initialize 31 days of data
     const initializeDayData = () => {
         const days = {}
@@ -341,105 +345,106 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
         e.preventDefault()
 
         try {
-            // DEBUG: Check logged-in user and farm
-            const { data: { user }, error: userError } = await supabase.auth.getUser()
-            console.log('📊 DEBUG INFO:')
-            console.log('  Logged-in User ID:', user?.id)
-            console.log('  User Email:', user?.email)
-            console.log('  Farm ID being used:', farmId)
-            console.log('  Farm Name:', farmName)
+            // Step 1: Get or create monthly audit record
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const auditId = audit.id
 
-            if (!user) {
-                alert('❌ Not logged in! Please log in first.')
-                return
-            }
+            // Step 2: Get or create feed/water records parent
+            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, auditId)
+            const fwId = feedWaterRecord.id
 
-            // Step 1: Create or get monthly audit record
-            const { data: existingAudit, error: auditCheckError } = await supabase
-                .from('monthly_audits')
-                .select('id')
-                .eq('farm_id', farmId)
-                .eq('month_year', monthYear)
-                .single()
-
-            let auditId
-            if (existingAudit) {
-                auditId = existingAudit.id
-            } else {
-                const { data: newAudit, error: newAuditError } = await supabase
-                    .from('monthly_audits')
-                    .insert([{
-                        farm_id: farmId,
-                        month_year: monthYear,
-                        form_09_completed: false,
-                    }])
-                    .select()
-
-                if (newAuditError) throw newAuditError
-                auditId = newAudit[0].id
-            }
-
-            // Step 2: Filter out empty days and prepare data
+            // Step 3: Filter out empty days and prepare daily records
             const daysWithData = Object.keys(dayData)
                 .filter(day => {
                     const d = dayData[day]
                     return d.feedDaily || d.feedActual || d.waterDaily || d.waterActual || d.mortalityDaily || d.inventory
-                }).map(day => parseInt(day))
+                })
 
-            console.log('📝 Days being saved:', daysWithData)
-            console.log('📝 Total days with data:', daysWithData.length)
+            // Step 4: Insert daily feed/water records
+            const feedWaterDailyData = daysWithData.map(day => {
+                const dateObj = new Date(monthYear)
+                dateObj.setDate(parseInt(day))
+                const recordDateForDay = dateObj.toISOString().split('T')[0]
+                const d = dayData[day]
 
-            // Step 3: Prepare daily records
-            const feedWaterRecords = daysWithData.map(day => ({
-                farm_id: farmId,
-                audit_id: auditId,
-                day_of_month: day,
-                record_date: recordDate,
-                feed_daily: dayData[day].feedDaily || null,
-                feed_actual: dayData[day].feedActual || null,
-                water_daily: dayData[day].waterDaily || null,
-                water_actual: dayData[day].waterActual || null,
-                auger_run_time_minutes: dayData[day].augerRunTimeMinutes || null,
-                flush: dayData[day].flush,
-                meds_vit: dayData[day].medsVit,
-                treatment: dayData[day].treatment,
-                mortality_daily: dayData[day].mortalityDaily || null,
-                mortality_reason: dayData[day].mortalityReason || null,
-                hospital_pen_monitoring: dayData[day].hospitalPenMonitoring || null,
-                inventory: dayData[day].inventory || null,
-            }))
+                return {
+                    fw_id: fwId,
+                    record_date: recordDateForDay,
+                    feed_daily: d.feedDaily ? parseFloat(d.feedDaily) : null,
+                    feed_actual: d.feedActual ? parseFloat(d.feedActual) : null,
+                    water_daily: d.waterDaily ? parseFloat(d.waterDaily) : null,
+                    water_actual: d.waterActual ? parseFloat(d.waterActual) : null,
+                    auger_run_time_minutes: d.augerRunTimeMinutes ? parseInt(d.augerRunTimeMinutes) : null,
+                    flush_notes: d.flush ? 'Flushed' : null,
+                    meds_vit_notes: d.medsVit ? 'Applied' : null,
+                    treatment_notes: d.treatment ? 'Applied' : null
+                }
+            })
 
-            // Step 4: Save daily records with UPSERT (allows re-saving same days)
-            const { error: recordError } = await supabase
-                .from('feed_water_records')
-                .upsert(feedWaterRecords)
+            if (feedWaterDailyData.length > 0) {
+                const { error: dailyError } = await supabase
+                    .from('feed_water_daily')
+                    .upsert(feedWaterDailyData, { onConflict: 'fw_id, record_date' })
 
-            if (recordError) throw recordError
-
-            // Step 5: Save form-level metadata (upsert to allow re-saving)
-            const { error: metaError } = await supabase
-                .from('feed_water_form_metadata')
-                .upsert([{
-                    farm_id: farmId,
-                    audit_id: auditId,
-                    record_date: recordDate,
-                    feed_target: feedTarget || null,
-                    monthly_mortality_percent: monthlyMortalityPercent || null,
-                    comments: comments || null,
-                }])
-
-            // Step 6: Don't auto-complete - user must manually mark as complete
-            // This allows users to save daily records without marking month done yet
-
-            if (recordError || metaError) {
-                alert('Error saving: ' + (recordError?.message || metaError?.message))
-                console.error('Errors:', recordError, metaError)
-            } else {
-                alert('✅ Form 09 records saved for month!')
+                if (dailyError) throw dailyError
             }
+
+            // Step 5: Insert health records (mortality, inventory)
+            const feedWaterHealthData = daysWithData.map(day => {
+                const dateObj = new Date(monthYear)
+                dateObj.setDate(parseInt(day))
+                const recordDateForDay = dateObj.toISOString().split('T')[0]
+                const d = dayData[day]
+
+                return {
+                    fw_id: fwId,
+                    record_date: recordDateForDay,
+                    mortality_daily: d.mortalityDaily ? parseInt(d.mortalityDaily) : 0,
+                    pileup_count: d.pileupCount ? parseInt(d.pileupCount) : null,
+                    efo_notified: false,
+                    mortality_reason: d.mortalityReason || null,
+                    hospital_pen_monitoring: d.hospitalPenMonitoring || null,
+                    inventory: d.inventory ? parseInt(d.inventory) : null
+                }
+            })
+
+            if (feedWaterHealthData.length > 0) {
+                const { error: healthError } = await supabase
+                    .from('feed_water_health')
+                    .upsert(feedWaterHealthData, { onConflict: 'fw_id, record_date' })
+
+                if (healthError) throw healthError
+            }
+
+            // Step 6: Update monthly metadata (if provided)
+            if (feedTarget || monthlyMortalityPercent || comments) {
+                const { error: metaError } = await supabase
+                    .from('feed_water_monthly_metadata')
+                    .upsert([{
+                        fw_id: fwId,
+                        feed_target: feedTarget || null,
+                        monthly_mortality_percent: monthlyMortalityPercent ? parseFloat(monthlyMortalityPercent) : null,
+                        comments: comments || null
+                    }], { onConflict: 'fw_id' })
+
+                if (metaError) throw metaError
+            }
+
+            // Step 7: Mark form as completed
+            const { error: auditUpdateError } = await supabase
+                .from('monthly_audits')
+                .update({
+                    form_09_completed: true,
+                    form_09_completed_date: new Date().toISOString()
+                })
+                .eq('id', auditId)
+
+            if (auditUpdateError) throw auditUpdateError
+
+            alert('✅ Form 09 records saved successfully!')
         } catch (error) {
-            alert('Error: ' + error.message)
-            console.error(error)
+            alert('Error saving: ' + error.message)
+            console.error('Error:', error)
         }
     }
 
@@ -469,9 +474,9 @@ export default function Form09FeedWaterRecords({ farmId, farmName, barnNumber, m
                     Form 09 - Feed Water Records
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
-                    <div><strong>Farm Name:</strong> {farmName}</div>
-                    <div><strong>Barn #:</strong> {barnNumber}</div>
-                    <div><strong>Month/Year:</strong> {monthYear}</div>
+                    <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
+                    <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
+                    <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
                         <input type="date" value={recordDate}

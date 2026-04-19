@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
+import { getOrCreateMonthlyAudit, getOrCreatePestControlRecord } from '../utils/farmBarnOps'
+import { useFarmContext } from '../contexts/FarmContext'
 
 // DAY VIEW COMPONENT
 const DayViewForm = ({ day, data, onDayChange }) => (
@@ -255,7 +257,9 @@ const MonthViewTable = ({ dayData, onDayChange }) => (
     </div>
 )
 
-export default function Form10PestControlRecords({ farmId, farmName, barnNumber, monthYear }) {
+export default function Form10PestControlRecords() {
+    const supabase = useSupabase()
+    const { farm, selectedBarn, monthYear } = useFarmContext()
     // Initialize 31 days of data
     const initializeDayData = () => {
         const days = {}
@@ -312,68 +316,56 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
         e.preventDefault()
 
         try {
-            // Step 1: Create or get monthly audit record
-            const { data: existingAudit, error: auditCheckError } = await supabase
-                .from('monthly_audits')
-                .select('id')
-                .eq('farm_id', farmId)
-                .eq('month_year', monthYear)
-                .single()
+            // Step 1: Get or create monthly audit record
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const auditId = audit.id
 
-            let currentAuditId
-            if (existingAudit) {
-                currentAuditId = existingAudit.id
-            } else {
-                const { data: newAudit, error: newAuditError } = await supabase
-                    .from('monthly_audits')
-                    .insert([{
-                        farm_id: farmId,
-                        month_year: monthYear,
-                        form_10_completed: false,
-                    }])
-                    .select()
+            // Step 2: Get or create pest control records parent
+            const { record: pestControlRecord } = await getOrCreatePestControlRecord(selectedBarn.id, auditId)
+            const pestId = pestControlRecord.id
 
-                if (newAuditError) throw newAuditError
-                currentAuditId = newAudit[0].id
-            }
-            setAuditId(currentAuditId)
-
-            // Step 2: Filter out empty days
+            // Step 3: Filter out empty days and prepare daily observation records
             const daysWithData = Object.keys(dayData)
                 .filter(day => {
                     const d = dayData[day]
                     return d.liveTrapsFindings || d.liveTrapsLocation || d.baitProduct || d.baitLocation || d.correctiveActions
-                }).map(day => parseInt(day))
+                })
 
-            // Step 3: Prepare daily records
-            const pestControlRecords = daysWithData.map(day => ({
-                farm_id: farmId,
-                audit_id: currentAuditId,
-                day_of_month: day,
-                live_traps_findings: dayData[day].liveTrapsFindings || null,
-                live_traps_location: dayData[day].liveTrapsLocation || null,
-                bait_product: dayData[day].baitProduct || null,
-                bait_location: dayData[day].baitLocation || null,
-                birds_on_range: dayData[day].birdsOnRange || null,
-                corrective_actions: dayData[day].correctiveActions || null,
-                frequency_weekly: dayData[day].frequencyWeekly || null,
-                frequency_monthly: dayData[day].frequencyMonthly || null,
-            }))
+            // Step 4: Insert daily observations
+            const pestDailyObservationsData = daysWithData.map(day => {
+                const dateObj = new Date(monthYear)
+                dateObj.setDate(parseInt(day))
+                const recordDateForDay = dateObj.toISOString().split('T')[0]
+                const d = dayData[day]
 
-            // Step 4: Save daily records (upsert)
-            const { error: recordError } = await supabase
-                .from('pest_control_records')
-                .upsert(pestControlRecords)
+                return {
+                    pest_id: pestId,
+                    record_date: recordDateForDay,
+                    mice_caught: d.miceCaught ? parseInt(d.miceCaught) : 0,
+                    traps_checked: d.trapsChecked ? parseInt(d.trapsChecked) : null,
+                    trap_findings_notes: d.liveTrapsFindings || null,
+                    trap_location: d.liveTrapsLocation || null,
+                    bait_product: d.baitProduct || null,
+                    bait_location: d.baitLocation || null,
+                    birds_on_range: d.birdsOnRange || null,
+                    corrective_actions: d.correctiveActions || null
+                }
+            })
 
-            if (recordError) throw recordError
+            if (pestDailyObservationsData.length > 0) {
+                const { error: dailyError } = await supabase
+                    .from('pest_daily_observations')
+                    .upsert(pestDailyObservationsData, { onConflict: 'pest_id, record_date' })
 
-            // Step 5: Save audit sections (upsert)
+                if (dailyError) throw dailyError
+            }
+
+            // Step 5: Update monthly audit data (exterior/interior inspections, fly monitoring, etc.)
             const { error: auditError } = await supabase
-                .from('pest_control_audit_sections')
+                .from('pest_monthly_audit')
                 .upsert([{
-                    farm_id: farmId,
-                    audit_id: currentAuditId,
-                    exterior_inspection_date: exteriorInspectionDate || null,
+                    pest_id: pestId,
+                    exterior_inspection_date: exteriorInspectionDate ? new Date(exteriorInspectionDate).toISOString().split('T')[0] : null,
                     exterior_inspection_observation: exteriorInspectionObservation || null,
                     wild_birds_observation: wildBirdsObservation || null,
                     fly_monitoring: flyMonitoring || null,
@@ -383,29 +375,20 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                     range_wild_bird_deterrents: rangeWildBirdDeterrents || null,
                     range_gravel_fences: rangeGravelFences || null,
                     range_other: rangeOther || null,
-                    interior_inspection_date: interiorInspectionDate || null,
+                    interior_inspection_date: interiorInspectionDate ? new Date(interiorInspectionDate).toISOString().split('T')[0] : null,
                     interior_inspection_observation: interiorInspectionObservation || null,
-                    rodent_index: rodentIndex || null,
+                    mice_total: parseInt(Object.values(dayData).reduce((sum, d) => sum + (parseInt(d.miceCaught) || 0), 0)),
+                    traps_total: parseInt(Object.values(dayData).reduce((sum, d) => sum + (parseInt(d.trapsChecked) || 0), 0)),
+                    days_monitored: daysWithData.length,
                     comments: comments || null,
                     signature: signature || null,
-                    signature_date: signatureDate || null,
-                }])
+                    signature_date: signatureDate ? new Date(signatureDate).toISOString().split('T')[0] : null
+                }], { onConflict: 'pest_id' })
 
             if (auditError) throw auditError
 
-            // Step 6: Don't auto-complete - user must manually mark as complete
-            // This allows users to save daily records without marking month done yet
-
-            alert('✅ Form 10 records saved for month!')
-        } catch (error) {
-            alert('Error: ' + error.message)
-            console.error(error)
-        }
-    }
-
-    const handleMarkMonthComplete = async () => {
-        try {
-            const { error } = await supabase
+            // Step 6: Mark form as completed
+            const { error: formUpdateError } = await supabase
                 .from('monthly_audits')
                 .update({
                     form_10_completed: true,
@@ -413,12 +396,16 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                 })
                 .eq('id', auditId)
 
-            if (error) throw error
-            alert('✅ Form 10 marked as complete for ' + monthYear)
-        } catch (err) {
-            alert('Error marking complete: ' + err.message)
+            if (formUpdateError) throw formUpdateError
+
+            alert('✅ Form 10 records saved successfully!')
+        } catch (error) {
+            alert('Error saving: ' + error.message)
+            console.error('Error:', error)
         }
     }
+
+
 
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
@@ -429,9 +416,9 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                     Form 10 - Pest Control Records
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
-                    <div><strong>Farm Name:</strong> {farmName}</div>
-                    <div><strong>Barn #:</strong> {barnNumber}</div>
-                    <div><strong>Month/Year:</strong> {monthYear}</div>
+                    <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
+                    <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
+                    <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
                         <input type="date" value={recordDate}
@@ -676,18 +663,7 @@ export default function Form10PestControlRecords({ farmId, farmName, barnNumber,
                     }}>
                         Save Form 10 - Pest Control Records
                     </button>
-                    <button type="button" onClick={handleMarkMonthComplete} style={{
-                        padding: '12px 40px',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        backgroundColor: '#0066cc',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}>
-                        ✓ Mark Month Complete
-                    </button>
+
                 </div>
             </div>
         </form>
