@@ -9,6 +9,8 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
     const [form08Data, setForm08Data] = useState([])
     const [form08Comments, setForm08Comments] = useState([])
     const [form08MonthlyInspections, setForm08MonthlyInspections] = useState(null)
+    const [form08AmmoniaData, setForm08AmmoniaData] = useState([])
+    const [barnNumber, setBarnNumber] = useState('')
     const [form09Data, setForm09Data] = useState([])
     const [form10Data, setForm10Data] = useState([])
     const [loading, setLoading] = useState(true)
@@ -30,16 +32,17 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .eq('audit_id', auditId)
 
                 // Form 08 - Welfare
-                // Step 1: get welfare_records entry for this barn/audit
+                // Step 1: get welfare_records entry (join barns to get barn_number)
                 const { data: welfareRecord } = await supabase
                     .from('welfare_records')
-                    .select('id, monthly_comments')
+                    .select('id, monthly_comments, barns(barn_number)')
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
                 let welfare = []
                 let weeklyInspections = []
                 let monthlyInspections = null
+                let ammoniaTests = []
 
                 if (welfareRecord) {
                     // Step 2: fetch daily checks
@@ -56,9 +59,17 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                         .eq('welfare_id', welfareRecord.id)
                         .order('inspection_date')
 
+                    // Step 4: fetch ammonia tests
+                    const { data: ammonia } = await supabase
+                        .from('welfare_ammonia_tests')
+                        .select('*')
+                        .eq('welfare_id', welfareRecord.id)
+                        .order('test_date')
+
                     welfare = dailyChecks || []
                     weeklyInspections = weekly || []
                     monthlyInspections = welfareRecord
+                    ammoniaTests = ammonia || []
                 }
 
                 // Form 09 - Feed & Water
@@ -79,6 +90,8 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 setForm08Data(welfare)
                 setForm08Comments(weeklyInspections)
                 setForm08MonthlyInspections(monthlyInspections)
+                setForm08AmmoniaData(ammoniaTests)
+                setBarnNumber(welfareRecord?.barns?.barn_number ?? '')
                 setForm09Data(feed || [])
                 setForm10Data(pest || [])
             } catch (err) {
@@ -102,10 +115,12 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
         try {
             const doc = <AuditReportPDF
                 farmName={farmName}
+                barnNumber={barnNumber}
                 monthYear={monthYear}
                 form08Data={form08Data}
                 form08Comments={form08Comments}
                 form08MonthlyInspections={form08MonthlyInspections}
+                form08AmmoniaData={form08AmmoniaData}
             />
             const asPdf = pdf(doc)
             asPdf.toBlob().then((blob) => {
@@ -115,6 +130,9 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 link.download = `Audit_${farmName}_${monthYear}.pdf`
                 link.click()
                 URL.revokeObjectURL(url)
+            }).catch((err) => {
+                console.error('PDF generation failed:', err)
+                alert('Error generating PDF: ' + err.message)
             })
         } catch (error) {
             console.error('Error generating PDF:', error)

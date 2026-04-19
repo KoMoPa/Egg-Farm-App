@@ -127,6 +127,26 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
         Injured Birds
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.respiratoryProblems}
+          onChange={() => onDayCheckbox(day, 'respiratoryProblems')} />
+        Respiratory Problems
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.pantingHuddling}
+          onChange={() => onDayCheckbox(day, 'pantingHuddling')} />
+        Panting/Huddling
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.lameness}
+          onChange={() => onDayCheckbox(day, 'lameness')} />
+        Lameness
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.featherPecking}
+          onChange={() => onDayCheckbox(day, 'featherPecking')} />
+        Signs of Feather Pecking/Cannibalism
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.trappedBirds}
           onChange={() => onDayCheckbox(day, 'trappedBirds')} />
         Trapped Birds
@@ -337,6 +357,10 @@ export default function Form08WelfareRecords() {
         abnormalBehavior: false,
         signsOfDisease: false,
         injuredBirds: false,
+        respiratoryProblems: false,
+        pantingHuddling: false,
+        lameness: false,
+        featherPecking: false,
         trappedBirds: false,
         deadBirds: false,
         feedWaterAvailable: false,
@@ -470,7 +494,7 @@ export default function Form08WelfareRecords() {
       // Step 3: Save weekly inspections (one row per day that has any checkbox checked)
       const weeklyInspections = Object.entries(dayData)
         .filter(([dayNum]) => parseInt(dayNum) <= daysInMonth)
-        .filter(([, day]) => day.overallAppearance || day.generalSound || day.abnormalBehavior || day.signsOfDisease || day.injuredBirds || day.trappedBirds || day.deadBirds || day.feedWaterAvailable || day.equipmentOperating || day.amenitiesCondition || day.layFacilityEnvironment)
+        .filter(([, day]) => day.overallAppearance || day.generalSound || day.abnormalBehavior || day.signsOfDisease || day.injuredBirds || day.respiratoryProblems || day.pantingHuddling || day.lameness || day.featherPecking || day.trappedBirds || day.deadBirds || day.feedWaterAvailable || day.equipmentOperating || day.amenitiesCondition || day.layFacilityEnvironment)
         .map(([dayNum, day]) => ({
           welfare_id: welfareId,
           inspection_date: `${monthPrefix}-${String(dayNum).padStart(2, '0')}`,
@@ -479,6 +503,10 @@ export default function Form08WelfareRecords() {
           check_abnormal_behavior: day.abnormalBehavior || false,
           check_disease_illness: day.signsOfDisease || false,
           check_injured_birds: day.injuredBirds || false,
+          check_respiratory: day.respiratoryProblems || false,
+          check_panting_huddling: day.pantingHuddling || false,
+          check_lameness: day.lameness || false,
+          check_feather_pecking: day.featherPecking || false,
           check_trapped_birds: day.trappedBirds || false,
           check_dead_birds: day.deadBirds || false,
           check_feed_water_available: day.feedWaterAvailable || false,
