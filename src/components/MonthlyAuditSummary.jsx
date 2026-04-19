@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { pdf } from '@react-pdf/renderer'
-import { supabase } from '../supabaseClient'
+import { useSupabase } from '../contexts/SupabaseContext'
 import { AuditReportPDF } from './AuditReportPDF'
 
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
@@ -30,38 +30,36 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .eq('audit_id', auditId)
 
                 // Form 08 - Welfare
-                const monthStart = `${monthYear}-01`
-                const nextMonth = new Date(new Date(`${monthYear}-01`).setMonth(new Date(`${monthYear}-01`).getMonth() + 1)).toISOString().split('T')[0]
-
-                // Fetch consolidated daily records (includes equipment data)
-                const { data: welfare, error: welfareError } = await supabase
-                    .from('form_08_daily_records')
-                    .select('*')
+                // Step 1: get welfare_records entry for this barn/audit
+                const { data: welfareRecord } = await supabase
+                    .from('welfare_records')
+                    .select('id, monthly_comments')
                     .eq('audit_id', auditId)
-                    .gte('record_date', monthStart)
-                    .lt('record_date', nextMonth)
-                    .order('record_date')
+                    .maybeSingle()
 
-                // Fetch Form 08 timestamped comments
-                const { data: commentsList, error: commentsError } = await supabase
-                    .from('form_08_comments')
-                    .select('*')
-                    .eq('audit_id', auditId)
-                    .order('comment_date', { ascending: true })
+                let welfare = []
+                let weeklyInspections = []
+                let monthlyInspections = null
 
-                // Fetch Form 08 monthly inspections
-                const { data: monthlyInspections, error: inspectionsError } = await supabase
-                    .from('form_08_monthly_inspections')
-                    .select('*')
-                    .eq('audit_id', auditId)
-                    .single()
+                if (welfareRecord) {
+                    // Step 2: fetch daily checks
+                    const { data: dailyChecks } = await supabase
+                        .from('welfare_daily_checks')
+                        .select('*')
+                        .eq('welfare_id', welfareRecord.id)
+                        .order('record_date')
 
-                console.log('📊 MonthlyAuditSummary Debug:')
-                console.log('  Audit ID:', auditId)
-                console.log('  Form 08 Daily Records:', welfare)
-                console.log('  Form 08 Comments:', commentsList)
-                console.log('  Form 08 Monthly Inspections:', monthlyInspections)
-                console.log('  Form 08 Errors:', { welfareError, commentsError, inspectionsError })
+                    // Step 3: fetch weekly inspections
+                    const { data: weekly } = await supabase
+                        .from('welfare_weekly_inspections')
+                        .select('*')
+                        .eq('welfare_id', welfareRecord.id)
+                        .order('inspection_date')
+
+                    welfare = dailyChecks || []
+                    weeklyInspections = weekly || []
+                    monthlyInspections = welfareRecord
+                }
 
                 // Form 09 - Feed & Water
                 const { data: feed, error: feedError } = await supabase
@@ -78,9 +76,9 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .order('day_of_month')
 
                 setForm07Data({ production: prod || [], sanitation: sanit || [] })
-                setForm08Data(welfare || [])
-                setForm08Comments(commentsList || [])
-                setForm08MonthlyInspections(monthlyInspections || null)
+                setForm08Data(welfare)
+                setForm08Comments(weeklyInspections)
+                setForm08MonthlyInspections(monthlyInspections)
                 setForm09Data(feed || [])
                 setForm10Data(pest || [])
             } catch (err) {
@@ -258,20 +256,24 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Manure</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Bedding</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Chemicals</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>AM Init</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>PM Init</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {form08Data.map((record) => (
-                                    <tr key={record.id}>
+                                    <tr key={record.record_date}>
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '9px' }}>{record.record_date}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.barn_temp_hi}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.barn_temp_lo}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.exterior_temp}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.floors_checked ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.walls_fans_ceiling_checked ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.manure_checked ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.bedding_used || ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.chemicals_used || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.floor_sanitation_code || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.walls_sanitation_code || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.manure_sanitation_code || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.bedding_notes || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontSize: '8px' }}>{record.chemicals_notes || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.hen_inspection_am || ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{record.hen_inspection_pm || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -287,15 +289,11 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
                         Form 08 - Welfare Records - Page 2 (Equipment & Inspection)
                     </h2>
-                    {form08Data.length > 0 ? (
+                    {form08Comments.length > 0 ? (
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '8px' }}>
                             <thead>
                                 <tr style={{ backgroundColor: '#f0f0f0' }}>
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Date</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>1st Init</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>1st Daily</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>2nd Init</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>2nd Daily</th>
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Appearance</th>
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Sound</th>
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Behavior</th>
@@ -307,27 +305,25 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Equipment</th>
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Amenities</th>
                                     <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Lay Facility</th>
+                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Comments</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {form08Data.map((record) => (
-                                    <tr key={`page2-${record.id}`}>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontSize: '8px' }}>{record.record_date}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.routine_hen_equip_1st_initial || ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.routine_hen_equip_1st_daily || ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.routine_hen_equip_2nd_initial || ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.routine_hen_equip_2nd_daily || ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.overall_appearance ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.general_sound ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.abnormal_behavior ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.signs_of_disease ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.injured_birds ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.trapped_birds ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.dead_birds ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.feed_water_available ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.equipment_operating ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.amenities_condition ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.lay_facility_environment ? '✓' : ''}</td>
+                                {form08Comments.map((record) => (
+                                    <tr key={record.inspection_date}>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontSize: '8px' }}>{record.inspection_date}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_overall_appearance ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_general_sound ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_abnormal_behavior ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_disease_illness ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_injured_birds ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_trapped_birds ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_dead_birds ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_feed_water_available ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_equipment_operating ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_amenities_condition ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_lay_facility ? '✓' : ''}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '3px', fontSize: '8px' }}>{record.comments || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -336,36 +332,15 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                         <p style={{ color: '#999', fontStyle: 'italic' }}>No inspection records entered</p>
                     )}
 
-                    {/* Monthly Inspections Section */}
-                    {form08MonthlyInspections && (
+                    {/* Monthly Comments */}
+                    {form08MonthlyInspections?.monthly_comments && (
                         <div style={{ marginTop: '30px', marginBottom: '30px', pageBreakInside: 'avoid' }}>
                             <h3 style={{ fontSize: '12px', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                                Monthly Inspections
+                                Monthly Comments
                             </h3>
-                            <div style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '10px', borderRadius: '4px', fontSize: '10px', lineHeight: '1.8' }}>
-                                {form08MonthlyInspections.ammonia_range && (
-                                    <div style={{ marginBottom: '8px' }}>Ammonia Range: <strong>{form08MonthlyInspections.ammonia_range}</strong> - Checked: {form08MonthlyInspections.ammonia_range_date || 'N/A'}</div>
-                                )}
-                                {form08MonthlyInspections.alarm_check_date && (
-                                    <div style={{ marginBottom: '8px' }}>Alarm Check: {form08MonthlyInspections.alarm_check_date} (Initials: {form08MonthlyInspections.alarm_check_initials || '--'})</div>
-                                )}
-                                {form08MonthlyInspections.generator_check_date && (
-                                    <div style={{ marginBottom: '8px' }}>Generator Check: {form08MonthlyInspections.generator_check_date} (Initials: {form08MonthlyInspections.generator_check_initials || '--'})</div>
-                                )}
+                            <div style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '10px', borderRadius: '4px', fontSize: '10px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                                {form08MonthlyInspections.monthly_comments}
                             </div>
-                        </div>
-                    )}
-                    {form08Comments && form08Comments.length > 0 && (
-                        <div style={{ marginTop: '30px', marginBottom: '30px', pageBreakInside: 'avoid' }}>
-                            <h3 style={{ fontSize: '12px', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                                Comments
-                            </h3>
-                            {form08Comments.map((comment, index) => (
-                                <div key={comment.id || index} style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '10px', borderRadius: '4px', fontSize: '10px', lineHeight: '1.6', marginBottom: '10px' }}>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>{comment.comment_date}</div>
-                                    <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{comment.comment_text}</div>
-                                </div>
-                            ))}
                         </div>
                     )}
 

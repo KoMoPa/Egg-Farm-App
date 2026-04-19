@@ -444,7 +444,7 @@ export default function Form08WelfareRecords() {
       // Step 2: Save daily checks (one row per day that has any data)
       const dailyChecks = Object.entries(dayData)
         .filter(([dayNum]) => parseInt(dayNum) <= daysInMonth)
-        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked)
+        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked || day.routineHenEquip1stInitial || day.routineHenEquip2ndInitial)
         .map(([dayNum, day]) => ({
           welfare_id: welfareId,
           record_date: `${monthPrefix}-${String(dayNum).padStart(2, '0')}`,
@@ -456,6 +456,8 @@ export default function Form08WelfareRecords() {
           manure_sanitation_code: day.manureChecked ? 'Y' : null,
           bedding_notes: day.beddingUsed || null,
           chemicals_notes: day.chemicalsUsed || null,
+          hen_inspection_am: day.routineHenEquip1stInitial || null,
+          hen_inspection_pm: day.routineHenEquip2ndInitial || null,
         }))
 
       if (dailyChecks.length > 0) {
@@ -483,7 +485,6 @@ export default function Form08WelfareRecords() {
           check_equipment_operating: day.equipmentOperating || false,
           check_amenities_condition: day.amenitiesCondition || false,
           check_lay_facility: day.layFacilityEnvironment || false,
-          weekly_initials: day.routineHenEquip1stInitial || null,
           comments: comments || null,
         }))
 
