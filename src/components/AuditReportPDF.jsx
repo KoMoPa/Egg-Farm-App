@@ -53,36 +53,36 @@ const styles = StyleSheet.create({
 
     // ── Page 1 rows ──
     p1HeaderRow: { flexDirection: 'row', backgroundColor: '#cccccc' },
-    p1DataRow:   { flexDirection: 'row', backgroundColor: '#ffffff' },
-    p1DataRowAlt:{ flexDirection: 'row', backgroundColor: '#f0f0f0' },
+    p1DataRow: { flexDirection: 'row', backgroundColor: '#ffffff' },
+    p1DataRowAlt: { flexDirection: 'row', backgroundColor: '#f0f0f0' },
 
     // Page 1 data cells
-    p1Date:  { width: 28, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
-    p1Temp:  { width: 57, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center' },
-    p1San:   { width: 54, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center' },
+    p1Date: { width: 28, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p1Temp: { width: 57, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center' },
+    p1San: { width: 54, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center' },
     p1Notes: { width: 92, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 3, fontSize: 7 },
-    p1NotesFlex: { flex: 1,  borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 3, fontSize: 7 },
+    p1NotesFlex: { flex: 1, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 3, fontSize: 7 },
 
     // Page 1 header cells (bold, heavier bottom border)
-    p1DateH:  { width: 28, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
-    p1TempH:  { width: 57, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
-    p1SanH:   { width: 54, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p1DateH: { width: 28, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p1TempH: { width: 57, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p1SanH: { width: 54, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
     p1NotesH: { width: 92, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 3, fontSize: 7, fontFamily: 'Helvetica-Bold' },
     p1NotesFlexH: { flex: 1, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 3, fontSize: 7, fontFamily: 'Helvetica-Bold' },
 
     // ── Page 2 rows ──
     p2HeaderRow: { flexDirection: 'row', backgroundColor: '#cccccc' },
-    p2DataRow:   { flexDirection: 'row', backgroundColor: '#ffffff' },
-    p2DataRowAlt:{ flexDirection: 'row', backgroundColor: '#f0f0f0' },
+    p2DataRow: { flexDirection: 'row', backgroundColor: '#ffffff' },
+    p2DataRowAlt: { flexDirection: 'row', backgroundColor: '#f0f0f0' },
 
     // Page 2 data cells
-    p2Date:  { width: 28, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
-    p2Init:  { width: 32, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center' },
+    p2Date: { width: 28, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p2Init: { width: 32, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 2, fontSize: 7, textAlign: 'center' },
     p2Check: { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 7, textAlign: 'center' },
 
     // Page 2 header cells
-    p2DateH:  { width: 28, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 6, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
-    p2InitH:  { width: 32, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 6, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p2DateH: { width: 28, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 6, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
+    p2InitH: { width: 32, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 2, fontSize: 6, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
     p2CheckH: { width: 42, borderRight: '1px solid #000', borderBottom: '1px solid #000', paddingVertical: 3, paddingHorizontal: 1, fontSize: 6, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
 
     // ── Bottom sections ──

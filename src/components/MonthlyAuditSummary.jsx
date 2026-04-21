@@ -269,7 +269,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Barn HI</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Barn LO</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Ext Temp</th>
-
+                                    <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Floors</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Walls</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Manure</th>
                                     <th style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>Bedding</th>
@@ -308,44 +308,64 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                         Form 08 - Welfare Records - Page 2 (Equipment & Inspection)
                     </h2>
                     {form08Comments.length > 0 ? (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '8px' }}>
-                            <thead>
-                                <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Date</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Appearance</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Sound</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Behavior</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Disease</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Injured</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Trapped</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Dead</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Feed/Water</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Equipment</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Amenities</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Lay Facility</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Comments</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {form08Comments.map((record) => (
-                                    <tr key={record.inspection_date}>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontSize: '8px' }}>{record.inspection_date}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_overall_appearance ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_general_sound ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_abnormal_behavior ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_disease_illness ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_injured_birds ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_trapped_birds ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_dead_birds ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_feed_water_available ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_equipment_operating ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_amenities_condition ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_lay_facility ? '✓' : ''}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '3px', fontSize: '8px' }}>{record.comments || ''}</td>
+                        <>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '8px' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Date</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Appearance</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Sound</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Behavior</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Disease</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Injured</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Trapped</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Dead</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Feed/Water</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Equipment</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Amenities</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontWeight: 'bold' }}>Lay Facility</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {form08Comments.map((record) => (
+                                        <tr key={record.inspection_date}>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center', fontSize: '8px' }}>{record.inspection_date}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_overall_appearance ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_general_sound ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_abnormal_behavior ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_disease_illness ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_injured_birds ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_trapped_birds ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_dead_birds ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_feed_water_available ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_equipment_operating ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_amenities_condition ? '✓' : ''}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px', textAlign: 'center' }}>{record.check_lay_facility ? '✓' : ''}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Inspection Comments — only rows that have a non-empty comment */}
+                            {(() => {
+                                const inspectionComments = form08Comments
+                                    .filter(r => r.comments?.trim())
+                                    .map(r => ({ date: r.inspection_date, text: r.comments.trim() }))
+                                return inspectionComments.length > 0 ? (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <h3 style={{ fontSize: '12px', marginBottom: '8px', borderBottom: '1px solid #ccc', paddingBottom: '4px', fontWeight: 'bold' }}>
+                                            Inspection Comments
+                                        </h3>
+                                        {inspectionComments.map((c, i) => (
+                                            <div key={i} style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '8px', borderRadius: '4px', marginBottom: '6px', fontSize: '10px' }}>
+                                                <span style={{ fontWeight: 'bold', marginRight: '8px' }}>{c.date}:</span>
+                                                <span style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{c.text}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : null
+                            })()}
+                        </>
                     ) : (
                         <p style={{ color: '#999', fontStyle: 'italic' }}>No inspection records entered</p>
                     )}
