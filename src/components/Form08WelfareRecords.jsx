@@ -180,147 +180,7 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
   </div>
 )
 
-// WEEK VIEW TABLE
-const WeekViewTable = ({ startDay, dayData, onDayChange, onDayCheckbox }) => {
-  const endDay = Math.min(startDay + 6, 31)
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '12px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#e8e8e8' }}>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Ext Temp</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {[...Array(endDay - startDay + 1)].map((_, i) => {
-            const day = startDay + i
-            const data = dayData[day]
-            return (
-              <tr key={day}>
-                <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.barnTempHi}
-                    onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.barnTempLo}
-                    onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.exteriorTemp}
-                    onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.floorsChecked}
-                    onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                    onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.manureChecked}
-                    onChange={() => onDayCheckbox(day, 'manureChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="text" value={data.beddingUsed}
-                    onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="text" value={data.chemicalsUsed}
-                    onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
-}
 
-// MONTH VIEW TABLE
-const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
-  <div style={{ overflowX: 'auto' }}>
-    <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '11px' }}>
-      <thead>
-        <tr style={{ backgroundColor: '#e8e8e8' }}>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Ext</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-        </tr>
-      </thead>
-      <tbody>
-        {[...Array(31)].map((_, i) => {
-          const day = i + 1
-          const data = dayData[day]
-          return (
-            <tr key={day}>
-              <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="number" step="0.1" value={data.barnTempHi}
-                  onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="number" step="0.1" value={data.barnTempLo}
-                  onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="number" step="0.1" value={data.exteriorTemp}
-                  onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                <input type="checkbox" checked={data.floorsChecked}
-                  onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                  onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                <input type="checkbox" checked={data.manureChecked}
-                  onChange={() => onDayCheckbox(day, 'manureChecked')} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="text" value={data.beddingUsed}
-                  onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="text" value={data.chemicalsUsed}
-                  onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
-  </div>
-)
 
 export default function Form08WelfareRecords() {
   const { farm, selectedBarn, monthYear } = useFarmContext()
@@ -375,15 +235,22 @@ export default function Form08WelfareRecords() {
   const supabase = useSupabase()
 
   const [dayData, setDayData] = useState(initializeDayData())
-  const [comments, setComments] = useState('')
   const [recordDate, setRecordDate] = useState(
     new Date().toISOString().split('T')[0]
   )
   const [saved, setSaved] = useState(false)
 
-  // View toggle: 'day', 'week', 'month'
+  // Monthly checks state
+  const [ammoniaRange, setAmmoniaRange] = useState('')
+  const [alarmCheckDate, setAlarmCheckDate] = useState('')
+  const [alarmCheckInitials, setAlarmCheckInitials] = useState('')
+  const [generatorCheckDate, setGeneratorCheckDate] = useState('')
+  const [generatorCheckInitials, setGeneratorCheckInitials] = useState('')
+  const [monthlyComments, setMonthlyComments] = useState('')
+  const [monthlySaved, setMonthlySaved] = useState(false)
+
+  // View toggle: 'day' | 'monthly'
   const [viewMode, setViewMode] = useState('day')
-  const [selectedDay, setSelectedDay] = useState(1)
 
   const handleDayChange = (day, field, value) => {
     setDayData(prev => ({
@@ -513,7 +380,6 @@ export default function Form08WelfareRecords() {
           check_equipment_operating: day.equipmentOperating || false,
           check_amenities_condition: day.amenitiesCondition || false,
           check_lay_facility: day.layFacilityEnvironment || false,
-          comments: comments || null,
         }))
 
       if (weeklyInspections.length > 0) {
@@ -562,6 +428,108 @@ export default function Form08WelfareRecords() {
     }
   }
 
+  const handleMonthlySubmit = async () => {
+    try {
+      if (!barnId) {
+        alert('Error: Barn ID is missing. Please select a barn.')
+        return
+      }
+
+      // Step 0: Get or create monthly_audits record
+      let auditId
+      const { data: existingAudit } = await supabase
+        .from('monthly_audits')
+        .select('id')
+        .eq('farm_id', farmId)
+        .eq('month_year', monthYear)
+        .maybeSingle()
+
+      if (existingAudit) {
+        auditId = existingAudit.id
+      } else {
+        const { data: newAudit, error: auditError } = await supabase
+          .from('monthly_audits')
+          .insert([{ farm_id: farmId, month_year: monthYear }])
+          .select('id')
+          .single()
+        if (auditError) throw auditError
+        auditId = newAudit.id
+      }
+
+      // Step 1: Get or create welfare_records + save monthly comments
+      let welfareId
+      const { data: existingWelfare } = await supabase
+        .from('welfare_records')
+        .select('id')
+        .eq('barn_id', barnId)
+        .eq('audit_id', auditId)
+        .maybeSingle()
+
+      if (existingWelfare) {
+        welfareId = existingWelfare.id
+        await supabase
+          .from('welfare_records')
+          .update({ monthly_comments: monthlyComments || null })
+          .eq('id', welfareId)
+      } else {
+        const { data: newWelfare, error: createError } = await supabase
+          .from('welfare_records')
+          .insert([{ barn_id: barnId, audit_id: auditId, monthly_comments: monthlyComments || null }])
+          .select('id')
+          .single()
+        if (createError) throw createError
+        welfareId = newWelfare.id
+      }
+
+      const monthFirstDate = monthYear.substring(0, 7) + '-01'
+
+      // Step 2: Save ammonia test (upsert keyed on welfare_id + test_date)
+      if (ammoniaRange) {
+        const { error: ammoniaError } = await supabase
+          .from('welfare_ammonia_tests')
+          .upsert([{ welfare_id: welfareId, test_date: monthFirstDate, ppm_range: ammoniaRange }],
+            { onConflict: 'welfare_id,test_date' })
+        if (ammoniaError) throw ammoniaError
+      }
+
+      // Step 3: Save alarm/generator checks — update existing row or insert new
+      if (alarmCheckDate || alarmCheckInitials || generatorCheckDate || generatorCheckInitials) {
+        const alarmGenFields = {
+          alarm_check_date: alarmCheckDate || null,
+          alarm_check_initials: alarmCheckInitials || null,
+          generator_check_date: generatorCheckDate || null,
+          generator_check_initials: generatorCheckInitials || null,
+        }
+        const { data: existingInspection } = await supabase
+          .from('welfare_weekly_inspections')
+          .select('welfare_id, inspection_date')
+          .eq('welfare_id', welfareId)
+          .eq('inspection_date', monthFirstDate)
+          .maybeSingle()
+
+        if (existingInspection) {
+          const { error } = await supabase
+            .from('welfare_weekly_inspections')
+            .update(alarmGenFields)
+            .eq('welfare_id', welfareId)
+            .eq('inspection_date', monthFirstDate)
+          if (error) throw error
+        } else {
+          const { error } = await supabase
+            .from('welfare_weekly_inspections')
+            .insert([{ welfare_id: welfareId, inspection_date: monthFirstDate, ...alarmGenFields }])
+          if (error) throw error
+        }
+      }
+
+      setMonthlySaved(true)
+      alert('✅ Monthly checks saved!')
+    } catch (error) {
+      alert('Error: ' + error.message)
+      console.error(error)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
@@ -601,18 +569,18 @@ export default function Form08WelfareRecords() {
           </button>
           <button
             type="button"
-            onClick={() => setViewMode('month')}
+            onClick={() => setViewMode('monthly')}
             style={{
               padding: '8px 16px',
               fontSize: '14px',
               fontWeight: 'bold',
-              backgroundColor: viewMode === 'month' ? '#0066cc' : '#ddd',
-              color: viewMode === 'month' ? 'white' : '#333',
+              backgroundColor: viewMode === 'monthly' ? '#0066cc' : '#ddd',
+              color: viewMode === 'monthly' ? 'white' : '#333',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer'
             }}>
-            Month View
+            Monthly Checks
           </button>
         </div>
       </div>
@@ -625,61 +593,150 @@ export default function Form08WelfareRecords() {
             data={dayData[parseInt(recordDate.split('-')[2])]}
             onDayChange={handleDayChange}
             onDayCheckbox={handleDayCheckbox} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+            <button type="submit" style={{
+              padding: '12px 40px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+              Save Daily Record
+            </button>
+          </div>
         </div>
       )}
 
-      {/* MONTH VIEW */}
-      {viewMode === 'month' && (
-        <MonthViewTable
-          dayData={dayData}
-          onDayChange={handleDayChange}
-          onDayCheckbox={handleDayCheckbox} />
-      )}
+      {/* MONTHLY CHECKS */}
+      {viewMode === 'monthly' && (
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '25px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+            Monthly Checks
+          </h3>
 
-      {/* PAGE 2: FORM-LEVEL DATA */}
-      <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #666' }}>
-        <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Form-Level Data</h3>
+          {/* Ammonia Range */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>
+              Ammonia Test (Oct–March only)
+            </h4>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '12px' }}>
+              Circle the PPM range at bird height (average of at least 3 locations):
+            </p>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              {['0-5', '5-10', '10-15', '15-20', '20+'].map(range => (
+                <label key={range} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="ammoniaRange"
+                    value={range}
+                    checked={ammoniaRange === range}
+                    onChange={(e) => setAmmoniaRange(e.target.value)}
+                  />
+                  {range} ppm
+                </label>
+              ))}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', color: '#888' }}>
+                <input
+                  type="radio"
+                  name="ammoniaRange"
+                  value=""
+                  checked={ammoniaRange === ''}
+                  onChange={() => setAmmoniaRange('')}
+                />
+                N/A
+              </label>
+            </div>
+          </div>
 
-        <div style={{ marginBottom: '30px', maxWidth: '600px', margin: '0 auto' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
-          <textarea value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            rows="4"
-            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-        </div>
+          {/* Alarm Check */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Alarm Check</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
+                <input type="date" value={alarmCheckDate}
+                  onChange={(e) => setAlarmCheckDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
+                <input type="text" maxLength="10" value={alarmCheckInitials}
+                  onChange={(e) => setAlarmCheckInitials(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-          <button type="submit" style={{
-            padding: '12px 40px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            Save Form 08 - Welfare Records
-          </button>
-          {saved && (
+          {/* Generator Check */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Generator Check</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
+                <input type="date" value={generatorCheckDate}
+                  onChange={(e) => setGeneratorCheckDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
+                <input type="text" maxLength="10" value={generatorCheckInitials}
+                  onChange={(e) => setGeneratorCheckInitials(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div style={{ marginBottom: '30px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              Comments / Corrective Actions
+            </label>
+            <textarea value={monthlyComments}
+              onChange={(e) => setMonthlyComments(e.target.value)}
+              rows="4"
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'Arial', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={handleMarkMonthComplete}
+              onClick={handleMonthlySubmit}
               style={{
                 padding: '12px 40px',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                backgroundColor: '#0066cc',
+                backgroundColor: '#28a745',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer'
               }}>
-              Mark Month Complete
+              Save Monthly Checks
             </button>
-          )}
+            {monthlySaved && (
+              <button
+                type="button"
+                onClick={handleMarkMonthComplete}
+                style={{
+                  padding: '12px 40px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#0066cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}>
+                Mark Month Complete
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </form>
   )
 }
