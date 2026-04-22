@@ -347,40 +347,66 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                             </table>
 
                             {/* Inspection Comments — only rows that have a non-empty comment */}
-                            {(() => {
-                                const inspectionComments = form08Comments
-                                    .filter(r => r.comments?.trim())
-                                    .map(r => ({ date: r.inspection_date, text: r.comments.trim() }))
-                                return inspectionComments.length > 0 ? (
-                                    <div style={{ marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '12px', marginBottom: '8px', borderBottom: '1px solid #ccc', paddingBottom: '4px', fontWeight: 'bold' }}>
-                                            Inspection Comments
-                                        </h3>
-                                        {inspectionComments.map((c, i) => (
-                                            <div key={i} style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '8px', borderRadius: '4px', marginBottom: '6px', fontSize: '10px' }}>
-                                                <span style={{ fontWeight: 'bold', marginRight: '8px' }}>{c.date}:</span>
-                                                <span style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{c.text}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : null
-                            })()}
                         </>
                     ) : (
                         <p style={{ color: '#999', fontStyle: 'italic' }}>No inspection records entered</p>
                     )}
 
-                    {/* Monthly Comments */}
-                    {form08MonthlyInspections?.monthly_comments && (
-                        <div style={{ marginTop: '30px', marginBottom: '30px', pageBreakInside: 'avoid' }}>
-                            <h3 style={{ fontSize: '12px', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                                Monthly Comments
-                            </h3>
-                            <div style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', padding: '10px', borderRadius: '4px', fontSize: '10px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                                {form08MonthlyInspections.monthly_comments}
+                    {/* Monthly Checks Summary */}
+                    {(() => {
+                        const alarmRec = form08Comments?.find(r => r.alarm_check_date || r.alarm_check_initials)
+                        const generatorRec = form08Comments?.find(r => r.generator_check_date || r.generator_check_initials)
+                        const ammoniaRec = form08AmmoniaData?.[0]
+                        const hasAny = alarmRec || generatorRec || ammoniaRec || form08MonthlyInspections?.monthly_comments?.trim()
+                        if (!hasAny) return null
+                        return (
+                            <div style={{ marginTop: '20px', border: '1px solid #ccc', borderRadius: '6px', overflow: 'hidden' }}>
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px 12px', borderBottom: '1px solid #ccc' }}>
+                                    <h3 style={{ margin: 0, fontSize: '12px', fontWeight: 'bold' }}>Monthly Checks</h3>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0', borderBottom: '1px solid #ccc' }}>
+                                    <div style={{ padding: '10px 12px', borderRight: '1px solid #ccc' }}>
+                                        <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 'bold' }}>Ammonia Test</p>
+                                        {ammoniaRec ? (
+                                            <p style={{ margin: 0, fontSize: '11px' }}>{ammoniaRec.ppm_range} ppm</p>
+                                        ) : (
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>Not recorded</p>
+                                        )}
+                                    </div>
+                                    <div style={{ padding: '10px 12px', borderRight: '1px solid #ccc' }}>
+                                        <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 'bold' }}>Alarm Check</p>
+                                        {alarmRec ? (
+                                            <>
+                                                <p style={{ margin: '0 0 2px', fontSize: '11px' }}>Date: {alarmRec.alarm_check_date || '—'}</p>
+                                                <p style={{ margin: 0, fontSize: '11px' }}>Initials: {alarmRec.alarm_check_initials || '—'}</p>
+                                            </>
+                                        ) : (
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>Not recorded</p>
+                                        )}
+                                    </div>
+                                    <div style={{ padding: '10px 12px' }}>
+                                        <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 'bold' }}>Generator Check</p>
+                                        {generatorRec ? (
+                                            <>
+                                                <p style={{ margin: '0 0 2px', fontSize: '11px' }}>Date: {generatorRec.generator_check_date || '—'}</p>
+                                                <p style={{ margin: 0, fontSize: '11px' }}>Initials: {generatorRec.generator_check_initials || '—'}</p>
+                                            </>
+                                        ) : (
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>Not recorded</p>
+                                        )}
+                                    </div>
+                                </div>
+                                {form08MonthlyInspections?.monthly_comments?.trim() && (
+                                    <div style={{ padding: '10px 12px' }}>
+                                        <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 'bold' }}>Comments / Corrective Actions</p>
+                                        <p style={{ margin: 0, fontSize: '11px', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                                            {form08MonthlyInspections.monthly_comments}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    )}
+                        )
+                    })()}
 
                     {/* Signature Section */}
                     <div style={{ marginTop: '50px', pageBreakInside: 'avoid' }}>
