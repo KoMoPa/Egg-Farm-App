@@ -9,7 +9,10 @@ export function FarmProvider({ children, user }) {
   const [farm, setFarm] = useState(null)
   const [barns, setBarns] = useState([])
   const [selectedBarn, setSelectedBarn] = useState(null)
-  const [monthYear, setMonthYear] = useState(new Date().toISOString().split('T')[0])
+  const today = new Date()
+  const [monthYear, setMonthYear] = useState(
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 

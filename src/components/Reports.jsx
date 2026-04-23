@@ -282,7 +282,7 @@ function Reports() {
             {/* Monthly Audit Summary Modal */}
             {selectedAuditId && (
                 <MonthlyAuditSummary
-                    farmId={farmId}
+                    farmId={farm?.id}
                     farmName={farm?.farm_name}
                     auditId={selectedAuditId}
                     monthYear={selectedMonth}

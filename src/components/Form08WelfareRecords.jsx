@@ -50,7 +50,7 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
       </label>
     </div>
 
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
       <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
         <select value={data.beddingUsed ? 'true' : 'false'}
@@ -67,19 +67,6 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
           style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
           <option value="false">No</option>
           <option value="true">Yes</option>
-        </select>
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ammonia Level</label>
-        <select value={data.ammoniaLevel}
-          onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}>
-          <option value="">Select...</option>
-          <option value="0-5">0-5</option>
-          <option value="5-10">5-10</option>
-          <option value="10-15">10-15</option>
-          <option value="15-20">15-20</option>
-          <option value="20+">20+</option>
         </select>
       </div>
     </div>
@@ -140,6 +127,26 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
         Injured Birds
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.respiratoryProblems}
+          onChange={() => onDayCheckbox(day, 'respiratoryProblems')} />
+        Respiratory Problems
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.pantingHuddling}
+          onChange={() => onDayCheckbox(day, 'pantingHuddling')} />
+        Panting/Huddling
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.lameness}
+          onChange={() => onDayCheckbox(day, 'lameness')} />
+        Lameness
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.featherPecking}
+          onChange={() => onDayCheckbox(day, 'featherPecking')} />
+        Signs of Feather Pecking/Cannibalism
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.trappedBirds}
           onChange={() => onDayCheckbox(day, 'trappedBirds')} />
         Trapped Birds
@@ -173,176 +180,14 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
   </div>
 )
 
-// WEEK VIEW TABLE
-const WeekViewTable = ({ startDay, dayData, onDayChange, onDayCheckbox }) => {
-  const endDay = Math.min(startDay + 6, 31)
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '12px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#e8e8e8' }}>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Ext Temp</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-            <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {[...Array(endDay - startDay + 1)].map((_, i) => {
-            const day = startDay + i
-            const data = dayData[day]
-            return (
-              <tr key={day}>
-                <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.barnTempHi}
-                    onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.barnTempLo}
-                    onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="number" step="0.1" value={data.exteriorTemp}
-                    onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.floorsChecked}
-                    onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                    onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                  <input type="checkbox" checked={data.manureChecked}
-                    onChange={() => onDayCheckbox(day, 'manureChecked')} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="text" value={data.beddingUsed}
-                    onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <input type="text" value={data.chemicalsUsed}
-                    onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-                </td>
-                <td style={{ border: '1px solid #333', padding: '2px' }}>
-                  <select value={data.ammoniaLevel}
-                    onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '11px' }}>
-                    <option value="">--</option>
-                    <option value="0-5">0-5</option>
-                    <option value="5-10">5-10</option>
-                    <option value="10-15">10-15</option>
-                    <option value="15-20">15-20</option>
-                    <option value="20+">20+</option>
-                  </select>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
-}
 
-// MONTH VIEW TABLE
-const MonthViewTable = ({ dayData, onDayChange, onDayCheckbox }) => (
-  <div style={{ overflowX: 'auto' }}>
-    <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '11px' }}>
-      <thead>
-        <tr style={{ backgroundColor: '#e8e8e8' }}>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Day</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Barn HI</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Barn LO</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Ext</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Floors</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Walls</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Manure</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Bedding</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Chemicals</th>
-          <th style={{ border: '1px solid #333', padding: '6px' }}>Ammonia</th>
-        </tr>
-      </thead>
-      <tbody>
-        {[...Array(31)].map((_, i) => {
-          const day = i + 1
-          const data = dayData[day]
-          return (
-            <tr key={day}>
-              <td style={{ border: '1px solid #333', padding: '4px', fontWeight: 'bold' }}>{day}</td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="number" step="0.1" value={data.barnTempHi}
-                  onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="number" step="0.1" value={data.barnTempLo}
-                  onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="number" step="0.1" value={data.exteriorTemp}
-                  onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                <input type="checkbox" checked={data.floorsChecked}
-                  onChange={() => onDayCheckbox(day, 'floorsChecked')} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                  onChange={() => onDayCheckbox(day, 'wallsFansCeilingChecked')} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>
-                <input type="checkbox" checked={data.manureChecked}
-                  onChange={() => onDayCheckbox(day, 'manureChecked')} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="text" value={data.beddingUsed}
-                  onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <input type="text" value={data.chemicalsUsed}
-                  onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc' }} />
-              </td>
-              <td style={{ border: '1px solid #333', padding: '2px' }}>
-                <select value={data.ammoniaLevel}
-                  onChange={(e) => onDayChange(day, 'ammoniaLevel', e.target.value)}
-                  style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '10px' }}>
-                  <option value="">--</option>
-                  <option value="0-5">0-5</option>
-                  <option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option>
-                  <option value="15-20">15-20</option>
-                  <option value="20+">20+</option>
-                </select>
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
-  </div>
-)
 
 export default function Form08WelfareRecords() {
-  const supabase = useSupabase()
   const { farm, selectedBarn, monthYear } = useFarmContext()
+  const farmId = farm?.id
+  const farmName = farm?.farm_name
+  const barnId = selectedBarn?.id
+  const barnNumber = selectedBarn?.barn_number
   // Initialize form data for 31 days
   const initializeDayData = () => {
     const days = {}
@@ -359,7 +204,6 @@ export default function Form08WelfareRecords() {
         manureChecked: false,
         beddingUsed: false,
         chemicalsUsed: false,
-        ammoniaLevel: '', // 0-5, 5-10, 10-15, 15-20, 20+
 
         // PAGE 2 - Weekly Inspections
         routineHenEquip1stInitial: '',
@@ -373,6 +217,10 @@ export default function Form08WelfareRecords() {
         abnormalBehavior: false,
         signsOfDisease: false,
         injuredBirds: false,
+        respiratoryProblems: false,
+        pantingHuddling: false,
+        lameness: false,
+        featherPecking: false,
         trappedBirds: false,
         deadBirds: false,
         feedWaterAvailable: false,
@@ -384,16 +232,25 @@ export default function Form08WelfareRecords() {
     return days
   }
 
+  const supabase = useSupabase()
+
   const [dayData, setDayData] = useState(initializeDayData())
-  const [commentsPage1, setCommentsPage1] = useState('')
-  const [commentsPage2, setCommentsPage2] = useState('')
   const [recordDate, setRecordDate] = useState(
     new Date().toISOString().split('T')[0]
   )
+  const [saved, setSaved] = useState(false)
 
-  // View toggle: 'day', 'week', 'month'
+  // Monthly checks state
+  const [ammoniaRange, setAmmoniaRange] = useState('')
+  const [alarmCheckDate, setAlarmCheckDate] = useState('')
+  const [alarmCheckInitials, setAlarmCheckInitials] = useState('')
+  const [generatorCheckDate, setGeneratorCheckDate] = useState('')
+  const [generatorCheckInitials, setGeneratorCheckInitials] = useState('')
+  const [monthlyComments, setMonthlyComments] = useState('')
+  const [monthlySaved, setMonthlySaved] = useState(false)
+
+  // View toggle: 'day' | 'monthly'
   const [viewMode, setViewMode] = useState('day')
-  const [selectedDay, setSelectedDay] = useState(1)
 
   const handleDayChange = (day, field, value) => {
     setDayData(prev => ({
@@ -419,146 +276,257 @@ export default function Form08WelfareRecords() {
     e.preventDefault()
 
     try {
-      // Step 1: Get or create monthly audit record
-      const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-      const auditId = audit.id
+      if (!barnId) {
+        alert('Error: Barn ID is missing. Please select a barn.')
+        return
+      }
 
-      // Step 2: Get or create welfare records parent
-      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, auditId)
-      const welfareId = welfareRecord.id
+      // Step 0: Get or create monthly_audits record
+      let auditId
+      const { data: existingAudit } = await supabase
+        .from('monthly_audits')
+        .select('id')
+        .eq('farm_id', farmId)
+        .eq('month_year', monthYear)
+        .maybeSingle()
 
-      // Step 3: Insert daily checks for each day with data
-      const dailyChecksData = Object.entries(dayData)
-        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked)
-        .map(([dayNum, day]) => {
-          // Create record_date from dayNum
-          const dateObj = new Date(monthYear)
-          dateObj.setDate(parseInt(dayNum))
-          const recordDateForDay = dateObj.toISOString().split('T')[0]
+      if (existingAudit) {
+        auditId = existingAudit.id
+      } else {
+        const { data: newAudit, error: auditError } = await supabase
+          .from('monthly_audits')
+          .insert([{ farm_id: farmId, month_year: monthYear }])
+          .select('id')
+          .single()
+        if (auditError) throw auditError
+        auditId = newAudit.id
+      }
 
-          // Map sanitation codes: B=blow, C=cleanout, S=sweep, W=wash
-          let floorSanitationCode = null
-          let wallsSanitationCode = null
-          let manureSanitationCode = null
-          
-          if (day.floorsChecked) floorSanitationCode = 'B'
-          if (day.wallsFansCeilingChecked) wallsSanitationCode = 'B'
-          if (day.manureChecked) manureSanitationCode = 'B'
+      // Step 1: Get or create welfare_records entry
+      let welfareId
+      const { data: existingWelfare } = await supabase
+        .from('welfare_records')
+        .select('id')
+        .eq('barn_id', barnId)
+        .eq('audit_id', auditId)
+        .maybeSingle()
 
-          return {
-            welfare_id: welfareId,
-            record_date: recordDateForDay,
-            barn_temp_hi: parseFloat(day.barnTempHi) || null,
-            barn_temp_lo: parseFloat(day.barnTempLo) || null,
-            exterior_temp: parseFloat(day.exteriorTemp) || null,
-            floor_sanitation_code: floorSanitationCode,
-            walls_sanitation_code: wallsSanitationCode,
-            manure_sanitation_code: manureSanitationCode,
-            bedding_notes: day.beddingUsed ? 'Used' : null,
-            chemicals_notes: day.chemicalsUsed ? 'Used' : null
-          }
-        })
+      if (existingWelfare) {
+        welfareId = existingWelfare.id
+        await supabase
+          .from('welfare_records')
+          .update({ monthly_comments: comments })
+          .eq('id', welfareId)
+      } else {
+        const { data: newWelfare, error: createError } = await supabase
+          .from('welfare_records')
+          .insert([{ barn_id: barnId, audit_id: auditId, monthly_comments: comments }])
+          .select('id')
+          .single()
+        if (createError) throw createError
+        welfareId = newWelfare.id
+      }
 
-      // Insert daily checks
-      if (dailyChecksData.length > 0) {
+      // Compute actual days in this month so we don't save day 31 for April etc.
+      const [year, month] = monthYear.split('-').map(Number)
+      const daysInMonth = new Date(year, month, 0).getDate()
+      const monthPrefix = monthYear.substring(0, 7) // 'YYYY-MM'
+
+      // Step 2: Save daily checks (one row per day that has any data)
+      const dailyChecks = Object.entries(dayData)
+        .filter(([dayNum]) => parseInt(dayNum) <= daysInMonth)
+        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked || day.routineHenEquip1stInitial || day.routineHenEquip2ndInitial)
+        .map(([dayNum, day]) => ({
+          welfare_id: welfareId,
+          record_date: `${monthPrefix}-${String(dayNum).padStart(2, '0')}`,
+          barn_temp_hi: day.barnTempHi ? parseFloat(day.barnTempHi) : null,
+          barn_temp_lo: day.barnTempLo ? parseFloat(day.barnTempLo) : null,
+          exterior_temp: day.exteriorTemp ? parseFloat(day.exteriorTemp) : null,
+          floor_sanitation_code: day.floorsChecked ? 'Y' : null,
+          walls_sanitation_code: day.wallsFansCeilingChecked ? 'Y' : null,
+          manure_sanitation_code: day.manureChecked ? 'Y' : null,
+          bedding_notes: day.beddingUsed || null,
+          chemicals_notes: day.chemicalsUsed || null,
+          hen_inspection_am: day.routineHenEquip1stInitial || null,
+          hen_inspection_pm: day.routineHenEquip2ndInitial || null,
+        }))
+
+      if (dailyChecks.length > 0) {
         const { error: dailyError } = await supabase
           .from('welfare_daily_checks')
-          .upsert(dailyChecksData, { onConflict: 'welfare_id, record_date' })
-
+          .upsert(dailyChecks, { onConflict: 'welfare_id,record_date' })
         if (dailyError) throw dailyError
       }
 
-      // Step 4: Insert weekly inspections for each day with inspection data
-      const weeklyInspectionsData = Object.entries(dayData)
-        .filter(([, day]) => day.routineHenEquip1stInitial || day.routineHenEquip1stDaily || day.routineHenEquip2ndInitial || day.routineHenEquip2ndDaily || 
-                             day.overallAppearance || day.generalSound || day.abnormalBehavior || day.signsOfDisease)
-        .map(([dayNum, day]) => {
-          const dateObj = new Date(monthYear)
-          dateObj.setDate(parseInt(dayNum))
-          const recordDateForDay = dateObj.toISOString().split('T')[0]
+      // Step 3: Save weekly inspections (one row per day that has any checkbox checked)
+      const weeklyInspections = Object.entries(dayData)
+        .filter(([dayNum]) => parseInt(dayNum) <= daysInMonth)
+        .filter(([, day]) => day.overallAppearance || day.generalSound || day.abnormalBehavior || day.signsOfDisease || day.injuredBirds || day.respiratoryProblems || day.pantingHuddling || day.lameness || day.featherPecking || day.trappedBirds || day.deadBirds || day.feedWaterAvailable || day.equipmentOperating || day.amenitiesCondition || day.layFacilityEnvironment)
+        .map(([dayNum, day]) => ({
+          welfare_id: welfareId,
+          inspection_date: `${monthPrefix}-${String(dayNum).padStart(2, '0')}`,
+          check_overall_appearance: day.overallAppearance || false,
+          check_general_sound: day.generalSound || false,
+          check_abnormal_behavior: day.abnormalBehavior || false,
+          check_disease_illness: day.signsOfDisease || false,
+          check_injured_birds: day.injuredBirds || false,
+          check_respiratory: day.respiratoryProblems || false,
+          check_panting_huddling: day.pantingHuddling || false,
+          check_lameness: day.lameness || false,
+          check_feather_pecking: day.featherPecking || false,
+          check_trapped_birds: day.trappedBirds || false,
+          check_dead_birds: day.deadBirds || false,
+          check_feed_water_available: day.feedWaterAvailable || false,
+          check_equipment_operating: day.equipmentOperating || false,
+          check_amenities_condition: day.amenitiesCondition || false,
+          check_lay_facility: day.layFacilityEnvironment || false,
+        }))
 
-          return {
-            welfare_id: welfareId,
-            inspection_date: recordDateForDay,
-            check_overall_appearance: day.overallAppearance,
-            check_general_sound: day.generalSound,
-            check_abnormal_behavior: day.abnormalBehavior,
-            check_disease_illness: day.signsOfDisease,
-            check_injured_birds: day.injuredBirds,
-            check_respiratory: false,
-            check_panting_huddling: false,
-            check_lameness: false,
-            check_feather_pecking: false,
-            check_trapped_birds: day.trappedBirds,
-            check_dead_birds: day.deadBirds,
-            check_feed_water_available: day.feedWaterAvailable,
-            check_equipment_operating: day.equipmentOperating,
-            check_amenities_condition: day.amenitiesCondition,
-            check_lay_facility: day.layFacilityEnvironment,
-            weekly_initials: day.routineHenEquip1stInitial || null,
-            comments: commentsPage1 || null
-          }
-        })
-
-      // Insert weekly inspections
-      if (weeklyInspectionsData.length > 0) {
+      if (weeklyInspections.length > 0) {
         const { error: weeklyError } = await supabase
           .from('welfare_weekly_inspections')
-          .upsert(weeklyInspectionsData, { onConflict: 'welfare_id, inspection_date' })
-
+          .upsert(weeklyInspections, { onConflict: 'welfare_id,inspection_date' })
         if (weeklyError) throw weeklyError
       }
 
-      // Step 5: Handle ammonia tests if ammonia data was recorded
-      const ammoniaData = Object.entries(dayData)
-        .filter(([, day]) => day.ammoniaLevel)
-        .map(([dayNum, day]) => {
-          const dateObj = new Date(monthYear)
-          dateObj.setDate(parseInt(dayNum))
-          const recordDateForDay = dateObj.toISOString().split('T')[0]
+      setSaved(true)
+      alert('✅ Form 08 records saved successfully!')
+    } catch (error) {
+      alert('Error: ' + error.message)
+      console.error(error)
+    }
+  }
 
-          return {
-            welfare_id: welfareId,
-            test_date: recordDateForDay,
-            ppm_range: day.ammoniaLevel,
-            distilled_water_used: false,
-            initials: null,
-            notes: null
-          }
-        })
+  const handleMarkMonthComplete = async () => {
+    if (!window.confirm('Mark Form 08 as complete for ' + monthYear + '? This confirms all records for the month have been entered.')) return
+    try {
+      const { data: audit, error: findError } = await supabase
+        .from('monthly_audits')
+        .select('id')
+        .eq('farm_id', farmId)
+        .eq('month_year', monthYear)
+        .maybeSingle()
 
-      // Insert ammonia tests
-      if (ammoniaData.length > 0) {
-        const { error: ammoniaError } = await supabase
-          .from('welfare_ammonia_tests')
-          .upsert(ammoniaData, { onConflict: 'welfare_id, test_date' })
-
-        if (ammoniaError) throw ammoniaError
+      if (findError) throw findError
+      if (!audit) {
+        alert('No audit record found. Please save records first.')
+        return
       }
 
-      // Step 6: Update welfare records with comments
-      const { error: updateError } = await supabase
-        .from('welfare_records')
-        .update({ monthly_comments: commentsPage1 || null })
-        .eq('id', welfareId)
-
-      if (updateError) throw updateError
-
-      // Step 7: Mark form as completed
-      const { error: auditUpdateError } = await supabase
+      const { error } = await supabase
         .from('monthly_audits')
         .update({
           form_08_completed: true,
           form_08_completed_date: new Date().toISOString()
         })
-        .eq('id', auditId)
+        .eq('id', audit.id)
 
-      if (auditUpdateError) throw auditUpdateError
+      if (error) throw error
+      alert('✅ Form 08 marked as complete for ' + monthYear)
+    } catch (err) {
+      alert('Error marking complete: ' + err.message)
+    }
+  }
 
-      alert('✅ Form 08 records saved successfully!')
+  const handleMonthlySubmit = async () => {
+    try {
+      if (!barnId) {
+        alert('Error: Barn ID is missing. Please select a barn.')
+        return
+      }
+
+      // Step 0: Get or create monthly_audits record
+      let auditId
+      const { data: existingAudit } = await supabase
+        .from('monthly_audits')
+        .select('id')
+        .eq('farm_id', farmId)
+        .eq('month_year', monthYear)
+        .maybeSingle()
+
+      if (existingAudit) {
+        auditId = existingAudit.id
+      } else {
+        const { data: newAudit, error: auditError } = await supabase
+          .from('monthly_audits')
+          .insert([{ farm_id: farmId, month_year: monthYear }])
+          .select('id')
+          .single()
+        if (auditError) throw auditError
+        auditId = newAudit.id
+      }
+
+      // Step 1: Get or create welfare_records + save monthly comments
+      let welfareId
+      const { data: existingWelfare } = await supabase
+        .from('welfare_records')
+        .select('id')
+        .eq('barn_id', barnId)
+        .eq('audit_id', auditId)
+        .maybeSingle()
+
+      if (existingWelfare) {
+        welfareId = existingWelfare.id
+        await supabase
+          .from('welfare_records')
+          .update({ monthly_comments: monthlyComments || null })
+          .eq('id', welfareId)
+      } else {
+        const { data: newWelfare, error: createError } = await supabase
+          .from('welfare_records')
+          .insert([{ barn_id: barnId, audit_id: auditId, monthly_comments: monthlyComments || null }])
+          .select('id')
+          .single()
+        if (createError) throw createError
+        welfareId = newWelfare.id
+      }
+
+      const monthFirstDate = monthYear.substring(0, 7) + '-01'
+
+      // Step 2: Save ammonia test (upsert keyed on welfare_id + test_date)
+      if (ammoniaRange) {
+        const { error: ammoniaError } = await supabase
+          .from('welfare_ammonia_tests')
+          .upsert([{ welfare_id: welfareId, test_date: monthFirstDate, ppm_range: ammoniaRange }],
+            { onConflict: 'welfare_id,test_date' })
+        if (ammoniaError) throw ammoniaError
+      }
+
+      // Step 3: Save alarm/generator checks — update existing row or insert new
+      if (alarmCheckDate || alarmCheckInitials || generatorCheckDate || generatorCheckInitials) {
+        const alarmGenFields = {
+          alarm_check_date: alarmCheckDate || null,
+          alarm_check_initials: alarmCheckInitials || null,
+          generator_check_date: generatorCheckDate || null,
+          generator_check_initials: generatorCheckInitials || null,
+        }
+        const { data: existingInspection } = await supabase
+          .from('welfare_weekly_inspections')
+          .select('welfare_id, inspection_date')
+          .eq('welfare_id', welfareId)
+          .eq('inspection_date', monthFirstDate)
+          .maybeSingle()
+
+        if (existingInspection) {
+          const { error } = await supabase
+            .from('welfare_weekly_inspections')
+            .update(alarmGenFields)
+            .eq('welfare_id', welfareId)
+            .eq('inspection_date', monthFirstDate)
+          if (error) throw error
+        } else {
+          const { error } = await supabase
+            .from('welfare_weekly_inspections')
+            .insert([{ welfare_id: welfareId, inspection_date: monthFirstDate, ...alarmGenFields }])
+          if (error) throw error
+        }
+      }
+
+      setMonthlySaved(true)
+      alert('✅ Monthly checks saved!')
     } catch (error) {
-      alert('Error saving: ' + error.message)
-      console.error('Error:', error)
+      alert('Error: ' + error.message)
+      console.error(error)
     }
   }
 
@@ -571,9 +539,9 @@ export default function Form08WelfareRecords() {
           Form 08 - Welfare Records
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
-          <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
-          <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
-          <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
+          <div><strong>Farm Name:</strong> {farmName}</div>
+          <div><strong>Barn #:</strong> {barnNumber}</div>
+          <div><strong>Month/Year:</strong> {monthYear}</div>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
             <input type="date" value={recordDate}
@@ -601,18 +569,18 @@ export default function Form08WelfareRecords() {
           </button>
           <button
             type="button"
-            onClick={() => setViewMode('month')}
+            onClick={() => setViewMode('monthly')}
             style={{
               padding: '8px 16px',
               fontSize: '14px',
               fontWeight: 'bold',
-              backgroundColor: viewMode === 'month' ? '#0066cc' : '#ddd',
-              color: viewMode === 'month' ? 'white' : '#333',
+              backgroundColor: viewMode === 'monthly' ? '#0066cc' : '#ddd',
+              color: viewMode === 'monthly' ? 'white' : '#333',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer'
             }}>
-            Month View
+            Monthly Checks
           </button>
         </div>
       </div>
@@ -625,54 +593,150 @@ export default function Form08WelfareRecords() {
             data={dayData[parseInt(recordDate.split('-')[2])]}
             onDayChange={handleDayChange}
             onDayCheckbox={handleDayCheckbox} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+            <button type="submit" style={{
+              padding: '12px 40px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+              Save Daily Record
+            </button>
+          </div>
         </div>
       )}
 
-      {/* MONTH VIEW */}
-      {viewMode === 'month' && (
-        <MonthViewTable
-          dayData={dayData}
-          onDayChange={handleDayChange}
-          onDayCheckbox={handleDayCheckbox} />
+      {/* MONTHLY CHECKS */}
+      {viewMode === 'monthly' && (
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '25px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+            Monthly Checks
+          </h3>
+
+          {/* Ammonia Range */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>
+              Ammonia Test (Oct–March only)
+            </h4>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '12px' }}>
+              Circle the PPM range at bird height (average of at least 3 locations):
+            </p>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              {['0-5', '5-10', '10-15', '15-20', '20+'].map(range => (
+                <label key={range} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="ammoniaRange"
+                    value={range}
+                    checked={ammoniaRange === range}
+                    onChange={(e) => setAmmoniaRange(e.target.value)}
+                  />
+                  {range} ppm
+                </label>
+              ))}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', color: '#888' }}>
+                <input
+                  type="radio"
+                  name="ammoniaRange"
+                  value=""
+                  checked={ammoniaRange === ''}
+                  onChange={() => setAmmoniaRange('')}
+                />
+                N/A
+              </label>
+            </div>
+          </div>
+
+          {/* Alarm Check */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Alarm Check</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
+                <input type="date" value={alarmCheckDate}
+                  onChange={(e) => setAlarmCheckDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
+                <input type="text" maxLength="10" value={alarmCheckInitials}
+                  onChange={(e) => setAlarmCheckInitials(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Generator Check */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Generator Check</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
+                <input type="date" value={generatorCheckDate}
+                  onChange={(e) => setGeneratorCheckDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
+                <input type="text" maxLength="10" value={generatorCheckInitials}
+                  onChange={(e) => setGeneratorCheckInitials(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div style={{ marginBottom: '30px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              Comments / Corrective Actions
+            </label>
+            <textarea value={monthlyComments}
+              onChange={(e) => setMonthlyComments(e.target.value)}
+              rows="4"
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'Arial', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleMonthlySubmit}
+              style={{
+                padding: '12px 40px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+              Save Monthly Checks
+            </button>
+            {monthlySaved && (
+              <button
+                type="button"
+                onClick={handleMarkMonthComplete}
+                style={{
+                  padding: '12px 40px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#0066cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}>
+                Mark Month Complete
+              </button>
+            )}
+          </div>
+        </div>
       )}
-
-      {/* PAGE 2: FORM-LEVEL DATA */}
-      <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #666' }}>
-        <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Form-Level Data</h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Page 1 Comments</label>
-            <textarea value={commentsPage1}
-              onChange={(e) => setCommentsPage1(e.target.value)}
-              rows="4"
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Page 2 Comments</label>
-            <textarea value={commentsPage2}
-              onChange={(e) => setCommentsPage2(e.target.value)}
-              rows="4"
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-          <button type="submit" style={{
-            padding: '12px 40px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            Save Form 08 - Welfare Records
-          </button>
-        </div>
-      </div>
     </form>
   )
 }

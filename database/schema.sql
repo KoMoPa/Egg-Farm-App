@@ -141,7 +141,7 @@ CREATE TABLE production_thermometer_calibration (
 );
 
 -- =============================================
--- FORM 08 - WELFARE RECORDS
+-- FORM 08 - WELFARE RECORDS (Consolidated)
 -- =============================================
 
 -- Parent container for monthly welfare records
@@ -373,14 +373,10 @@ ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE barns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_audits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE production_cooler_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_floor_eggs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_egg_output ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_cooler_temps ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_sanitation ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_flock_age ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_daily_checks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_weekly_inspections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sanitation_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_daily_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_equipment_inspection ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_form_metadata ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_daily ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_health ENABLE ROW LEVEL SECURITY;
@@ -444,22 +440,22 @@ CREATE POLICY "Users can only access their barn records" ON production_flock_age
     production_id IN (SELECT id FROM production_cooler_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
   );
 
--- Welfare records
-CREATE POLICY "Users can only access their barn records" ON welfare_records
+-- Welfare daily records
+CREATE POLICY "Users can only access their farm records" ON welfare_daily_records
   FOR ALL USING (
-    barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid()))
+    (SELECT user_id FROM farms WHERE id = welfare_daily_records.farm_id) = auth.uid()
   );
 
--- Welfare daily checks
-CREATE POLICY "Users can only access their barn records" ON welfare_daily_checks
+-- Welfare equipment inspection
+CREATE POLICY "Users can only access their farm records" ON welfare_equipment_inspection
   FOR ALL USING (
-    welfare_id IN (SELECT id FROM welfare_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
+    (SELECT user_id FROM farms WHERE id = welfare_equipment_inspection.farm_id) = auth.uid()
   );
 
--- Welfare weekly inspections
-CREATE POLICY "Users can only access their barn records" ON welfare_weekly_inspections
+-- Welfare form metadata
+CREATE POLICY "Users can only access their farm records" ON welfare_form_metadata
   FOR ALL USING (
-    welfare_id IN (SELECT id FROM welfare_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
+    (SELECT user_id FROM farms WHERE id = welfare_form_metadata.farm_id) = auth.uid()
   );
 
 -- Feed water records
@@ -530,236 +526,25 @@ CREATE POLICY "Users can only access their barn records" ON corrective_action_lo
 CREATE INDEX idx_farms_user_id ON farms(user_id);
 CREATE INDEX idx_barns_farm_id ON barns(farm_id);
 CREATE INDEX idx_monthly_audits_farm_id ON monthly_audits(farm_id);
-CREATE INDEX idx_monthly_audits_farm_month ON monthly_audits(farm_id, month_year);
+CREATE INDEX idx_monthly_audits_month_year ON monthly_audits(month_year);
+CREATE INDEX idx_production_cooler_farm_id ON production_cooler_records(farm_id);
+CREATE INDEX idx_production_cooler_audit_id ON production_cooler_records(audit_id);
+CREATE INDEX idx_sanitation_farm_id ON sanitation_records(farm_id);
+CREATE INDEX idx_welfare_daily_farm_id ON welfare_daily_records(farm_id);
+CREATE INDEX idx_welfare_daily_audit_id ON welfare_daily_records(audit_id);
+CREATE INDEX idx_feed_water_farm_id ON feed_water_records(farm_id);
+CREATE INDEX idx_feed_water_audit_id ON feed_water_records(audit_id);
+CREATE INDEX idx_pest_control_farm_id ON pest_control_records(farm_id);
+CREATE INDEX idx_pest_control_audit_id ON pest_control_records(audit_id);
 
--- Production indexes
-CREATE INDEX idx_production_cooler_records_barn_id ON production_cooler_records(barn_id);
-CREATE INDEX idx_production_cooler_records_audit_id ON production_cooler_records(audit_id);
-CREATE INDEX idx_production_floor_eggs_production_id_date ON production_floor_eggs(production_id, record_date);
-CREATE INDEX idx_production_egg_output_production_id_date ON production_egg_output(production_id, record_date);
-CREATE INDEX idx_production_cooler_temps_production_id_date ON production_cooler_temps(production_id, record_date);
-CREATE INDEX idx_production_sanitation_production_id_date ON production_sanitation(production_id, record_date);
-CREATE INDEX idx_production_flock_age_production_id_date ON production_flock_age(production_id, record_date);
+-- Index for monthly audits lookup by farm and month
+CREATE INDEX idx_monthly_audits_farm_month 
+ON monthly_audits(farm_id, month_year);
 
--- Welfare indexes
-CREATE INDEX idx_welfare_records_barn_id ON welfare_records(barn_id);
-CREATE INDEX idx_welfare_records_audit_id ON welfare_records(audit_id);
-CREATE INDEX idx_welfare_daily_checks_welfare_id_date ON welfare_daily_checks(welfare_id, record_date);
-CREATE INDEX idx_welfare_weekly_inspections_welfare_id_date ON welfare_weekly_inspections(welfare_id, inspection_date);
+-- Index for analyzing auger runtime by audit
+CREATE INDEX idx_feed_water_auger_runtime 
+ON feed_water_records(audit_id, auger_run_time_minutes);
 
--- Feed & Water indexes
-CREATE INDEX idx_feed_water_records_barn_id ON feed_water_records(barn_id);
-CREATE INDEX idx_feed_water_records_audit_id ON feed_water_records(audit_id);
-CREATE INDEX idx_feed_water_daily_fw_id_date ON feed_water_daily(fw_id, record_date);
-CREATE INDEX idx_feed_water_health_fw_id_date ON feed_water_health(fw_id, record_date);
-
--- Pest Control indexes
-CREATE INDEX idx_pest_control_records_barn_id ON pest_control_records(barn_id);
-CREATE INDEX idx_pest_control_records_audit_id ON pest_control_records(audit_id);
-CREATE INDEX idx_pest_daily_observations_pest_id_date ON pest_daily_observations(pest_id, record_date);
-
--- Thermometer calibration indexes
-CREATE INDEX idx_production_thermometer_cal_production_id ON production_thermometer_calibration(production_id);
-CREATE INDEX idx_production_thermometer_cal_date ON production_thermometer_calibration(calibration_date);
-
--- Ammonia tests indexes
-CREATE INDEX idx_welfare_ammonia_tests_welfare_id_date ON welfare_ammonia_tests(welfare_id, test_date);
-
--- Corrective action log indexes
-CREATE INDEX idx_corrective_action_log_barn_id ON corrective_action_log(barn_id);
-CREATE INDEX idx_corrective_action_log_audit_id ON corrective_action_log(audit_id);
-CREATE INDEX idx_corrective_action_log_deviation_date ON corrective_action_log(deviation_date);
-
--- =============================================
--- VIEWS FOR PDF EXPORT AND ANALYTICS
--- =============================================
-
--- Form 07: Production & Cooler - Complete month snapshot
-CREATE VIEW form_07_snapshot AS
-SELECT 
-  pcr.id as production_id,
-  b.id as barn_id,
-  b.barn_name,
-  b.barn_number,
-  pcr.audit_id,
-  COALESCE(pfe.record_date, peo.record_date, pct.record_date, ps.record_date, pfa.record_date) as record_date,
-  pfa.flock_age_weeks,
-  pfe.collection_1 as floor_eggs_collection_1,
-  pfe.collection_2 as floor_eggs_collection_2,
-  pfe.floor_eggs_total,
-  peo.egg_production_1,
-  peo.egg_production_2,
-  peo.egg_production_daily,
-  peo.egg_production_percent,
-  peo.notes as production_notes,
-  pct.cooler_temp_hi_celsius,
-  pct.cooler_temp_lo_celsius,
-  pct.cooler_rh_hi_percent,
-  pct.cooler_rh_lo_percent,
-  pct.cooler_check_time,
-  ps.dirty_trays_count,
-  ps.egg_cooler_sanitation_code,
-  ps.pack_room_sanitation_code,
-  ps.equip_sanitation_code,
-  ps.corrective_actions
-FROM production_cooler_records pcr
-LEFT JOIN barns b ON pcr.barn_id = b.id
-FULL OUTER JOIN production_flock_age pfa ON pcr.id = pfa.production_id
-FULL OUTER JOIN production_floor_eggs pfe ON pcr.id = pfe.production_id
-FULL OUTER JOIN production_egg_output peo ON pcr.id = peo.production_id
-FULL OUTER JOIN production_cooler_temps pct ON pcr.id = pct.production_id
-FULL OUTER JOIN production_sanitation ps ON pcr.id = ps.production_id
-ORDER BY b.id, record_date;
-
--- Form 08: Welfare - Complete month snapshot
-CREATE VIEW form_08_snapshot AS
-SELECT 
-  wr.id as welfare_id,
-  b.id as barn_id,
-  b.barn_name,
-  b.barn_number,
-  wr.audit_id,
-  wr.monthly_comments,
-  COALESCE(wdc.record_date, wwi.inspection_date) as record_date,
-  wdc.barn_temp_hi,
-  wdc.barn_temp_lo,
-  wdc.exterior_temp,
-  wdc.floor_sanitation_code,
-  wdc.walls_sanitation_code,
-  wdc.manure_sanitation_code,
-  wdc.bedding_notes,
-  wdc.chemicals_notes,
-  wdc.hen_inspection_am,
-  wdc.hen_inspection_pm,
-  wwi.alarm_check_date,
-  wwi.alarm_check_initials,
-  wwi.generator_check_date,
-  wwi.generator_check_initials,
-  wwi.check_overall_appearance,
-  wwi.check_general_sound,
-  wwi.check_abnormal_behavior,
-  wwi.check_disease_illness,
-  wwi.check_injured_birds,
-  wwi.check_respiratory,
-  wwi.check_panting_huddling,
-  wwi.check_lameness,
-  wwi.check_feather_pecking,
-  wwi.check_trapped_birds,
-  wwi.check_dead_birds,
-  wwi.check_feed_water_available,
-  wwi.check_equipment_operating,
-  wwi.check_amenities_condition,
-  wwi.check_lay_facility,
-  wwi.weekly_initials,
-  wwi.comments
-FROM welfare_records wr
-LEFT JOIN barns b ON wr.barn_id = b.id
-FULL OUTER JOIN welfare_daily_checks wdc ON wr.id = wdc.welfare_id
-FULL OUTER JOIN welfare_weekly_inspections wwi ON wr.id = wwi.welfare_id
-ORDER BY b.id, record_date;
-
--- Form 09: Feed & Water - Complete month snapshot
-CREATE VIEW form_09_snapshot AS
-SELECT 
-  fwr.id as fw_id,
-  b.id as barn_id,
-  b.barn_name,
-  b.barn_number,
-  fwr.audit_id,
-  COALESCE(fwd.record_date, fwh.record_date) as record_date,
-  fwd.feed_daily,
-  fwd.feed_actual,
-  fwd.water_daily,
-  fwd.water_actual,
-  fwd.auger_run_time_minutes,
-  fwd.flush_notes,
-  fwd.meds_vit_notes,
-  fwd.treatment_notes,
-  fwd.notes,
-  fwh.mortality_daily,
-  fwh.pileup_count,
-  fwh.efo_notified,
-  fwh.mortality_reason,
-  fwh.hospital_pen_monitoring,
-  fwh.inventory,
-  fwm.starting_inventory,
-  fwm.feed_target,
-  fwm.monthly_mortality_percent,
-  fwm.water_residual_monthly,
-  fwm.comments
-FROM feed_water_records fwr
-LEFT JOIN barns b ON fwr.barn_id = b.id
-FULL OUTER JOIN feed_water_daily fwd ON fwr.id = fwd.fw_id
-FULL OUTER JOIN feed_water_health fwh ON fwr.id = fwh.fw_id
-LEFT JOIN feed_water_monthly_metadata fwm ON fwr.id = fwm.fw_id
-ORDER BY b.id, record_date;
-
--- Form 10: Pest Control - Complete month snapshot
-CREATE VIEW form_10_snapshot AS
-SELECT 
-  pcr.id as pest_id,
-  b.id as barn_id,
-  b.barn_name,
-  b.barn_number,
-  pcr.audit_id,
-  pdo.record_date,
-  pdo.mice_caught,
-  pdo.traps_checked,
-  pdo.trap_findings_notes,
-  pdo.trap_location,
-  pdo.bait_product,
-  pdo.bait_location,
-  pdo.bait_replenished,
-  pdo.birds_on_range,
-  pdo.corrective_actions,
-  pma.exterior_inspection_date,
-  pma.exterior_inspection_observation,
-  pma.wild_birds_observation,
-  pma.fly_monitoring,
-  pma.range_grass,
-  pma.range_ponding_water,
-  pma.range_rotation_harrow,
-  pma.range_wild_bird_deterrents,
-  pma.range_gravel_fences,
-  pma.range_other,
-  pma.interior_inspection_date,
-  pma.interior_inspection_observation,
-  pma.mice_total,
-  pma.traps_total,
-  pma.days_monitored,
-  pma.rodent_index,
-  pma.comments,
-  pma.signature,
-  pma.signature_date
-FROM pest_control_records pcr
-LEFT JOIN barns b ON pcr.barn_id = b.id
-LEFT JOIN pest_daily_observations pdo ON pcr.id = pdo.pest_id
-LEFT JOIN pest_monthly_audit pma ON pcr.id = pma.pest_id;
-
--- =============================================
--- PERMISSIONS FOR AUTHENTICATED USERS
--- =============================================
--- Grant all permissions to the authenticated role so users can access their data
-
-GRANT ALL ON farms TO authenticated;
-GRANT ALL ON barns TO authenticated;
-GRANT ALL ON monthly_audits TO authenticated;
-GRANT ALL ON production_cooler_records TO authenticated;
-GRANT ALL ON production_floor_eggs TO authenticated;
-GRANT ALL ON production_egg_output TO authenticated;
-GRANT ALL ON production_cooler_temps TO authenticated;
-GRANT ALL ON production_sanitation TO authenticated;
-GRANT ALL ON production_flock_age TO authenticated;
-GRANT ALL ON production_thermometer_calibration TO authenticated;
-GRANT ALL ON welfare_records TO authenticated;
-GRANT ALL ON welfare_daily_checks TO authenticated;
-GRANT ALL ON welfare_weekly_inspections TO authenticated;
-GRANT ALL ON welfare_ammonia_tests TO authenticated;
-GRANT ALL ON feed_water_records TO authenticated;
-GRANT ALL ON feed_water_daily TO authenticated;
-GRANT ALL ON feed_water_health TO authenticated;
-GRANT ALL ON feed_water_monthly_metadata TO authenticated;
-GRANT ALL ON pest_control_records TO authenticated;
-GRANT ALL ON pest_daily_observations TO authenticated;
-GRANT ALL ON pest_monthly_audit TO authenticated;
-GRANT ALL ON corrective_action_log TO authenticated;
+-- Combined index for efficiency analysis (farm + audit + auger runtime)
+CREATE INDEX idx_feed_water_farm_auger 
+ON feed_water_records(farm_id, audit_id, auger_run_time_minutes);
