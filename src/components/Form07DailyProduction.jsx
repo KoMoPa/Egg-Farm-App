@@ -74,37 +74,52 @@ export default function Form07DailyProduction() {
       const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, auditId)
       const productionId = productionRecord.id
 
-      // Step 3: Insert floor eggs record
+      // Check if a record already exists for this date
+      const { data: existing } = await supabase
+        .from('production_floor_eggs')
+        .select('record_date')
+        .eq('production_id', productionId)
+        .eq('record_date', recordDate)
+        .maybeSingle()
+
+      if (existing) {
+        const confirmed = window.confirm(
+          `A record for ${recordDate} already exists. Overwrite it with the current values?`
+        )
+        if (!confirmed) return
+      }
+
+      // Step 3: Upsert floor eggs record
       const { error: floorEggsError } = await supabase
         .from('production_floor_eggs')
-        .insert([{
+        .upsert([{
           production_id: productionId,
           record_date: recordDate,
           collection_1: parseInt(formData.floorEggs1) || null,
           collection_2: parseInt(formData.floorEggs2) || null,
           floor_eggs_total: floorEggsTotal
-        }])
+        }], { onConflict: 'production_id,record_date' })
 
       if (floorEggsError) throw floorEggsError
 
-      // Step 4: Insert egg production record
+      // Step 4: Upsert egg production record
       const { error: eggOutputError } = await supabase
         .from('production_egg_output')
-        .insert([{
+        .upsert([{
           production_id: productionId,
           record_date: recordDate,
           egg_production_1: parseInt(formData.eggProduction1) || null,
           egg_production_2: parseInt(formData.eggProduction2) || null,
           egg_production_daily: eggProductionDaily,
           egg_production_percent: toNumber(formData.eggProductionPercent)
-        }])
+        }], { onConflict: 'production_id,record_date' })
 
       if (eggOutputError) throw eggOutputError
 
-      // Step 5: Insert cooler temps record
+      // Step 5: Upsert cooler temps record
       const { error: coolerTempsError } = await supabase
         .from('production_cooler_temps')
-        .insert([{
+        .upsert([{
           production_id: productionId,
           record_date: recordDate,
           cooler_temp_hi_celsius: toNumber(formData.coolerTempHi),
@@ -112,19 +127,19 @@ export default function Form07DailyProduction() {
           cooler_rh_hi_percent: toNumber(formData.coolerRhHi),
           cooler_rh_lo_percent: toNumber(formData.coolerRhLo),
           cooler_check_time: formData.coolerCheckTime || null
-        }])
+        }], { onConflict: 'production_id,record_date' })
 
       if (coolerTempsError) throw coolerTempsError
 
-      // Step 6: Insert sanitation record
+      // Step 6: Upsert sanitation record
       const sanitationCodes = []
-      if (formData.eggCoolerCleaned) sanitationCodes.push('B') // B = blow/cleaned
-      if (formData.packRoomCleaned) sanitationCodes.push('W')  // W = wash
-      if (formData.tablesPackingEquipCleaned) sanitationCodes.push('S') // S = sweep
+      if (formData.eggCoolerCleaned) sanitationCodes.push('B')
+      if (formData.packRoomCleaned) sanitationCodes.push('W')
+      if (formData.tablesPackingEquipCleaned) sanitationCodes.push('S')
 
       const { error: sanitationError } = await supabase
         .from('production_sanitation')
-        .insert([{
+        .upsert([{
           production_id: productionId,
           record_date: recordDate,
           dirty_trays_count: parseInt(formData.dirtyTrays) || 0,
@@ -132,19 +147,19 @@ export default function Form07DailyProduction() {
           pack_room_sanitation_code: sanitationCodes.includes('W') ? 'W' : null,
           equip_sanitation_code: sanitationCodes.includes('S') ? 'S' : null,
           corrective_actions: formData.correctiveActions || null
-        }])
+        }], { onConflict: 'production_id,record_date' })
 
       if (sanitationError) throw sanitationError
 
-      // Step 7: Insert flock age record (if provided)
+      // Step 7: Upsert flock age record (if provided)
       if (formData.age) {
         const { error: flockAgeError } = await supabase
           .from('production_flock_age')
-          .insert([{
+          .upsert([{
             production_id: productionId,
             record_date: recordDate,
             flock_age_weeks: parseInt(formData.age)
-          }])
+          }], { onConflict: 'production_id,record_date' })
 
         if (flockAgeError) throw flockAgeError
       }
@@ -268,300 +283,300 @@ export default function Form07DailyProduction() {
       {/* ============ DAY VIEW ============ */}
       {viewMode === 'day' && (<>
 
-      {/* Date picker */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '16px' }}>Date</label>
-        <input type="date" value={recordDate}
-          onChange={(e) => setRecordDate(e.target.value)}
-          style={{ padding: '8px', border: '1px solid #ccc', fontSize: '16px' }} />
-      </div>
+        {/* Date picker */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '16px' }}>Date</label>
+          <input type="date" value={recordDate}
+            onChange={(e) => setRecordDate(e.target.value)}
+            style={{ padding: '8px', border: '1px solid #ccc', fontSize: '16px' }} />
+        </div>
 
-      {/* ============ PAGE 1 FIELDS ============ */}
+        {/* ============ PAGE 1 FIELDS ============ */}
 
-      {/* Age */}
-      <div style={{ marginBottom: '30px' }}>
-        <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Age (weeks)
-        </label>
-        <input
-          type="number"
-          value={formData.age}
-          onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-          style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-          placeholder="25"
-        />
-      </div>
+        {/* Age */}
+        <div style={{ marginBottom: '30px' }}>
+          <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+            Age (weeks)
+          </label>
+          <input
+            type="number"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+            placeholder="25"
+          />
+        </div>
 
-      {/* Floor Eggs */}
-      <div style={{ background: '#fff3cd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-        <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
-          Floor Eggs
-        </h3>
+        {/* Floor Eggs */}
+        <div style={{ background: '#fff3cd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
+            Floor Eggs
+          </h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              #1
-            </label>
-            <input
-              type="number"
-              value={formData.floorEggs1}
-              onChange={(e) => setFormData({ ...formData, floorEggs1: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="150"
-            />
-          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                #1
+              </label>
+              <input
+                type="number"
+                value={formData.floorEggs1}
+                onChange={(e) => setFormData({ ...formData, floorEggs1: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="150"
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              #2
-            </label>
-            <input
-              type="number"
-              value={formData.floorEggs2}
-              onChange={(e) => setFormData({ ...formData, floorEggs2: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="120"
-            />
-          </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                #2
+              </label>
+              <input
+                type="number"
+                value={formData.floorEggs2}
+                onChange={(e) => setFormData({ ...formData, floorEggs2: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="120"
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              Total
-            </label>
-            <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#ffc107', borderRadius: '8px', textAlign: 'center' }}>
-              {floorEggsTotal}
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                Total
+              </label>
+              <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#ffc107', borderRadius: '8px', textAlign: 'center' }}>
+                {floorEggsTotal}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Egg Production */}
-      <div style={{ background: '#d4edda', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-        <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #28a745', paddingBottom: '8px' }}>
-          Egg Production
-        </h3>
+        {/* Egg Production */}
+        <div style={{ background: '#d4edda', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #28a745', paddingBottom: '8px' }}>
+            Egg Production
+          </h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              #1
-            </label>
-            <input
-              type="number"
-              value={formData.eggProduction1}
-              onChange={(e) => setFormData({ ...formData, eggProduction1: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="6000"
-            />
-          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                #1
+              </label>
+              <input
+                type="number"
+                value={formData.eggProduction1}
+                onChange={(e) => setFormData({ ...formData, eggProduction1: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="6000"
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              #2
-            </label>
-            <input
-              type="number"
-              value={formData.eggProduction2}
-              onChange={(e) => setFormData({ ...formData, eggProduction2: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="6500"
-            />
-          </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                #2
+              </label>
+              <input
+                type="number"
+                value={formData.eggProduction2}
+                onChange={(e) => setFormData({ ...formData, eggProduction2: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="6500"
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              Daily
-            </label>
-            <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#28a745', color: 'white', borderRadius: '8px', textAlign: 'center' }}>
-              {eggProductionDaily}
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                Daily
+              </label>
+              <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#28a745', color: 'white', borderRadius: '8px', textAlign: 'center' }}>
+                {eggProductionDaily}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                % Daily
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.eggProductionPercent}
+                onChange={(e) => setFormData({ ...formData, eggProductionPercent: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="92.5"
+              />
             </div>
           </div>
+        </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              % Daily
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.eggProductionPercent}
-              onChange={(e) => setFormData({ ...formData, eggProductionPercent: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="92.5"
-            />
+        {/* Cooler Temperature & Humidity */}
+        <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
+            Cooler Temperature & RH%
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                Temp HI (°C)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.coolerTempHi}
+                onChange={(e) => setFormData({ ...formData, coolerTempHi: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="4.5"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                Temp LO (°C)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.coolerTempLo}
+                onChange={(e) => setFormData({ ...formData, coolerTempLo: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="3.8"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                RH% HI
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.coolerRhHi}
+                onChange={(e) => setFormData({ ...formData, coolerRhHi: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="75.0"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                RH% LO
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.coolerRhLo}
+                onChange={(e) => setFormData({ ...formData, coolerRhLo: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+                placeholder="70.0"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                Time
+              </label>
+              <input
+                type="time"
+                value={formData.coolerCheckTime}
+                onChange={(e) => setFormData({ ...formData, coolerCheckTime: e.target.value })}
+                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Cooler Temperature & Humidity */}
-      <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-        <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
-          Cooler Temperature & RH%
-        </h3>
+        {/* PAGE BREAK VISUAL */}
+        <div style={{ borderTop: '4px dashed #999', margin: '40px 0', padding: '20px 0', textAlign: 'center', color: '#666', fontSize: '18px', fontWeight: 'bold' }}>
+          ═══ PAGE 2: SANITATION ═══
+        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '15px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              Temp HI (°C)
+        {/* ============ PAGE 2 FIELDS ============ */}
+
+        {/* Dirty Trays */}
+        <div style={{ marginBottom: '30px' }}>
+          <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+            Dirty Trays (Daily count)
+          </label>
+          <input
+            type="number"
+            value={formData.dirtyTrays}
+            onChange={(e) => setFormData({ ...formData, dirtyTrays: e.target.value })}
+            style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
+            placeholder="5"
+          />
+        </div>
+
+        {/* Sanitation - As Completed */}
+        <div style={{ background: '#e7f3ff', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0066cc', paddingBottom: '8px' }}>
+            Sanitation - As Completed
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.eggCoolerCleaned}
+                onChange={(e) => setFormData({ ...formData, eggCoolerCleaned: e.target.checked })}
+                style={{ width: '24px', height: '24px', marginRight: '12px' }}
+              />
+              <span style={{ fontSize: '18px' }}>Egg Cooler</span>
             </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.coolerTempHi}
-              onChange={(e) => setFormData({ ...formData, coolerTempHi: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="4.5"
-            />
-          </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              Temp LO (°C)
+            <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.packRoomCleaned}
+                onChange={(e) => setFormData({ ...formData, packRoomCleaned: e.target.checked })}
+                style={{ width: '24px', height: '24px', marginRight: '12px' }}
+              />
+              <span style={{ fontSize: '18px' }}>Pack Room</span>
             </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.coolerTempLo}
-              onChange={(e) => setFormData({ ...formData, coolerTempLo: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="3.8"
-            />
-          </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              RH% HI
+            <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tablesPackingEquipCleaned}
+                onChange={(e) => setFormData({ ...formData, tablesPackingEquipCleaned: e.target.checked })}
+                style={{ width: '24px', height: '24px', marginRight: '12px' }}
+              />
+              <span style={{ fontSize: '18px' }}>Tables/Packing Equip</span>
             </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.coolerRhHi}
-              onChange={(e) => setFormData({ ...formData, coolerRhHi: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="75.0"
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              RH% LO
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.coolerRhLo}
-              onChange={(e) => setFormData({ ...formData, coolerRhLo: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-              placeholder="70.0"
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-              Time
-            </label>
-            <input
-              type="time"
-              value={formData.coolerCheckTime}
-              onChange={(e) => setFormData({ ...formData, coolerCheckTime: e.target.value })}
-              style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-            />
           </div>
         </div>
-      </div>
 
-      {/* PAGE BREAK VISUAL */}
-      <div style={{ borderTop: '4px dashed #999', margin: '40px 0', padding: '20px 0', textAlign: 'center', color: '#666', fontSize: '18px', fontWeight: 'bold' }}>
-        ═══ PAGE 2: SANITATION ═══
-      </div>
-
-      {/* ============ PAGE 2 FIELDS ============ */}
-
-      {/* Dirty Trays */}
-      <div style={{ marginBottom: '30px' }}>
-        <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Dirty Trays (Daily count)
-        </label>
-        <input
-          type="number"
-          value={formData.dirtyTrays}
-          onChange={(e) => setFormData({ ...formData, dirtyTrays: e.target.value })}
-          style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px' }}
-          placeholder="5"
-        />
-      </div>
-
-      {/* Sanitation - As Completed */}
-      <div style={{ background: '#e7f3ff', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-        <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0066cc', paddingBottom: '8px' }}>
-          Sanitation - As Completed
-        </h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={formData.eggCoolerCleaned}
-              onChange={(e) => setFormData({ ...formData, eggCoolerCleaned: e.target.checked })}
-              style={{ width: '24px', height: '24px', marginRight: '12px' }}
-            />
-            <span style={{ fontSize: '18px' }}>Egg Cooler</span>
+        {/* Corrective Actions */}
+        <div style={{ marginBottom: '30px' }}>
+          <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+            Corrective Actions
           </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={formData.packRoomCleaned}
-              onChange={(e) => setFormData({ ...formData, packRoomCleaned: e.target.checked })}
-              style={{ width: '24px', height: '24px', marginRight: '12px' }}
-            />
-            <span style={{ fontSize: '18px' }}>Pack Room</span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={formData.tablesPackingEquipCleaned}
-              onChange={(e) => setFormData({ ...formData, tablesPackingEquipCleaned: e.target.checked })}
-              style={{ width: '24px', height: '24px', marginRight: '12px' }}
-            />
-            <span style={{ fontSize: '18px' }}>Tables/Packing Equip</span>
-          </label>
+          <textarea
+            value={formData.correctiveActions}
+            onChange={(e) => setFormData({ ...formData, correctiveActions: e.target.value })}
+            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit' }}
+            rows="4"
+            placeholder="Describe any issues found and corrective actions taken..."
+          />
         </div>
-      </div>
 
-      {/* Corrective Actions */}
-      <div style={{ marginBottom: '30px' }}>
-        <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Corrective Actions
-        </label>
-        <textarea
-          value={formData.correctiveActions}
-          onChange={(e) => setFormData({ ...formData, correctiveActions: e.target.value })}
-          style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit' }}
-          rows="4"
-          placeholder="Describe any issues found and corrective actions taken..."
-        />
-      </div>
-
-      {/* Submit Button */}
-      <button
-        type="submit"
-        style={{
-          width: '100%',
-          padding: '20px',
-          fontSize: '22px',
-          fontWeight: 'bold',
-          background: '#28a745',
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer'
-        }}
-      >
-        💾 Save Daily Record
-      </button>
+        {/* Submit Button */}
+        <button
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '20px',
+            fontSize: '22px',
+            fontWeight: 'bold',
+            background: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          💾 Save Daily Record
+        </button>
 
       </>)}
 
