@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { AuditReportPDF } from './AuditReportPDF'
+import { ProductionReportPDF } from './ProductionReportPDF'
 
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
     const supabase = useSupabase()
@@ -21,15 +22,35 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
             setLoading(true)
             try {
                 // Form 07 - Production & Cooler
-                const { data: prod } = await supabase
+                const { data: prodRecord } = await supabase
                     .from('production_cooler_records')
                     .select('*')
                     .eq('audit_id', auditId)
+                    .maybeSingle()
 
-                const { data: sanit, error: sanitError } = await supabase
-                    .from('sanitation_records')
-                    .select('*')
-                    .eq('audit_id', auditId)
+                let form07FlockAge = []
+                let form07FloorEggs = []
+                let form07EggOutput = []
+                let form07CoolerTemps = []
+                let form07Sanitation = []
+                let form07ThermCal = []
+
+                if (prodRecord) {
+                    const [fa, fe, eo, ct, san, tc] = await Promise.all([
+                        supabase.from('production_flock_age').select('*').eq('production_id', prodRecord.id).order('record_date'),
+                        supabase.from('production_floor_eggs').select('*').eq('production_id', prodRecord.id).order('record_date'),
+                        supabase.from('production_egg_output').select('*').eq('production_id', prodRecord.id).order('record_date'),
+                        supabase.from('production_cooler_temps').select('*').eq('production_id', prodRecord.id).order('record_date'),
+                        supabase.from('production_sanitation').select('*').eq('production_id', prodRecord.id).order('record_date'),
+                        supabase.from('production_thermometer_calibration').select('*').eq('production_id', prodRecord.id).order('calibration_date'),
+                    ])
+                    form07FlockAge = fa.data || []
+                    form07FloorEggs = fe.data || []
+                    form07EggOutput = eo.data || []
+                    form07CoolerTemps = ct.data || []
+                    form07Sanitation = san.data || []
+                    form07ThermCal = tc.data || []
+                }
 
                 // Form 08 - Welfare
                 // Step 1: get welfare_records entry (join barns to get barn_number)
@@ -86,7 +107,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     .eq('audit_id', auditId)
                     .order('day_of_month')
 
-                setForm07Data({ production: prod || [], sanitation: sanit || [] })
+                setForm07Data({ record: prodRecord, flockAge: form07FlockAge, floorEggs: form07FloorEggs, eggOutput: form07EggOutput, coolerTemps: form07CoolerTemps, sanitation: form07Sanitation, thermCal: form07ThermCal })
                 setForm08Data(welfare)
                 setForm08Comments(weeklyInspections)
                 setForm08MonthlyInspections(monthlyInspections)
@@ -113,21 +134,36 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
     const handleDownloadPDF = async () => {
         try {
-            const doc = <AuditReportPDF
-                farmName={farmName}
-                barnNumber={barnNumber}
-                monthYear={monthYear}
-                form08Data={form08Data}
-                form08Comments={form08Comments}
-                form08MonthlyInspections={form08MonthlyInspections}
-                form08AmmoniaData={form08AmmoniaData}
-            />
+            let doc
+            let filename
+
+            if (selectedForm === 'form07') {
+                doc = <ProductionReportPDF
+                    farmName={farmName}
+                    barnNumber={barnNumber}
+                    monthYear={monthYear}
+                    form07Data={form07Data}
+                />
+                filename = `Form07_${farmName}_${monthYear}.pdf`
+            } else {
+                doc = <AuditReportPDF
+                    farmName={farmName}
+                    barnNumber={barnNumber}
+                    monthYear={monthYear}
+                    form08Data={form08Data}
+                    form08Comments={form08Comments}
+                    form08MonthlyInspections={form08MonthlyInspections}
+                    form08AmmoniaData={form08AmmoniaData}
+                />
+                filename = `Form08_${farmName}_${monthYear}.pdf`
+            }
+
             const asPdf = pdf(doc)
             asPdf.toBlob().then((blob) => {
                 const url = URL.createObjectURL(blob)
                 const link = document.createElement('a')
                 link.href = url
-                link.download = `Audit_${farmName}_${monthYear}.pdf`
+                link.download = filename
                 link.click()
                 URL.revokeObjectURL(url)
             }).catch((err) => {
@@ -219,41 +255,152 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
             </div>
 
             {/* Form 07 */}
-            {selectedForm === 'form07' && (
-                <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                    <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                        Form 07 - Egg Production & Cooler Records
-                    </h2>
-                    {form07Data.production && form07Data.production.length > 0 ? (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
-                            <thead>
-                                <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Date</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left', fontWeight: 'bold' }}>Age (wks)</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Floor Eggs</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Prod Daily</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Temp HI</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Temp LO</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {form07Data.production.map((record) => (
-                                    <tr key={record.id}>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px' }}>{record.record_date}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px' }}>{record.flock_age_weeks}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.floor_eggs_total}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.egg_production_daily}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.cooler_temp_hi_celsius}°C</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.cooler_temp_lo_celsius}°C</td>
+            {selectedForm === 'form07' && (() => {
+                // Build a date-keyed map merging all child tables
+                const dateMap = {}
+                const addToMap = (rows, key) => rows.forEach(r => {
+                    if (!dateMap[r.record_date]) dateMap[r.record_date] = {}
+                    dateMap[r.record_date][key] = r
+                })
+                addToMap(form07Data.flockAge || [], 'age')
+                addToMap(form07Data.floorEggs || [], 'floor')
+                addToMap(form07Data.eggOutput || [], 'egg')
+                addToMap(form07Data.coolerTemps || [], 'cooler')
+                addToMap(form07Data.sanitation || [], 'san')
+                const dates = Object.keys(dateMap).sort()
+                const rec = form07Data.record
+                return (
+                    <div style={{ marginBottom: '40px' }}>
+                        <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                            Form 07 - Egg Production & Cooler Records
+                        </h2>
+
+                        {/* Page 1 table */}
+                        {dates.length > 0 ? (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '10px' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Date</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Age (wks)</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Floor #1</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Floor #2</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Floor Total</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Prod #1</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Prod #2</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Prod Daily</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>%</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Temp HI</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Temp LO</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>RH% HI</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>RH% LO</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Time</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p style={{ color: '#999', fontStyle: 'italic' }}>No production records entered</p>
-                    )}
-                </div>
-            )}
+                                </thead>
+                                <tbody>
+                                    {dates.map(d => {
+                                        const row = dateMap[d]
+                                        return (
+                                            <tr key={d}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px' }}>{d}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.age?.flock_age_weeks ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.floor?.collection_1 ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.floor?.collection_2 ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.floor?.floor_eggs_total ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.egg?.egg_production_1 ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.egg?.egg_production_2 ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.egg?.egg_production_daily ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.egg?.egg_production_percent ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_temp_hi_celsius ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_temp_lo_celsius ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_rh_hi_percent ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_rh_lo_percent ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_check_time ?? ''}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p style={{ color: '#999', fontStyle: 'italic' }}>No daily production records entered</p>
+                        )}
+
+                        {/* Page 2 - Sanitation */}
+                        {(form07Data.sanitation || []).length > 0 && (
+                            <>
+                                <h3 style={{ fontSize: '13px', marginBottom: '10px', marginTop: '20px', borderBottom: '1px solid #ccc', paddingBottom: '4px' }}>Sanitation</h3>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '10px' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                            <th style={{ border: '1px solid #ccc', padding: '4px' }}>Date</th>
+                                            <th style={{ border: '1px solid #ccc', padding: '4px' }}>Dirty Trays</th>
+                                            <th style={{ border: '1px solid #ccc', padding: '4px' }}>Egg Cooler</th>
+                                            <th style={{ border: '1px solid #ccc', padding: '4px' }}>Pack Room</th>
+                                            <th style={{ border: '1px solid #ccc', padding: '4px' }}>Tables/Equip</th>
+                                            <th style={{ border: '1px solid #ccc', padding: '4px' }}>Corrective Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(form07Data.sanitation || []).map(s => (
+                                            <tr key={s.record_date}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px' }}>{s.record_date}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{s.dirty_trays_count ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{s.egg_cooler_sanitation_code ? '✓' : ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{s.pack_room_sanitation_code ? '✓' : ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{s.equip_sanitation_code ? '✓' : ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px' }}>{s.corrective_actions ?? ''}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+
+                        {/* Monthly Checks */}
+                        {(rec?.monthly_corrective_actions || rec?.monthly_comments || (form07Data.thermCal || []).length > 0) && (
+                            <div style={{ background: '#f0f7ff', border: '1px solid #b3d4f5', borderRadius: '6px', padding: '16px', marginTop: '16px' }}>
+                                <h3 style={{ fontSize: '13px', margin: '0 0 12px 0', fontWeight: 'bold' }}>Monthly Checks</h3>
+                                {(form07Data.thermCal || []).length > 0 && (
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <strong style={{ fontSize: '11px' }}>Thermometer Calibration:</strong>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', fontSize: '10px' }}>
+                                            <thead>
+                                                <tr style={{ backgroundColor: '#dce8f8' }}>
+                                                    <th style={{ border: '1px solid #ccc', padding: '4px' }}>Date</th>
+                                                    <th style={{ border: '1px solid #ccc', padding: '4px' }}>Method</th>
+                                                    <th style={{ border: '1px solid #ccc', padding: '4px' }}>Result</th>
+                                                    <th style={{ border: '1px solid #ccc', padding: '4px' }}>Initials</th>
+                                                    <th style={{ border: '1px solid #ccc', padding: '4px' }}>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {(form07Data.thermCal || []).map(tc => (
+                                                    <tr key={tc.id}>
+                                                        <td style={{ border: '1px solid #ccc', padding: '4px' }}>{tc.calibration_date}</td>
+                                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{tc.method}</td>
+                                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{tc.result_pass ? 'Pass' : 'Fail'}</td>
+                                                        <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{tc.initials ?? ''}</td>
+                                                        <td style={{ border: '1px solid #ccc', padding: '4px' }}>{tc.notes ?? ''}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                                {rec?.monthly_corrective_actions && (
+                                    <div style={{ marginBottom: '8px', fontSize: '11px' }}>
+                                        <strong>Corrective Actions:</strong> {rec.monthly_corrective_actions}
+                                    </div>
+                                )}
+                                {rec?.monthly_comments && (
+                                    <div style={{ fontSize: '11px' }}>
+                                        <strong>Comments:</strong> {rec.monthly_comments}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )
+            })()}
 
             {/* Form 08 */}
             {selectedForm === 'form08' && (
