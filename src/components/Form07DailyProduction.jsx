@@ -6,7 +6,18 @@ import { useFarmContext } from '../contexts/FarmContext'
 export default function Form07DailyProduction() {
   const supabase = useSupabase()
   const { farm, selectedBarn, monthYear } = useFarmContext()
+  const [viewMode, setViewMode] = useState('day')
   const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0])
+
+  // Monthly Checks state
+  const [thermCalDate, setThermCalDate] = useState('')
+  const [thermCalMethod, setThermCalMethod] = useState('A')
+  const [thermCalPass, setThermCalPass] = useState(true)
+  const [thermCalInitials, setThermCalInitials] = useState('')
+  const [thermCalNotes, setThermCalNotes] = useState('')
+  const [monthlyCorrectiveActions, setMonthlyCorrectiveActions] = useState('')
+  const [monthlyComments, setMonthlyComments] = useState('')
+  const [monthlySaved, setMonthlySaved] = useState(false)
 
   const [formData, setFormData] = useState({
     age: '',
@@ -176,31 +187,93 @@ export default function Form07DailyProduction() {
     }
   }
 
+  const handleMonthlySubmit = async (e) => {
+    e.preventDefault()
+    try {
+      const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+      const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
+      const productionId = productionRecord.id
+
+      // Save thermometer calibration if date is provided
+      if (thermCalDate) {
+        const { error: thermError } = await supabase
+          .from('production_thermometer_calibration')
+          .insert([{
+            production_id: productionId,
+            calibration_date: thermCalDate,
+            method: thermCalMethod,
+            result_pass: thermCalPass,
+            initials: thermCalInitials || null,
+            notes: thermCalNotes || null
+          }])
+        if (thermError) throw thermError
+      }
+
+      // Save monthly corrective actions and comments to production_cooler_records
+      const { error: updateError } = await supabase
+        .from('production_cooler_records')
+        .update({
+          monthly_corrective_actions: monthlyCorrectiveActions || null,
+          monthly_comments: monthlyComments || null
+        })
+        .eq('id', productionId)
+      if (updateError) throw updateError
+
+      setMonthlySaved(true)
+      alert('✅ Monthly checks saved!')
+    } catch (err) {
+      alert('Error saving monthly checks: ' + err.message)
+      console.error(err)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
-      {/* FORM HEADER - Matches top of official form */}
-      <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
+      {/* FORM HEADER */}
+      <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 07 - Egg Production & Cooler Records
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
-          <div>
-            <strong>Farm Name:</strong> {farm?.farm_name}
-          </div>
-          <div>
-            <strong>Barn:</strong> {selectedBarn?.barn_name}
-          </div>
-          <div>
-            <strong>Month/Year:</strong> {monthYear.substring(0, 7)}
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
-            <input type="date" value={recordDate}
-              onChange={(e) => setRecordDate(e.target.value)}
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px' }}>
+          <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
+          <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
+          <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
         </div>
+      </div>
+
+      {/* TAB TOGGLE */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {['day', 'monthly'].map(mode => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setViewMode(mode)}
+            style={{
+              padding: '10px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              border: '2px solid #28a745',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              background: viewMode === mode ? '#28a745' : 'white',
+              color: viewMode === mode ? 'white' : '#28a745'
+            }}
+          >
+            {mode === 'day' ? 'Day View' : 'Monthly Checks'}
+          </button>
+        ))}
+      </div>
+
+      {/* ============ DAY VIEW ============ */}
+      {viewMode === 'day' && (<>
+
+      {/* Date picker */}
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '16px' }}>Date</label>
+        <input type="date" value={recordDate}
+          onChange={(e) => setRecordDate(e.target.value)}
+          style={{ padding: '8px', border: '1px solid #ccc', fontSize: '16px' }} />
       </div>
 
       {/* ============ PAGE 1 FIELDS ============ */}
@@ -487,8 +560,137 @@ export default function Form07DailyProduction() {
           cursor: 'pointer'
         }}
       >
-        💾 Save Complete Form 07 (Day {formData.date})
+        💾 Save Daily Record
       </button>
+
+      </>)}
+
+      {/* ============ MONTHLY CHECKS TAB ============ */}
+      {viewMode === 'monthly' && (
+        <div>
+          {/* Thermometer Calibration */}
+          <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', marginBottom: '16px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
+              Thermometer Calibration (twice annually)
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Calibration Date</label>
+                <input type="date" value={thermCalDate}
+                  onChange={e => setThermCalDate(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Method</label>
+                <select value={thermCalMethod} onChange={e => setThermCalMethod(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px' }}>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Result</label>
+                <select value={thermCalPass ? 'pass' : 'fail'} onChange={e => setThermCalPass(e.target.value === 'pass')}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px' }}>
+                  <option value="pass">Pass</option>
+                  <option value="fail">Fail</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Initials</label>
+                <input type="text" value={thermCalInitials}
+                  onChange={e => setThermCalInitials(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px' }}
+                  placeholder="AB" maxLength={20} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Notes</label>
+                <input type="text" value={thermCalNotes}
+                  onChange={e => setThermCalNotes(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px' }}
+                  placeholder="Optional notes" />
+              </div>
+            </div>
+          </div>
+
+          {/* Monthly Corrective Actions */}
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+              Corrective Actions (Monthly)
+            </label>
+            <textarea value={monthlyCorrectiveActions}
+              onChange={e => setMonthlyCorrectiveActions(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit' }}
+              placeholder="Monthly corrective actions summary..." />
+          </div>
+
+          {/* Comments */}
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+              Comments
+            </label>
+            <textarea value={monthlyComments}
+              onChange={e => setMonthlyComments(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit' }}
+              placeholder="Monthly comments..." />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleMonthlySubmit}
+            style={{
+              width: '100%',
+              padding: '18px',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              background: '#0c5460',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            💾 Save Monthly Checks
+          </button>
+
+          {monthlySaved && (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+                  const { error } = await supabase
+                    .from('monthly_audits')
+                    .update({ form_07_completed: true, form_07_completed_date: new Date().toISOString() })
+                    .eq('id', audit.id)
+                  if (error) throw error
+                  alert('✅ Month marked complete!')
+                } catch (err) {
+                  alert('Error: ' + err.message)
+                }
+              }}
+              style={{
+                width: '100%',
+                marginTop: '12px',
+                padding: '18px',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                background: '#155724',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ✅ Mark Month Complete
+            </button>
+          )}
+        </div>
+      )}
+
     </form>
   )
 }
