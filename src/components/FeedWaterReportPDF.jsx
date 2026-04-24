@@ -36,17 +36,17 @@ const styles = StyleSheet.create({
     // Column widths — 545pt total
     // Date(30)+FD(42)+FA(42)+WD(42)+WA(42)+Flush(30)+Meds(35)+Treat(38)+Mort(38)+Reason(55)+Hosp(70)+Inv(81) = 545
     cDate: { width: 30, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 7, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
-    cFD:   { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cFA:   { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cWD:   { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cWA:   { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cFlush:{ width: 30, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cFD: { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cFA: { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cWD: { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cWA: { width: 42, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cFlush: { width: 30, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
     cMeds: { width: 35, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cTreat:{ width: 38, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cTreat: { width: 38, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
     cMort: { width: 38, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cReason:{ width: 55, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cReason: { width: 55, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
     cHosp: { width: 70, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
-    cInv:  { width: 81, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
+    cInv: { width: 81, borderRight: '1px solid #000', borderBottom: '0.5px solid #aaa', paddingVertical: 2, paddingHorizontal: 1, fontSize: 6, textAlign: 'center' },
 
     hdrTxt: { fontFamily: 'Helvetica-Bold', fontSize: 6, textAlign: 'center', paddingVertical: 2, paddingHorizontal: 1 },
 
@@ -110,17 +110,17 @@ export function FeedWaterReportPDF({ farmName, barnNumber, monthYear, form09Data
                     {/* Row 2: Column headers */}
                     <View style={styles.hdrRow}>
                         <View style={[styles.cDate, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Date</Text></View>
-                        <View style={[styles.cFD,   { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Feed{'\n'}Daily</Text></View>
-                        <View style={[styles.cFA,   { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Feed{'\n'}Actual</Text></View>
-                        <View style={[styles.cWD,   { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Water{'\n'}Daily</Text></View>
-                        <View style={[styles.cWA,   { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Water{'\n'}Actual</Text></View>
-                        <View style={[styles.cFlush,{ backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Flush</Text></View>
+                        <View style={[styles.cFD, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Feed{'\n'}Daily</Text></View>
+                        <View style={[styles.cFA, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Feed{'\n'}Actual</Text></View>
+                        <View style={[styles.cWD, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Water{'\n'}Daily</Text></View>
+                        <View style={[styles.cWA, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Water{'\n'}Actual</Text></View>
+                        <View style={[styles.cFlush, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Flush</Text></View>
                         <View style={[styles.cMeds, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Meds/{'\n'}Vit</Text></View>
-                        <View style={[styles.cTreat,{ backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Treat{'\n'}ment</Text></View>
+                        <View style={[styles.cTreat, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Treat{'\n'}ment</Text></View>
                         <View style={[styles.cMort, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Daily</Text></View>
-                        <View style={[styles.cReason,{ backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Reason{'\n'}(natural or{'\n'}eutha.)</Text></View>
+                        <View style={[styles.cReason, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Reason{'\n'}(natural or{'\n'}eutha.)</Text></View>
                         <View style={[styles.cHosp, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Hospital Pen{'\n'}Monitoring{'\n'}(improved/{'\n'}eutha.)</Text></View>
-                        <View style={[styles.cInv,  { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Inventory</Text></View>
+                        <View style={[styles.cInv, { backgroundColor: '#cccccc' }]}><Text style={styles.hdrTxt}>Inventory</Text></View>
                     </View>
 
                     {/* Data rows */}
