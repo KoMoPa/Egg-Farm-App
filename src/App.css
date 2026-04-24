@@ -1,10 +1,21 @@
 /* ── App shell layout ── */
+/* Fix: 100vh on iOS Safari includes the browser chrome, cutting off the bottom tab bar.
+   100dvh (dynamic viewport height) shrinks when the address bar is visible. */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh;        /* fallback */
+  height: 100dvh;       /* iOS Safari 15.4+, Chrome 108+ */
   background: #f5f5f5;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
 }
 
 .app-header {
@@ -143,6 +154,85 @@
 .app-tab-item.active .app-tab-label {
   color: #0066cc;
   font-weight: 700;
+}
+
+/* ── Phone (max 767px) ── */
+@media (max-width: 767px) {
+  .app-header {
+    height: 52px;
+    padding: 0 14px;
+  }
+
+  .app-header-title {
+    font-size: 15px;
+  }
+
+  .app-header-farm {
+    display: none;
+  }
+
+  .app-header-email {
+    display: none;
+  }
+
+  .app-logout-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .app-content-inner {
+    padding: 14px 12px;
+  }
+
+  .app-no-barn-card {
+    padding: 32px 16px;
+  }
+
+  .app-no-barn-text {
+    font-size: 15px;
+  }
+
+  .app-month-bar {
+    padding: 10px 14px;
+    gap: 10px;
+    margin-bottom: 14px;
+    border-radius: 8px;
+  }
+
+  .app-month-label {
+    font-size: 13px;
+  }
+
+  .app-tab-item {
+    padding: 6px 2px 8px;
+    min-height: 56px;
+    gap: 2px;
+  }
+
+  .app-tab-emoji {
+    font-size: 20px;
+  }
+
+  .app-tab-label {
+    font-size: 10px;
+  }
+
+  /* Force multi-column form grids to single column on phone */
+  div[style*='grid-template-columns: 1fr 1fr'],
+  div[style*='grid-template-columns: 1fr 1fr 1fr'],
+  div[style*='grid-template-columns: 1fr 1fr 1fr 1fr'],
+  div[style*='gridTemplateColumns: \'1fr 1fr\''],
+  div[style*='repeat(3'],
+  div[style*='repeat(4'] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Inputs and selects full width */
+  input, select, textarea {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+    box-sizing: border-box;
+  }
 }
 
 /* ── iPad (768px and up) ── */
