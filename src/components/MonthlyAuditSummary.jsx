@@ -3,6 +3,7 @@ import { pdf } from '@react-pdf/renderer'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { AuditReportPDF } from './AuditReportPDF'
 import { ProductionReportPDF } from './ProductionReportPDF'
+import { FeedWaterReportPDF } from './FeedWaterReportPDF'
 
 function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
     const supabase = useSupabase()
@@ -12,7 +13,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
     const [form08MonthlyInspections, setForm08MonthlyInspections] = useState(null)
     const [form08AmmoniaData, setForm08AmmoniaData] = useState([])
     const [barnNumber, setBarnNumber] = useState('')
-    const [form09Data, setForm09Data] = useState([])
+    const [form09Data, setForm09Data] = useState({ fwRecord: null, daily: [], health: [], metadata: {} })
     const [form10Data, setForm10Data] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedForm, setSelectedForm] = useState('form08')
@@ -94,11 +95,23 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 }
 
                 // Form 09 - Feed & Water
-                const { data: feed, error: feedError } = await supabase
+                const { data: fwRecord } = await supabase
                     .from('feed_water_records')
                     .select('*')
                     .eq('audit_id', auditId)
-                    .order('day_of_month')
+                    .maybeSingle()
+
+                let fw09Daily = [], fw09Health = [], fw09Meta = {}
+                if (fwRecord) {
+                    const [fwD, fwH, fwM] = await Promise.all([
+                        supabase.from('feed_water_daily').select('*').eq('fw_id', fwRecord.id).order('record_date'),
+                        supabase.from('feed_water_health').select('*').eq('fw_id', fwRecord.id).order('record_date'),
+                        supabase.from('feed_water_monthly_metadata').select('*').eq('fw_id', fwRecord.id).maybeSingle(),
+                    ])
+                    fw09Daily = fwD.data || []
+                    fw09Health = fwH.data || []
+                    fw09Meta = fwM.data || {}
+                }
 
                 // Form 10 - Pest Control
                 const { data: pest, error: pestError } = await supabase
@@ -113,7 +126,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 setForm08MonthlyInspections(monthlyInspections)
                 setForm08AmmoniaData(ammoniaTests)
                 setBarnNumber(welfareRecord?.barns?.barn_number ?? '')
-                setForm09Data(feed || [])
+                setForm09Data({ fwRecord, daily: fw09Daily, health: fw09Health, metadata: fw09Meta })
                 setForm10Data(pest || [])
             } catch (err) {
                 console.error('Error fetching data:', err)
@@ -145,6 +158,14 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     form07Data={form07Data}
                 />
                 filename = `Form07_${farmName}_${monthYear}.pdf`
+            } else if (selectedForm === 'form09') {
+                doc = <FeedWaterReportPDF
+                    farmName={farmName}
+                    barnNumber={barnNumber}
+                    monthYear={monthYear}
+                    form09Data={form09Data}
+                />
+                filename = `Form09_${farmName}_${monthYear}.pdf`
             } else {
                 doc = <AuditReportPDF
                     farmName={farmName}
@@ -572,41 +593,87 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
             )}
 
             {/* Form 09 */}
-            {selectedForm === 'form09' && (
-                <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                    <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
-                        Form 09 - Feed & Water Records ({form09Data.length} days)
-                    </h2>
-                    {form09Data.length > 0 ? (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '10px' }}>
-                            <thead>
-                                <tr style={{ backgroundColor: '#f0f0f0' }}>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Day</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Feed Actual</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Water Actual</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Auger (min)</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 'bold' }}>Mortality</th>
-                                    <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Meds/Vit</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {form09Data.map((record) => (
-                                    <tr key={record.id}>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.day_of_month}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.feed_actual}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.water_actual}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.auger_run_time_minutes}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{record.mortality_daily}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{record.meds_vit ? '✓' : ''}</td>
+            {selectedForm === 'form09' && (() => {
+                const dailyMap = {}
+                ;(form09Data.daily || []).forEach(r => { dailyMap[r.record_date] = r })
+                const healthMap = {}
+                ;(form09Data.health || []).forEach(r => { healthMap[r.record_date] = r })
+                const allDates = [...new Set([
+                    ...(form09Data.daily || []).map(r => r.record_date),
+                    ...(form09Data.health || []).map(r => r.record_date),
+                ])].sort()
+                const meta = form09Data.metadata || {}
+                return (
+                    <div style={{ marginBottom: '40px' }}>
+                        <h2 style={{ fontSize: '14px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px', color: '#000', fontWeight: 'bold' }}>
+                            Form 09 - Feed &amp; Water Records
+                        </h2>
+                        {allDates.length > 0 ? (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '9px' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Date</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Feed Daily</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Feed Actual</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Water Daily</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Water Actual</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Flush</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Meds/Vit</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Treatment</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Mortality</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Reason</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Hospital Pen</th>
+                                        <th style={{ border: '1px solid #ccc', padding: '4px' }}>Inventory</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p style={{ color: '#999', fontStyle: 'italic' }}>No feed & water records entered</p>
-                    )}
-                </div>
-            )}
+                                </thead>
+                                <tbody>
+                                    {allDates.map(d => {
+                                        const dl = dailyMap[d]
+                                        const hl = healthMap[d]
+                                        return (
+                                            <tr key={d}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px' }}>{d}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.feed_daily ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.feed_actual ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.water_daily ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.water_actual ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.flush_notes ? '✓' : ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.meds_vit_notes ? '✓' : ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{dl?.treatment_notes ? '✓' : ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{hl?.mortality_daily ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px' }}>{hl?.mortality_reason ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px' }}>{hl?.hospital_pen_monitoring ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{hl?.inventory ?? ''}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p style={{ color: '#999', fontStyle: 'italic' }}>No feed &amp; water records entered</p>
+                        )}
+
+                        {/* Monthly Checks */}
+                        {(meta.feed_target || meta.monthly_mortality_percent != null || meta.comments) && (
+                            <div style={{ background: '#f0f7ff', border: '1px solid #b3d4f5', borderRadius: '6px', padding: '16px', marginTop: '8px' }}>
+                                <h3 style={{ fontSize: '13px', margin: '0 0 12px 0', fontWeight: 'bold' }}>Monthly Checks</h3>
+                                {meta.feed_target && (
+                                    <div style={{ fontSize: '11px', marginBottom: '6px' }}><strong>Feed Target:</strong> {meta.feed_target}</div>
+                                )}
+                                {meta.monthly_mortality_percent != null && (
+                                    <div style={{ fontSize: '11px', marginBottom: '6px' }}>
+                                        <strong>Monthly Mortality:</strong> {meta.monthly_mortality_percent}%
+                                        {meta.monthly_mortality_percent > 0.5 ? ' ⚠️ Notify EFO' : ''}
+                                    </div>
+                                )}
+                                {meta.comments && (
+                                    <div style={{ fontSize: '11px' }}><strong>Comments:</strong> {meta.comments}</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )
+            })()}
 
             {/* Form 10 */}
             {selectedForm === 'form10' && (
