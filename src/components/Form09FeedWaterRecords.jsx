@@ -211,92 +211,7 @@ const WeekViewTable = ({ startDay, dayData, onDayChange }) => {
     )
 }
 
-// MONTH VIEW TABLE
-const MonthViewTable = ({ dayData, onDayChange }) => (
-    <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', width: '100%', border: '1px solid #333', fontSize: '10px' }}>
-            <thead>
-                <tr style={{ backgroundColor: '#e8e8e8' }}>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Day</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Feed Daily</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Feed Actual</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Water Daily</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Water Actual</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Flush</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Meds/Vit</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Treatment</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Mortality</th>
-                    <th style={{ border: '1px solid #333', padding: '4px' }}>Inventory</th>
-                </tr>
-            </thead>
-            <tbody>
-                {[...Array(31)].map((_, i) => {
-                    const day = i + 1
-                    const data = dayData[day]
-                    return (
-                        <tr key={day}>
-                            <td style={{ border: '1px solid #333', padding: '2px', fontWeight: 'bold' }}>{day}</td>
-                            <td style={{ border: '1px solid #333', padding: '2px' }}>
-                                <input type="number" step="0.1" value={data.feedDaily}
-                                    onChange={(e) => onDayChange(day, 'feedDaily', e.target.value)}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }} />
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px' }}>
-                                <input type="number" step="0.1" value={data.feedActual}
-                                    onChange={(e) => onDayChange(day, 'feedActual', e.target.value)}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }} />
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px' }}>
-                                <input type="number" step="0.1" value={data.waterDaily}
-                                    onChange={(e) => onDayChange(day, 'waterDaily', e.target.value)}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }} />
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px' }}>
-                                <input type="number" step="0.1" value={data.waterActual}
-                                    onChange={(e) => onDayChange(day, 'waterActual', e.target.value)}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }} />
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'center' }}>
-                                <select value={data.flush ? 'true' : 'false'}
-                                    onChange={(e) => onDayChange(day, 'flush', e.target.value === 'true')}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }}>
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
-                                </select>
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'center' }}>
-                                <select value={data.medsVit ? 'true' : 'false'}
-                                    onChange={(e) => onDayChange(day, 'medsVit', e.target.value === 'true')}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }}>
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
-                                </select>
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'center' }}>
-                                <select value={data.treatment ? 'true' : 'false'}
-                                    onChange={(e) => onDayChange(day, 'treatment', e.target.value === 'true')}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }}>
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
-                                </select>
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px' }}>
-                                <input type="number" value={data.mortalityDaily}
-                                    onChange={(e) => onDayChange(day, 'mortalityDaily', e.target.value)}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }} />
-                            </td>
-                            <td style={{ border: '1px solid #333', padding: '2px' }}>
-                                <input type="number" value={data.inventory}
-                                    onChange={(e) => onDayChange(day, 'inventory', e.target.value)}
-                                    style={{ width: '100%', padding: '2px', border: '1px solid #ccc', fontSize: '9px' }} />
-                            </td>
-                        </tr>
-                    )
-                })}
-            </tbody>
-        </table>
-    </div>
-)
+
 
 export default function Form09FeedWaterRecords() {
     const supabase = useSupabase()
@@ -330,6 +245,7 @@ export default function Form09FeedWaterRecords() {
     const [feedTarget, setFeedTarget] = useState('')
     const [monthlyMortalityPercent, setMonthlyMortalityPercent] = useState('')
     const [comments, setComments] = useState('')
+    const [monthlySaved, setMonthlySaved] = useState(false)
 
     const handleDayChange = (day, field, value) => {
         setDayData(prev => ({
@@ -448,15 +364,40 @@ export default function Form09FeedWaterRecords() {
         }
     }
 
+    const handleMonthlySubmit = async (e) => {
+        e.preventDefault()
+        try {
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+            const fwId = feedWaterRecord.id
+
+            const { error } = await supabase
+                .from('feed_water_monthly_metadata')
+                .upsert([{
+                    fw_id: fwId,
+                    feed_target: feedTarget || null,
+                    monthly_mortality_percent: monthlyMortalityPercent ? parseFloat(monthlyMortalityPercent) : null,
+                    comments: comments || null
+                }], { onConflict: 'fw_id' })
+
+            if (error) throw error
+            setMonthlySaved(true)
+            setTimeout(() => setMonthlySaved(false), 3000)
+        } catch (err) {
+            alert('Error saving monthly checks: ' + err.message)
+        }
+    }
+
     const handleMarkMonthComplete = async () => {
         try {
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
             const { error } = await supabase
                 .from('monthly_audits')
                 .update({
                     form_09_completed: true,
                     form_09_completed_date: new Date().toISOString()
                 })
-                .eq('id', auditId)
+                .eq('id', audit.id)
 
             if (error) throw error
             alert('✅ Form 09 marked as complete for ' + monthYear)
@@ -487,36 +428,24 @@ export default function Form09FeedWaterRecords() {
 
                 {/* VIEW TOGGLE */}
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                    <button
-                        type="button"
-                        onClick={() => setViewMode('day')}
-                        style={{
-                            padding: '8px 16px',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
-                            backgroundColor: viewMode === 'day' ? '#0066cc' : '#ddd',
-                            color: viewMode === 'day' ? 'white' : '#333',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}>
-                        Day View
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setViewMode('month')}
-                        style={{
-                            padding: '8px 16px',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
-                            backgroundColor: viewMode === 'month' ? '#0066cc' : '#ddd',
-                            color: viewMode === 'month' ? 'white' : '#333',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}>
-                        Month View
-                    </button>
+                    {['day', 'monthly'].map(mode => (
+                        <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setViewMode(mode)}
+                            style={{
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                backgroundColor: viewMode === mode ? '#0066cc' : '#ddd',
+                                color: viewMode === mode ? 'white' : '#333',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}>
+                            {mode === 'day' ? 'Day View' : 'Monthly Checks'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -530,43 +459,57 @@ export default function Form09FeedWaterRecords() {
                 </div>
             )}
 
-            {/* MONTH VIEW */}
-            {viewMode === 'month' && (
-                <MonthViewTable
-                    dayData={dayData}
-                    onDayChange={handleDayChange} />
-            )}
+            {/* MONTHLY CHECKS TAB */}
+            {viewMode === 'monthly' && (
+                <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '10px' }}>
+                    <h3 style={{ fontSize: '18px', marginBottom: '24px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+                        Monthly Checks
+                    </h3>
 
-            {/* FORM-LEVEL DATA */}
-            <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #666' }}>
-                <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Form Summary</h3>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Feed Target</label>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Feed Target</label>
                         <input type="text" value={feedTarget}
                             onChange={(e) => setFeedTarget(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
                     </div>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Monthly Mortality %</label>
-                        <input type="number" step="0.1" value={monthlyMortalityPercent}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
+                        <input type="number" step="0.01" value={monthlyMortalityPercent}
                             onChange={(e) => setMonthlyMortalityPercent(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>If greater than 0.5%, notify EFO</p>
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                        <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>If greater than 0.5%, notify EFO</p>
+                    </div>
+
+                    <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Comments</label>
+                        <textarea value={comments}
+                            onChange={(e) => setComments(e.target.value)}
+                            rows={4}
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <button type="button" onClick={handleMonthlySubmit} style={{
+                            padding: '10px 32px',
+                            fontSize: '15px',
+                            fontWeight: 'bold',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}>
+                            💾 Save Monthly Checks
+                        </button>
+                        {monthlySaved && <span style={{ color: '#28a745', fontWeight: 'bold' }}>✓ Saved!</span>}
                     </div>
                 </div>
+            )}
 
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
-                    <textarea value={comments}
-                        onChange={(e) => setComments(e.target.value)}
-                        rows="5"
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+            {/* DAILY SAVE BUTTON — shown on day/month views */}
+            {viewMode !== 'monthly' && (
+                <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
                     <button type="submit" style={{
                         padding: '12px 40px',
                         fontSize: '16px',
@@ -577,22 +520,10 @@ export default function Form09FeedWaterRecords() {
                         borderRadius: '4px',
                         cursor: 'pointer'
                     }}>
-                        Save Form 09 - Feed Water Records
-                    </button>
-                    <button type="button" onClick={handleMarkMonthComplete} style={{
-                        padding: '12px 40px',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        backgroundColor: '#0066cc',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}>
-                        ✓ Mark Month Complete
+                        💾 Save Daily Records
                     </button>
                 </div>
-            </div>
+            )}
         </form>
     )
 }

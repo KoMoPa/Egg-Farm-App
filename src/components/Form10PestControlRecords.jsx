@@ -299,8 +299,7 @@ export default function Form10PestControlRecords() {
     const [interiorInspectionObservation, setInteriorInspectionObservation] = useState('')
     const [rodentIndex, setRodentIndex] = useState('')
     const [comments, setComments] = useState('')
-    const [signature, setSignature] = useState('')
-    const [signatureDate, setSignatureDate] = useState('')
+    const [monthlySaved, setMonthlySaved] = useState(false)
 
     const handleDayChange = (day, field, value) => {
         setDayData(prev => ({
@@ -360,7 +359,36 @@ export default function Form10PestControlRecords() {
                 if (dailyError) throw dailyError
             }
 
-            // Step 5: Update monthly audit data (exterior/interior inspections, fly monitoring, etc.)
+            // Step 5: Mark form as completed
+            const { error: formUpdateError } = await supabase
+                .from('monthly_audits')
+                .update({
+                    form_10_completed: true,
+                    form_10_completed_date: new Date().toISOString()
+                })
+                .eq('id', auditId)
+
+            if (formUpdateError) throw formUpdateError
+
+            alert('✅ Form 10 records saved successfully!')
+        } catch (error) {
+            alert('Error saving: ' + error.message)
+            console.error('Error:', error)
+        }
+    }
+
+    const handleMonthlySubmit = async () => {
+        try {
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const auditId = audit.id
+            const { record: pestControlRecord } = await getOrCreatePestControlRecord(selectedBarn.id, auditId)
+            const pestId = pestControlRecord.id
+
+            const daysWithData = Object.keys(dayData).filter(day => {
+                const d = dayData[day]
+                return d.liveTrapsFindings || d.liveTrapsLocation || d.baitProduct || d.baitLocation || d.correctiveActions
+            })
+
             const { error: auditError } = await supabase
                 .from('pest_monthly_audit')
                 .upsert([{
@@ -381,31 +409,17 @@ export default function Form10PestControlRecords() {
                     traps_total: parseInt(Object.values(dayData).reduce((sum, d) => sum + (parseInt(d.trapsChecked) || 0), 0)),
                     days_monitored: daysWithData.length,
                     comments: comments || null,
-                    signature: signature || null,
-                    signature_date: signatureDate ? new Date(signatureDate).toISOString().split('T')[0] : null
                 }], { onConflict: 'pest_id' })
 
             if (auditError) throw auditError
 
-            // Step 6: Mark form as completed
-            const { error: formUpdateError } = await supabase
-                .from('monthly_audits')
-                .update({
-                    form_10_completed: true,
-                    form_10_completed_date: new Date().toISOString()
-                })
-                .eq('id', auditId)
-
-            if (formUpdateError) throw formUpdateError
-
-            alert('✅ Form 10 records saved successfully!')
+            setMonthlySaved(true)
+            setTimeout(() => setMonthlySaved(false), 3000)
         } catch (error) {
-            alert('Error saving: ' + error.message)
+            alert('Error saving monthly checks: ' + error.message)
             console.error('Error:', error)
         }
     }
-
-
 
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
@@ -446,18 +460,18 @@ export default function Form10PestControlRecords() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => setViewMode('month')}
+                        onClick={() => setViewMode('monthly')}
                         style={{
                             padding: '8px 16px',
                             fontSize: '14px',
                             fontWeight: 'bold',
-                            backgroundColor: viewMode === 'month' ? '#0066cc' : '#ddd',
-                            color: viewMode === 'month' ? 'white' : '#333',
+                            backgroundColor: viewMode === 'monthly' ? '#0066cc' : '#ddd',
+                            color: viewMode === 'monthly' ? 'white' : '#333',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer'
                         }}>
-                        Month View
+                        Monthly Checks
                     </button>
                 </div>
             </div>
@@ -472,185 +486,181 @@ export default function Form10PestControlRecords() {
                 </div>
             )}
 
-            {/* MONTH VIEW */}
-            {viewMode === 'month' && (
-                <MonthViewTable
-                    dayData={dayData}
-                    onDayChange={handleDayChange} />
-            )}
+            {/* MONTHLY CHECKS */}
+            {viewMode === 'monthly' && (
+                <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '2px solid #666' }}>
+                    <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Monthly Checks</h3>
 
-            {/* SIDE AUDIT SECTIONS */}
-            <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #666' }}>
-                <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Side Audit Sections</h3>
-
-                {/* Exterior Inspection */}
-                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Exterior Inspection</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
-                            <input type="date" value={exteriorInspectionDate}
-                                onChange={(e) => setExteriorInspectionDate(e.target.value)}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
-                            <textarea value={exteriorInspectionObservation}
-                                onChange={(e) => setExteriorInspectionObservation(e.target.value)}
-                                maxLength="500"
-                                rows="3"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Wild Birds */}
-                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Wild Birds</h4>
-                    <textarea value={wildBirdsObservation}
-                        onChange={(e) => setWildBirdsObservation(e.target.value)}
-                        maxLength="500"
-                        rows="3"
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-                </div>
-
-                {/* Fly Monitoring */}
-                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Fly Monitoring</h4>
-                    <div style={{ display: 'flex', gap: '20px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <input type="radio" name="flyMonitoring" value="very-few"
-                                checked={flyMonitoring === 'very-few'}
-                                onChange={(e) => setFlyMonitoring(e.target.value)} />
-                            Very Few
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <input type="radio" name="flyMonitoring" value="moderate"
-                                checked={flyMonitoring === 'moderate'}
-                                onChange={(e) => setFlyMonitoring(e.target.value)} />
-                            Moderate
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <input type="radio" name="flyMonitoring" value="severe"
-                                checked={flyMonitoring === 'severe'}
-                                onChange={(e) => setFlyMonitoring(e.target.value)} />
-                            Severe
-                        </label>
-                    </div>
-                </div>
-
-                {/* Range Management */}
-                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Grass:</label>
-                            <input type="text" value={rangeGrass}
-                                onChange={(e) => setRangeGrass(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Ponding Water:</label>
-                            <input type="text" value={rangePondingWater}
-                                onChange={(e) => setRangePondingWater(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rotation/Harrow:</label>
-                            <input type="text" value={rangeRotationHarrow}
-                                onChange={(e) => setRangeRotationHarrow(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Wild Bird Deterrents:</label>
-                            <input type="text" value={rangeWildBirdDeterrents}
-                                onChange={(e) => setRangeWildBirdDeterrents(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Gravel/Fences:</label>
-                            <input type="text" value={rangeGravelFences}
-                                onChange={(e) => setRangeGravelFences(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Other:</label>
-                            <input type="text" value={rangeOther}
-                                onChange={(e) => setRangeOther(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Interior Inspection */}
-                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Interior Inspection</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
-                            <input type="date" value={interiorInspectionDate}
-                                onChange={(e) => setInteriorInspectionDate(e.target.value)}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
-                            <textarea value={interiorInspectionObservation}
-                                onChange={(e) => setInteriorInspectionObservation(e.target.value)}
-                                maxLength="500"
-                                rows="3"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Summary Section */}
-                <div style={{ marginBottom: '30px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Summary</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
-                            <input type="text" value={rodentIndex}
-                                onChange={(e) => setRodentIndex(e.target.value)}
-                                maxLength="500"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                    {/* Exterior Inspection */}
+                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Exterior Inspection</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
+                                <input type="date" value={exteriorInspectionDate}
+                                    onChange={(e) => setExteriorInspectionDate(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
+                                <textarea value={exteriorInspectionObservation}
+                                    onChange={(e) => setExteriorInspectionObservation(e.target.value)}
+                                    maxLength="500"
+                                    rows="3"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                            </div>
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
-                        <textarea value={comments}
-                            onChange={(e) => setComments(e.target.value)}
+                    {/* Wild Birds */}
+                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Wild Birds</h4>
+                        <textarea value={wildBirdsObservation}
+                            onChange={(e) => setWildBirdsObservation(e.target.value)}
                             maxLength="500"
-                            rows="4"
+                            rows="3"
                             style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature</label>
-                            <input type="text" value={signature}
-                                onChange={(e) => setSignature(e.target.value)}
-                                maxLength="500"
-                                placeholder="Print name here"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
-                            <input type="date" value={signatureDate}
-                                onChange={(e) => setSignatureDate(e.target.value)}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                    {/* Fly Monitoring */}
+                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Fly Monitoring</h4>
+                        <div style={{ display: 'flex', gap: '20px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input type="radio" name="flyMonitoring" value="Very Few"
+                                    checked={flyMonitoring === 'Very Few'}
+                                    onChange={(e) => setFlyMonitoring(e.target.value)} />
+                                Very Few
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input type="radio" name="flyMonitoring" value="Moderate"
+                                    checked={flyMonitoring === 'Moderate'}
+                                    onChange={(e) => setFlyMonitoring(e.target.value)} />
+                                Moderate
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input type="radio" name="flyMonitoring" value="Severe"
+                                    checked={flyMonitoring === 'Severe'}
+                                    onChange={(e) => setFlyMonitoring(e.target.value)} />
+                                Severe
+                            </label>
                         </div>
                     </div>
-                </div>
 
-                {/* Submit Button */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                    {/* Range Management */}
+                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Grass:</label>
+                                <input type="text" value={rangeGrass}
+                                    onChange={(e) => setRangeGrass(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Ponding Water:</label>
+                                <input type="text" value={rangePondingWater}
+                                    onChange={(e) => setRangePondingWater(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rotation/Harrow:</label>
+                                <input type="text" value={rangeRotationHarrow}
+                                    onChange={(e) => setRangeRotationHarrow(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Wild Bird Deterrents:</label>
+                                <input type="text" value={rangeWildBirdDeterrents}
+                                    onChange={(e) => setRangeWildBirdDeterrents(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Gravel/Fences:</label>
+                                <input type="text" value={rangeGravelFences}
+                                    onChange={(e) => setRangeGravelFences(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Other:</label>
+                                <input type="text" value={rangeOther}
+                                    onChange={(e) => setRangeOther(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Interior Inspection */}
+                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Interior Inspection</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
+                                <input type="date" value={interiorInspectionDate}
+                                    onChange={(e) => setInteriorInspectionDate(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
+                                <textarea value={interiorInspectionObservation}
+                                    onChange={(e) => setInteriorInspectionObservation(e.target.value)}
+                                    maxLength="500"
+                                    rows="3"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div style={{ marginBottom: '30px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Summary</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
+                                <input type="text" value={rodentIndex}
+                                    onChange={(e) => setRodentIndex(e.target.value)}
+                                    maxLength="500"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                            </div>
+                        </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
+                            <textarea value={comments}
+                                onChange={(e) => setComments(e.target.value)}
+                                maxLength="500"
+                                rows="4"
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                        </div>
+                    </div>
+
+                    {/* Save Monthly Checks Button */}
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
+                        <button type="button" onClick={handleMonthlySubmit} style={{
+                            padding: '12px 40px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}>
+                            💾 Save Monthly Checks
+                        </button>
+                        {monthlySaved && <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Monthly checks saved!</span>}
+                    </div>
+                </div>
+            )}
+
+            {/* DAILY SAVE BUTTON */}
+            {viewMode !== 'monthly' && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
                     <button type="submit" style={{
                         padding: '12px 40px',
                         fontSize: '16px',
@@ -663,9 +673,8 @@ export default function Form10PestControlRecords() {
                     }}>
                         Save Form 10 - Pest Control Records
                     </button>
-
                 </div>
-            </div>
+            )}
         </form>
     )
 }
