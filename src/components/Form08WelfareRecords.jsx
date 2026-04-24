@@ -315,12 +315,12 @@ export default function Form08WelfareRecords() {
         welfareId = existingWelfare.id
         await supabase
           .from('welfare_records')
-          .update({ monthly_comments: comments })
+          .update({ monthly_comments: monthlyComments || null })
           .eq('id', welfareId)
       } else {
         const { data: newWelfare, error: createError } = await supabase
           .from('welfare_records')
-          .insert([{ barn_id: barnId, audit_id: auditId, monthly_comments: comments }])
+          .insert([{ barn_id: barnId, audit_id: auditId, monthly_comments: monthlyComments || null }])
           .select('id')
           .single()
         if (createError) throw createError
