@@ -37,7 +37,7 @@ export default function BarnManager() {
       {/* Farm Info Header */}
       <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #0066cc' }}>
         <h2 style={{ fontSize: '22px', margin: '0 0 5px 0', color: '#0066cc' }}>
-          🏭 {farm?.farm_name || 'Farm'}
+          {farm?.farm_name || 'Farm'}
         </h2>
         <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
           Manage barns for your farm

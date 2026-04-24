@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useAuth } from './contexts/AuthContext'
@@ -12,21 +12,20 @@ import Form10PestControlRecords from './components/Form10PestControlRecords'
 import Reports from './components/Reports'
 import './App.css'
 
+const TABS = [
+  { key: 'home', label: 'Farm & Barns', emoji: '🏠' },
+  { key: 'form07', label: 'Production', emoji: '🥚' },
+  { key: 'form08', label: 'Welfare', emoji: '🐔' },
+  { key: 'form09', label: 'Feed/Water', emoji: '🌾' },
+  { key: 'form10', label: 'Pest Control', emoji: '🐀' },
+  { key: 'reports', label: 'Reports', emoji: '📋' },
+]
+
 function App() {
   const { user, signOut } = useAuth()
 
-  // Test data (will be replaced with real farms from DB in future)
-  const testFarmId = 'fbb40bbc-bbaf-40e7-833a-712bbbb65b11'
-  const testFarmName = 'Test Egg Farm'
-  const testBarnNumber = 'Barn 1'
-  const testMonthYear = '2026-03-01'
+  if (!user) return <Login />
 
-  // If not logged in, show login page
-  if (!user) {
-    return <Login />
-  }
-
-  // Wrap app with FarmProvider to provide farm context to all components
   return (
     <FarmProvider user={user}>
       <AppContent signOut={signOut} user={user} />
@@ -35,188 +34,100 @@ function App() {
 }
 
 function AppContent({ signOut, user }) {
-  const [currentForm, setCurrentForm] = useState('form07')
+  const [activeTab, setActiveTab] = useState('home')
+  const { farm, monthYear, setMonthYear, selectedBarn } = useFarmContext()
 
-  return (
-    <div style={{ background: '#f5f5f5', minHeight: '100vh', padding: '20px' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Header with user info and logout */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <div>
-            <h1 style={{ margin: '0 0 5px 0', fontSize: '32px' }}>
-              🥚 SCSC Compliance Tracker
-            </h1>
-            <p style={{ color: '#666', margin: 0 }}>
-              Start Clean - Stay Clean On-Farm Food Safety Program
-            </p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
-              Logged in as: <strong>{user.email}</strong>
-            </p>
-            <button
-              onClick={signOut}
-              style={{
-                padding: '8px 16px',
-                fontSize: '14px',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}>
-              Logout
-            </button>
-          </div>
-        </div>
+  const activeTabDef = TABS.find(t => t.key === activeTab)
 
-        {/* Farm and Barn Manager */}
-        <BarnManager />
-
-        {/* Form Navigation and Content */}
-        <FormContent currentForm={currentForm} setCurrentForm={setCurrentForm} />
-      </div>
-    </div>
-  )
-}
-
-function FormContent({ currentForm, setCurrentForm }) {
-  const { selectedBarn, monthYear, setMonthYear } = useFarmContext()
-
-  // Parse monthYear string (YYYY-MM-DD) and create Date for DatePicker
+  // Month/year helpers
   const [year, month] = monthYear.split('-')
   const selectedDate = new Date(parseInt(year), parseInt(month) - 1)
-
-  // Handle date change and convert back to YYYY-MM-DD format
   const handleDateChange = (date) => {
     if (date) {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      setMonthYear(`${year}-${month}-01`)
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      setMonthYear(`${y}-${m}-01`)
     }
   }
-
-  // Custom month content renderer with tooltip
   const renderMonthContent = (month, shortMonth, longMonth, day) => {
     const fullYear = new Date(day).getFullYear()
-    const tooltipText = `${longMonth} ${fullYear}`
-    return <span title={tooltipText}>{shortMonth}</span>
-  }
-
-  if (!selectedBarn) {
-    return (
-      <div style={{ background: 'white', borderRadius: '8px', padding: '40px', textAlign: 'center', border: '2px dashed #999' }}>
-        <h3 style={{ color: '#666', fontSize: '18px' }}>
-          👈 Select or create a barn to get started
-        </h3>
-      </div>
-    )
+    return <span title={`${longMonth} ${fullYear}`}>{shortMonth}</span>
   }
 
   return (
-    <>
-      {/* Month/Year Selector */}
-      <div style={{ background: 'white', borderRadius: '8px', padding: '20px', marginBottom: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-        <label style={{ fontWeight: 'bold', fontSize: '16px' }}>
-          Select Month/Year:
-        </label>
-        <DatePicker
-          selected={selectedDate}
-          onChange={handleDateChange}
-          renderMonthContent={renderMonthContent}
-          showMonthYearPicker
-          dateFormat="MM/yyyy"
-          style={{
-            padding: '8px 12px',
-            fontSize: '16px',
-            border: '1px solid #ccc',
-            borderRadius: '4px'
-          }}
-        />
-      </div>
+    <div className="app-shell">
+      {/* ── Top header bar ── */}
+      <header className="app-header">
+        <div className="app-header-left">
+          <span className="app-header-title">{activeTabDef.emoji} {activeTabDef.label}</span>
+          {farm?.farm_name && (
+            <span className="app-header-farm">{farm.farm_name}</span>
+          )}
+        </div>
+        <div className="app-header-right">
+          <span className="app-header-email">{user.email}</span>
+          <button onClick={signOut} className="app-logout-btn">Logout</button>
+        </div>
+      </header>
 
-      {/* Form Navigation */}
-      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '30px', flexWrap: 'wrap' }}>
-        <button
-          onClick={() => setCurrentForm('form07')}
-          style={{
-            padding: '10px 20px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            backgroundColor: currentForm === 'form07' ? '#0066cc' : '#ccc',
-            color: currentForm === 'form07' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-          Form 07 - Production
-        </button>
-        <button
-          onClick={() => setCurrentForm('form08')}
-          style={{
-            padding: '10px 20px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            backgroundColor: currentForm === 'form08' ? '#0066cc' : '#ccc',
-            color: currentForm === 'form08' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-          Form 08 - Welfare
-        </button>
+      {/* ── Scrollable content area ── */}
+      <main className="app-content">
+        <div className="app-content-inner">
 
-        <button
-          onClick={() => setCurrentForm('form09')}
-          style={{
-            padding: '10px 20px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            backgroundColor: currentForm === 'form09' ? '#0066cc' : '#ccc',
-            color: currentForm === 'form09' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-          Form 09 - Feed Water
-        </button>
-        <button
-          onClick={() => setCurrentForm('form10')}
-          style={{
-            padding: '10px 20px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            backgroundColor: currentForm === 'form10' ? '#0066cc' : '#ccc',
-            color: currentForm === 'form10' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-          Form 10 - Pest Control
-        </button>
-        <button
-          onClick={() => setCurrentForm('reports')}
-          style={{
-            padding: '10px 20px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            backgroundColor: currentForm === 'reports' ? '#28a745' : '#ccc',
-            color: currentForm === 'reports' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-          📊 Reports
-        </button>
-      </div>
+          {/* Home / barn manager tab */}
+          {activeTab === 'home' && <BarnManager />}
 
-      {/* Forms */}
-      {currentForm === 'form07' && <Form07DailyProduction />}
-      {currentForm === 'form08' && <Form08WelfareRecords />}
-      {currentForm === 'form09' && <Form09FeedWaterRecords />}
-      {currentForm === 'form10' && <Form10PestControlRecords />}
-      {currentForm === 'reports' && <Reports />}
-    </>
+          {/* Form tabs */}
+          {activeTab !== 'home' && activeTab !== 'reports' && (
+            <>
+              {!selectedBarn ? (
+                <div className="app-no-barn-card">
+                  <p className="app-no-barn-text">👈 Select or create a barn on the <strong>Farm &amp; Barns</strong> tab first</p>
+                </div>
+              ) : (
+                <>
+                  {/* Month picker */}
+                  <div className="app-month-bar">
+                    <label className="app-month-label">Month / Year:</label>
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={handleDateChange}
+                      renderMonthContent={renderMonthContent}
+                      showMonthYearPicker
+                      dateFormat="MM/yyyy"
+                    />
+                  </div>
+
+                  {activeTab === 'form07' && <Form07DailyProduction />}
+                  {activeTab === 'form08' && <Form08WelfareRecords />}
+                  {activeTab === 'form09' && <Form09FeedWaterRecords />}
+                  {activeTab === 'form10' && <Form10PestControlRecords />}
+                </>
+              )}
+            </>
+          )}
+
+          {activeTab === 'reports' && <Reports />}
+        </div>
+      </main>
+
+      {/* ── Bottom tab bar ── */}
+      <nav className="app-tab-bar">
+        {TABS.map(tab => {
+          const active = activeTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`app-tab-item${active ? ' active' : ''}`}
+            >
+              <span className="app-tab-emoji">{tab.emoji}</span>
+              <span className="app-tab-label">{tab.label}</span>
+            </button>
+          )
+        })}
+      </nav>
+    </div>
   )
 }
 

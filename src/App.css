@@ -1,3 +1,226 @@
+/* ── App shell layout ── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0066cc;
+  color: white;
+  padding: 0 20px;
+  height: 60px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.app-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.app-header-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.app-header-farm {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-header-email {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.app-logout-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.app-content-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+.app-no-barn-card {
+  background: white;
+  border-radius: 10px;
+  padding: 48px 40px;
+  text-align: center;
+  border: 2px dashed #bbb;
+}
+
+.app-no-barn-text {
+  color: #666;
+  font-size: 17px;
+  margin: 0;
+}
+
+.app-month-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.app-month-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+}
+
+/* ── Bottom tab bar ── */
+.app-tab-bar {
+  display: flex;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.app-tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 10px;
+  background: none;
+  border: none;
+  border-top: 3px solid transparent;
+  cursor: pointer;
+  gap: 3px;
+  transition: border-color 0.15s;
+  min-height: 62px;
+}
+
+.app-tab-item.active {
+  border-top-color: #0066cc;
+}
+
+.app-tab-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.app-tab-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #888;
+  white-space: nowrap;
+}
+
+.app-tab-item.active .app-tab-label {
+  color: #0066cc;
+  font-weight: 700;
+}
+
+/* ── iPad (768px and up) ── */
+@media (min-width: 768px) {
+  .app-header {
+    height: 72px;
+    padding: 0 32px;
+  }
+
+  .app-header-title {
+    font-size: 22px;
+  }
+
+  .app-header-farm {
+    font-size: 15px;
+  }
+
+  .app-header-email {
+    font-size: 15px;
+  }
+
+  .app-logout-btn {
+    padding: 10px 20px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  .app-content-inner {
+    padding: 32px 28px;
+  }
+
+  .app-month-bar {
+    padding: 18px 24px;
+    margin-bottom: 24px;
+  }
+
+  .app-month-label {
+    font-size: 17px;
+  }
+
+  .app-tab-item {
+    padding: 12px 4px 14px;
+    min-height: 80px;
+    gap: 5px;
+  }
+
+  .app-tab-emoji {
+    font-size: 30px;
+  }
+
+  .app-tab-label {
+    font-size: 13px;
+  }
+
+  .app-no-barn-text {
+    font-size: 20px;
+  }
+}
+
+/* ── Large iPad Pro / desktop ── */
+@media (min-width: 1024px) {
+  .app-header-title {
+    font-size: 24px;
+  }
+
+  .app-tab-emoji {
+    font-size: 28px;
+  }
+
+  .app-tab-label {
+    font-size: 14px;
+  }
+
+  .app-tab-item {
+    min-height: 76px;
+  }
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
