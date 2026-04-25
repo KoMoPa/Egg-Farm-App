@@ -228,11 +228,15 @@ export default function Form08WelfareRecords() {
 
   const supabase = useSupabase()
 
-  const [dayData, setDayData] = useState(initializeDayData())
-  const [recordDate, setRecordDate] = useState(
-    new Date().toISOString().split('T')[0]
-  )
-  const [saved, setSaved] = useState(false)
+  const [dayData, setDayData] = useState({})
+  const [lockedDays, setLockedDays] = useState({})
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const t = new Date()
+    const [y, m] = monthYear.split('-')
+    return parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1
+  })
+  const [loadingDay, setLoadingDay] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   // Monthly checks state
   const [ammoniaRange, setAmmoniaRange] = useState('')
@@ -242,15 +246,186 @@ export default function Form08WelfareRecords() {
   const [generatorCheckInitials, setGeneratorCheckInitials] = useState('')
   const [monthlyComments, setMonthlyComments] = useState('')
   const [monthlySaved, setMonthlySaved] = useState(false)
+  const [monthlyLocked, setMonthlyLocked] = useState(false)
 
   // View toggle: 'day' | 'monthly'
   const [viewMode, setViewMode] = useState('day')
+
+  const daysInMonth = new Date(
+    parseInt(monthYear.substring(0, 4)),
+    parseInt(monthYear.substring(5, 7)),
+    0
+  ).getDate()
+
+  // Reset on barn/month change
+  useEffect(() => {
+    setDayData({})
+    setLockedDays({})
+    const t = new Date()
+    const [y, m] = monthYear.split('-')
+    setSelectedDay(parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1)
+    setAmmoniaRange('')
+    setAlarmCheckDate('')
+    setAlarmCheckInitials('')
+    setGeneratorCheckDate('')
+    setGeneratorCheckInitials('')
+    setMonthlyComments('')
+    setMonthlySaved(false)
+    setMonthlyLocked(false)
+    setLoadingDay(false)
+    setSaving(false)
+  }, [selectedBarn?.id, monthYear])
+
+  // Load monthly checks data from DB
+  useEffect(() => {
+    if (!selectedBarn?.id || !farm?.id) return
+
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+        const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+        if (cancelled) return
+
+        const welfareId = welfareRecord.id
+        const monthFirstDate = monthYear.substring(0, 7) + '-01'
+
+        // Load ammonia test
+        const { data: ammoniaTest } = await supabase
+          .from('welfare_ammonia_tests')
+          .select('ppm_range')
+          .eq('welfare_id', welfareId)
+          .eq('test_date', monthFirstDate)
+          .maybeSingle()
+        if (!cancelled && ammoniaTest?.ppm_range) setAmmoniaRange(ammoniaTest.ppm_range)
+
+        // Load alarm/generator checks
+        const { data: inspection } = await supabase
+          .from('welfare_weekly_inspections')
+          .select('alarm_check_date, alarm_check_initials, generator_check_date, generator_check_initials')
+          .eq('welfare_id', welfareId)
+          .eq('inspection_date', monthFirstDate)
+          .maybeSingle()
+
+        if (!cancelled && inspection) {
+          if (inspection.alarm_check_date) setAlarmCheckDate(inspection.alarm_check_date)
+          if (inspection.alarm_check_initials) setAlarmCheckInitials(inspection.alarm_check_initials)
+          if (inspection.generator_check_date) setGeneratorCheckDate(inspection.generator_check_date)
+          if (inspection.generator_check_initials) setGeneratorCheckInitials(inspection.generator_check_initials)
+        }
+
+        // Load monthly comments
+        const { data: record } = await supabase
+          .from('welfare_records')
+          .select('monthly_comments')
+          .eq('id', welfareId)
+          .maybeSingle()
+
+        if (!cancelled && record?.monthly_comments) setMonthlyComments(record.monthly_comments)
+
+        // Check if any data exists to determine lock status
+        if (!cancelled) {
+          const hasData = ammoniaTest || inspection || record?.monthly_comments
+          setMonthlyLocked(!!hasData)
+        }
+      } catch (err) {
+        console.error('Error loading monthly data:', err)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [selectedBarn?.id, monthYear])
+
+  // Lazy-load selected day
+  useEffect(() => {
+    if (!farm?.id || !selectedBarn?.id) return
+    if (dayData[selectedDay] !== undefined) return
+    let cancelled = false
+
+    const load = async () => {
+      setLoadingDay(true)
+      try {
+        const monthStr = monthYear.substring(0, 7)
+        const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
+
+        const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+        const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+        if (cancelled) return
+
+        const welfareId = welfareRecord.id
+
+        const [
+          { data: dailyCheck },
+          { data: weeklyInspection },
+        ] = await Promise.all([
+          supabase.from('welfare_daily_checks').select('*').eq('welfare_id', welfareId).eq('record_date', recDate).maybeSingle(),
+          supabase.from('welfare_weekly_inspections').select('*').eq('welfare_id', welfareId).eq('inspection_date', recDate).maybeSingle(),
+        ])
+
+        if (cancelled) return
+
+        // If no data found at all, initialize with blank form
+        if (!dailyCheck && !weeklyInspection) {
+          setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
+          setLockedDays(p => ({ ...p, [selectedDay]: false }))
+          return
+        }
+
+        setDayData(p => ({
+          ...p,
+          [selectedDay]: {
+            barnTempHi: dailyCheck?.barn_temp_hi?.toString() ?? '',
+            barnTempLo: dailyCheck?.barn_temp_lo?.toString() ?? '',
+            exteriorTemp: dailyCheck?.exterior_temp?.toString() ?? '',
+            floorsChecked: dailyCheck?.floor_sanitation_code === 'Y',
+            wallsFansCeilingChecked: dailyCheck?.walls_sanitation_code === 'Y',
+            manureChecked: dailyCheck?.manure_sanitation_code === 'Y',
+            beddingUsed: dailyCheck?.bedding_notes === 'Yes',
+            chemicalsUsed: dailyCheck?.chemicals_notes === 'Yes',
+            routineHenEquip1stInitial: dailyCheck?.hen_inspection_am ?? '',
+            routineHenEquip1stDaily: '',
+            routineHenEquip2ndInitial: dailyCheck?.hen_inspection_pm ?? '',
+            routineHenEquip2ndDaily: '',
+            overallAppearance: weeklyInspection?.check_overall_appearance ?? false,
+            generalSound: weeklyInspection?.check_general_sound ?? false,
+            abnormalBehavior: weeklyInspection?.check_abnormal_behavior ?? false,
+            signsOfDisease: weeklyInspection?.check_disease_illness ?? false,
+            injuredBirds: weeklyInspection?.check_injured_birds ?? false,
+            respiratoryProblems: weeklyInspection?.check_respiratory ?? false,
+            pantingHuddling: weeklyInspection?.check_panting_huddling ?? false,
+            lameness: weeklyInspection?.check_lameness ?? false,
+            featherPecking: weeklyInspection?.check_feather_pecking ?? false,
+            trappedBirds: weeklyInspection?.check_trapped_birds ?? false,
+            deadBirds: weeklyInspection?.check_dead_birds ?? false,
+            feedWaterAvailable: weeklyInspection?.check_feed_water_available ?? false,
+            equipmentOperating: weeklyInspection?.check_equipment_operating ?? false,
+            amenitiesCondition: weeklyInspection?.check_amenities_condition ?? false,
+            layFacilityEnvironment: weeklyInspection?.check_lay_facility ?? false,
+          },
+        }))
+        setLockedDays(p => ({ ...p, [selectedDay]: true }))
+      } catch (err) {
+        console.error('Error loading day:', err)
+        if (!cancelled) {
+          setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
+          setLockedDays(p => ({ ...p, [selectedDay]: false }))
+        }
+      } finally {
+        if (!cancelled) setLoadingDay(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [selectedDay, selectedBarn?.id, monthYear])
 
   const handleDayChange = (day, field, value) => {
     setDayData(prev => ({
       ...prev,
       [day]: {
-        ...prev[day],
+        ...(prev[day] ?? BLANK_DAY),
         [field]: value
       }
     }))
@@ -260,108 +435,18 @@ export default function Form08WelfareRecords() {
     setDayData(prev => ({
       ...prev,
       [day]: {
-        ...prev[day],
-        [field]: !prev[day][field]
+        ...(prev[day] ?? BLANK_DAY),
+        [field]: !prev[day]?.[field]
       }
     }))
   }
 
+  const currentDayData = dayData[selectedDay] ?? { ...BLANK_DAY }
+  const isLocked = lockedDays[selectedDay] === true
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    try {
-      if (!barnId) {
-        alert('Error: Barn ID is missing. Please select a barn.')
-        return
-      }
-
-      // Step 0: Get or create monthly_audits record
-      let auditId
-      const { data: existingAudit } = await supabase
-        .from('monthly_audits')
-        .select('id')
-        .eq('farm_id', farmId)
-        .eq('month_year', monthYear)
-        .maybeSingle()
-
-      if (existingAudit) {
-        auditId = existingAudit.id
-      } else {
-        const { data: newAudit, error: auditError } = await supabase
-          .from('monthly_audits')
-          .insert([{ farm_id: farmId, month_year: monthYear }])
-          .select('id')
-          .single()
-        if (auditError) throw auditError
-        auditId = newAudit.id
-      }
-
-      // Step 1: Get or create welfare_records entry
-      let welfareId
-      const { data: existingWelfare } = await supabase
-        .from('welfare_records')
-        .select('id')
-        .eq('barn_id', barnId)
-        .eq('audit_id', auditId)
-        .maybeSingle()
-
-      if (existingWelfare) {
-        welfareId = existingWelfare.id
-        await supabase
-          .from('welfare_records')
-          .update({ monthly_comments: monthlyComments || null })
-          .eq('id', welfareId)
-      } else {
-        const { data: newWelfare, error: createError } = await supabase
-          .from('welfare_records')
-          .insert([{ barn_id: barnId, audit_id: auditId, monthly_comments: monthlyComments || null }])
-          .select('id')
-          .single()
-        if (createError) throw createError
-        welfareId = newWelfare.id
-      }
-
-      // Compute actual days in this month so we don't save day 31 for April etc.
-      const [year, month] = monthYear.split('-').map(Number)
-      const daysInMonth = new Date(year, month, 0).getDate()
-      const monthPrefix = monthYear.substring(0, 7) // 'YYYY-MM'
-
-      // Step 2: Save daily checks (one row per day that has any data)
-      const dailyChecks = Object.entries(dayData)
-        .filter(([dayNum]) => parseInt(dayNum) <= daysInMonth)
-        .filter(([, day]) => day.barnTempHi || day.barnTempLo || day.exteriorTemp || day.floorsChecked || day.wallsFansCeilingChecked || day.manureChecked || day.routineHenEquip1stInitial || day.routineHenEquip2ndInitial)
-        .map(([dayNum, day]) => ({
-          welfare_id: welfareId,
-          record_date: `${monthPrefix}-${String(dayNum).padStart(2, '0')}`,
-          barn_temp_hi: day.barnTempHi ? parseFloat(day.barnTempHi) : null,
-          barn_temp_lo: day.barnTempLo ? parseFloat(day.barnTempLo) : null,
-          exterior_temp: day.exteriorTemp ? parseFloat(day.exteriorTemp) : null,
-          floor_sanitation_code: day.floorsChecked ? 'Y' : null,
-          walls_sanitation_code: day.wallsFansCeilingChecked ? 'Y' : null,
-          manure_sanitation_code: day.manureChecked ? 'Y' : null,
-          bedding_notes: day.beddingUsed || null,
-          chemicals_notes: day.chemicalsUsed || null,
-          hen_inspection_am: day.routineHenEquip1stInitial || null,
-          hen_inspection_pm: day.routineHenEquip2ndInitial || null,
-        }))
-
-        load()
-        return () => { cancelled = true }
-    }, [selectedDay, selectedBarn?.id, monthYear])
-
-    const currentDayData = dayData[selectedDay] ?? { ...BLANK_DAY }
-    const isLocked = lockedDays[selectedDay] === true
-
-    const handleDayChange = (day, field, value) => {
-        setDayData(prev => ({
-            ...prev,
-            [day]: { ...(prev[day] ?? BLANK_DAY), [field]: value }
-        }))
-    }
-
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        setSaving(true)
+    setSaving(true)
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
             const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)

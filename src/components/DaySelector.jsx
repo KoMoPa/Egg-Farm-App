@@ -52,7 +52,6 @@ export default function DaySelector({ daysInMonth, selectedDay, lockedDays = {},
                 padding: 0,
                 lineHeight: '34px',
                 textAlign: 'center',
-                borderColor: inactive ? 'transparent' : undefined,
               }}
             >
               {inactive ? '' : d}
