@@ -11,6 +11,7 @@ const BLANK_FORM = {
     eggProduction1: '',
     eggProduction2: '',
     eggProductionPercent: '',
+    notes: '',
     coolerTempHi: '',
     coolerTempLo: '',
     coolerRhHi: '',
@@ -181,6 +182,7 @@ export default function Form07DailyProduction() {
                         eggProduction1: eggOutput?.egg_production_1?.toString() ?? '',
                         eggProduction2: eggOutput?.egg_production_2?.toString() ?? '',
                         eggProductionPercent: eggOutput?.egg_production_percent?.toString() ?? '',
+                        notes: eggOutput?.notes ?? '',
                         coolerTempHi: coolerTemps?.cooler_temp_hi_celsius?.toString() ?? '',
                         coolerTempLo: coolerTemps?.cooler_temp_lo_celsius?.toString() ?? '',
                         coolerRhHi: coolerTemps?.cooler_rh_hi_percent?.toString() ?? '',
@@ -261,7 +263,8 @@ export default function Form07DailyProduction() {
                     egg_production_1: parseInt(d.eggProduction1) || null,
                     egg_production_2: parseInt(d.eggProduction2) || null,
                     egg_production_daily: eggProductionDaily,
-                    egg_production_percent: toNumber(d.eggProductionPercent)
+                    egg_production_percent: toNumber(d.eggProductionPercent),
+                    notes: d.notes || null
                 }], { onConflict: 'production_id,record_date' })
             if (eggOutputError) throw eggOutputError
 
@@ -533,6 +536,21 @@ export default function Form07DailyProduction() {
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Egg Production Notes */}
+                <div style={{ marginBottom: '30px' }}>
+                    <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                        Production Notes
+                    </label>
+                    <textarea
+                        value={currentDayData.notes}
+                        onChange={(e) => setField('notes', e.target.value)}
+                        disabled={isLocked}
+                        rows="3"
+                        style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(isLocked && inputLocked) }}
+                        placeholder="Any notes about today's egg production..."
+                    />
                 </div>
 
                 {/* Cooler Temperature & Humidity */}

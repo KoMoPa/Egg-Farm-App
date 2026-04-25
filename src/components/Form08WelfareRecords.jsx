@@ -32,6 +32,8 @@ const BLANK_DAY = {
     equipmentOperating: false,
     amenitiesCondition: false,
     layFacilityEnvironment: false,
+    weeklyInitials: '',
+    weeklyComments: '',
 }
 
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
@@ -171,6 +173,24 @@ const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
                 </label>
             ))}
         </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', marginTop: '20px' }}>
+            <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Weekly Initials</label>
+                <input type="text" maxLength="20" value={data.weeklyInitials}
+                    onChange={(e) => onDayChange(day, 'weeklyInitials', e.target.value)}
+                    disabled={locked}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
+            </div>
+            <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Inspection Comments</label>
+                <textarea value={data.weeklyComments}
+                    onChange={(e) => onDayChange(day, 'weeklyComments', e.target.value)}
+                    disabled={locked}
+                    rows="2"
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'inherit', ...(locked && inputLocked) }} />
+            </div>
+        </div>
     </div>
 )
 
@@ -221,6 +241,8 @@ export default function Form08WelfareRecords() {
         equipmentOperating: false,
         amenitiesCondition: false,
         layFacilityEnvironment: false,
+        weeklyInitials: '',
+        weeklyComments: '',
       }
     }
     return days
@@ -240,6 +262,9 @@ export default function Form08WelfareRecords() {
 
   // Monthly checks state
   const [ammoniaRange, setAmmoniaRange] = useState('')
+  const [ammoniaDistilledWater, setAmmoniaDistilledWater] = useState(false)
+  const [ammoniaInitials, setAmmoniaInitials] = useState('')
+  const [ammoniaNotes, setAmmoniaNotes] = useState('')
   const [alarmCheckDate, setAlarmCheckDate] = useState('')
   const [alarmCheckInitials, setAlarmCheckInitials] = useState('')
   const [generatorCheckDate, setGeneratorCheckDate] = useState('')
@@ -265,6 +290,9 @@ export default function Form08WelfareRecords() {
     const [y, m] = monthYear.split('-')
     setSelectedDay(parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1)
     setAmmoniaRange('')
+    setAmmoniaDistilledWater(false)
+    setAmmoniaInitials('')
+    setAmmoniaNotes('')
     setAlarmCheckDate('')
     setAlarmCheckInitials('')
     setGeneratorCheckDate('')
@@ -294,11 +322,16 @@ export default function Form08WelfareRecords() {
         // Load ammonia test
         const { data: ammoniaTest } = await supabase
           .from('welfare_ammonia_tests')
-          .select('ppm_range')
+          .select('ppm_range, distilled_water_used, initials, notes')
           .eq('welfare_id', welfareId)
           .eq('test_date', monthFirstDate)
           .maybeSingle()
-        if (!cancelled && ammoniaTest?.ppm_range) setAmmoniaRange(ammoniaTest.ppm_range)
+        if (!cancelled && ammoniaTest) {
+          if (ammoniaTest.ppm_range) setAmmoniaRange(ammoniaTest.ppm_range)
+          if (ammoniaTest.distilled_water_used != null) setAmmoniaDistilledWater(ammoniaTest.distilled_water_used)
+          if (ammoniaTest.initials) setAmmoniaInitials(ammoniaTest.initials)
+          if (ammoniaTest.notes) setAmmoniaNotes(ammoniaTest.notes)
+        }
 
         // Load alarm/generator checks
         const { data: inspection } = await supabase
@@ -403,6 +436,8 @@ export default function Form08WelfareRecords() {
             equipmentOperating: weeklyInspection?.check_equipment_operating ?? false,
             amenitiesCondition: weeklyInspection?.check_amenities_condition ?? false,
             layFacilityEnvironment: weeklyInspection?.check_lay_facility ?? false,
+            weeklyInitials: weeklyInspection?.weekly_initials ?? '',
+            weeklyComments: weeklyInspection?.comments ?? '',
           },
         }))
         setLockedDays(p => ({ ...p, [selectedDay]: true }))
@@ -493,6 +528,8 @@ export default function Form08WelfareRecords() {
                     check_equipment_operating: d.equipmentOperating,
                     check_amenities_condition: d.amenitiesCondition,
                     check_lay_facility: d.layFacilityEnvironment,
+                    weekly_initials: d.weeklyInitials || null,
+                    comments: d.weeklyComments || null,
                 }], { onConflict: 'welfare_id,inspection_date' })
             if (weeklyError) throw weeklyError
 
@@ -529,8 +566,14 @@ export default function Form08WelfareRecords() {
             if (ammoniaRange) {
                 const { error: ammoniaError } = await supabase
                     .from('welfare_ammonia_tests')
-                    .upsert([{ welfare_id: welfareId, test_date: monthFirstDate, ppm_range: ammoniaRange }],
-                        { onConflict: 'welfare_id,test_date' })
+                    .upsert([{
+                        welfare_id: welfareId,
+                        test_date: monthFirstDate,
+                        ppm_range: ammoniaRange,
+                        distilled_water_used: ammoniaDistilledWater,
+                        initials: ammoniaInitials || null,
+                        notes: ammoniaNotes || null,
+                    }], { onConflict: 'welfare_id,test_date' })
                 if (ammoniaError) throw ammoniaError
             }
 
@@ -732,6 +775,29 @@ export default function Form08WelfareRecords() {
                                 />
                                 N/A
                             </label>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 2fr', gap: '20px', alignItems: 'start', marginTop: '15px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', paddingTop: '28px' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={ammoniaDistilledWater}
+                                    onChange={(e) => setAmmoniaDistilledWater(e.target.checked)}
+                                />
+                                Distilled Water Used
+                            </label>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
+                                <input type="text" maxLength="20" value={ammoniaInitials}
+                                    onChange={(e) => setAmmoniaInitials(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Notes</label>
+                                <textarea value={ammoniaNotes}
+                                    onChange={(e) => setAmmoniaNotes(e.target.value)}
+                                    rows="2"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }} />
+                            </div>
                         </div>
                     </div>
 

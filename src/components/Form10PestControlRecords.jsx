@@ -5,14 +5,15 @@ import { useFarmContext } from '../contexts/FarmContext'
 import DaySelector from './DaySelector'
 
 const BLANK_DAY = {
+    micesCaught: '',
+    trapsChecked: '',
+    baitReplenished: false,
     liveTrapsFindings: '',
     liveTrapsLocation: '',
     baitProduct: '',
     baitLocation: '',
     birdsOnRange: '',
     correctiveActions: '',
-    frequencyWeekly: '',
-    frequencyMonthly: '',
 }
 
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
@@ -23,6 +24,31 @@ const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
         <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
             Daily Tracking - Day {day}
         </h3>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+            <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Mice Caught</label>
+                <input type="number" value={data.micesCaught}
+                    onChange={(e) => onDayChange(day, 'micesCaught', e.target.value)}
+                    disabled={locked}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
+            </div>
+            <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Traps Checked</label>
+                <input type="number" value={data.trapsChecked}
+                    onChange={(e) => onDayChange(day, 'trapsChecked', e.target.value)}
+                    disabled={locked}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', paddingTop: '24px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
+                    <input type="checkbox" checked={data.baitReplenished}
+                        onChange={(e) => onDayChange(day, 'baitReplenished', e.target.checked)}
+                        disabled={locked} />
+                    Bait Replenished
+                </label>
+            </div>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
             <div>
@@ -79,31 +105,6 @@ const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
             </div>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>At Least Weekly</label>
-                <select value={data.frequencyWeekly}
-                    onChange={(e) => onDayChange(day, 'frequencyWeekly', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
-                    <option value="">Select...</option>
-                    <option value="checked">Checked</option>
-                    <option value="not-checked">Not Checked</option>
-                </select>
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>At Least Monthly</label>
-                <select value={data.frequencyMonthly}
-                    onChange={(e) => onDayChange(day, 'frequencyMonthly', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
-                    <option value="">Select...</option>
-                    <option value="checked">Checked</option>
-                    <option value="not-checked">Not Checked</option>
-                </select>
-            </div>
-        </div>
     </div>
 )
 
@@ -127,6 +128,11 @@ export default function Form10PestControlRecords() {
     const [interiorInspectionDate, setInteriorInspectionDate] = useState('')
     const [interiorInspectionObservation, setInteriorInspectionObservation] = useState('')
     const [rodentIndex, setRodentIndex] = useState('')
+    const [miceTotal, setMiceTotal] = useState('')
+    const [trapsTotal, setTrapsTotal] = useState('')
+    const [daysMonitored, setDaysMonitored] = useState('')
+    const [signature, setSignature] = useState('')
+    const [signatureDate, setSignatureDate] = useState('')
     const [comments, setComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
     const [monthlyLocked, setMonthlyLocked] = useState(false)
@@ -168,6 +174,11 @@ export default function Form10PestControlRecords() {
         setInteriorInspectionDate('')
         setInteriorInspectionObservation('')
         setRodentIndex('')
+        setMiceTotal('')
+        setTrapsTotal('')
+        setDaysMonitored('')
+        setSignature('')
+        setSignatureDate('')
         setComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
@@ -203,6 +214,11 @@ export default function Form10PestControlRecords() {
                     setInteriorInspectionDate(ma.interior_inspection_date ?? '')
                     setInteriorInspectionObservation(ma.interior_inspection_observation ?? '')
                     setRodentIndex(ma.rodent_index?.toString() ?? '')
+                    setMiceTotal(ma.mice_total?.toString() ?? '')
+                    setTrapsTotal(ma.traps_total?.toString() ?? '')
+                    setDaysMonitored(ma.days_monitored?.toString() ?? '')
+                    setSignature(ma.signature ?? '')
+                    setSignatureDate(ma.signature_date ?? '')
                     setComments(ma.comments ?? '')
                     setMonthlySaved(true)
                     setMonthlyLocked(true)
@@ -265,14 +281,15 @@ export default function Form10PestControlRecords() {
                 setDayData(p => ({
                     ...p,
                     [selectedDay]: {
+                        micesCaught: daily.mice_caught?.toString() ?? '',
+                        trapsChecked: daily.traps_checked?.toString() ?? '',
+                        baitReplenished: daily.bait_replenished ?? false,
                         liveTrapsFindings: daily.trap_findings_notes ?? '',
                         liveTrapsLocation: daily.trap_location ?? '',
                         baitProduct: daily.bait_product ?? '',
                         baitLocation: daily.bait_location ?? '',
                         birdsOnRange: daily.birds_on_range ?? '',
                         correctiveActions: daily.corrective_actions ?? '',
-                        frequencyWeekly: '',
-                        frequencyMonthly: '',
                     },
                 }))
                 setLockedDays(p => ({ ...p, [selectedDay]: true }))
@@ -317,6 +334,9 @@ export default function Form10PestControlRecords() {
                 .upsert([{
                     pest_id: pestId,
                     record_date: recDate,
+                    mice_caught: d.micesCaught ? parseInt(d.micesCaught) : 0,
+                    traps_checked: d.trapsChecked ? parseInt(d.trapsChecked) : null,
+                    bait_replenished: d.baitReplenished ?? false,
                     trap_findings_notes: d.liveTrapsFindings || null,
                     trap_location: d.liveTrapsLocation || null,
                     bait_product: d.baitProduct || null,
@@ -333,6 +353,23 @@ export default function Form10PestControlRecords() {
             console.error('Error:', err)
         } finally {
             setSaving(false)
+        }
+    }
+
+    const handleMarkMonthComplete = async () => {
+        try {
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const { error } = await supabase
+                .from('monthly_audits')
+                .update({
+                    form_10_completed: true,
+                    form_10_completed_date: new Date().toISOString()
+                })
+                .eq('id', audit.id)
+            if (error) throw error
+            alert('✅ Form 10 marked as complete for ' + monthYear)
+        } catch (err) {
+            alert('Error marking complete: ' + err.message)
         }
     }
 
@@ -358,7 +395,13 @@ export default function Form10PestControlRecords() {
                     range_other: rangeOther || null,
                     interior_inspection_date: interiorInspectionDate ? new Date(interiorInspectionDate).toISOString().split('T')[0] : null,
                     interior_inspection_observation: interiorInspectionObservation || null,
+                    mice_total: miceTotal ? parseInt(miceTotal) : null,
+                    traps_total: trapsTotal ? parseInt(trapsTotal) : null,
+                    days_monitored: daysMonitored ? parseInt(daysMonitored) : null,
+                    rodent_index: rodentIndex ? parseFloat(rodentIndex) : null,
                     comments: comments || null,
+                    signature: signature || null,
+                    signature_date: signatureDate || null,
                 }], { onConflict: 'pest_id' })
 
             if (auditError) throw auditError
@@ -569,13 +612,33 @@ export default function Form10PestControlRecords() {
                     {/* Summary */}
                     <div style={{ marginBottom: '30px' }}>
                         <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Summary</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Mice Total</label>
+                                <input type="number" value={miceTotal}
+                                    onChange={(e) => setMiceTotal(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Traps Total</label>
+                                <input type="number" value={trapsTotal}
+                                    onChange={(e) => setTrapsTotal(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Days Monitored</label>
+                                <input type="number" value={daysMonitored}
+                                    onChange={(e) => setDaysMonitored(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                        </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
-                                <input type="text" value={rodentIndex}
+                                <input type="number" step="0.0001" value={rodentIndex}
                                     onChange={(e) => setRodentIndex(e.target.value)}
-                                    maxLength="500"
                                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
                             </div>
                         </div>
                         <div style={{ marginBottom: '20px' }}>
@@ -586,6 +649,20 @@ export default function Form10PestControlRecords() {
                                 rows="4"
                                 style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
                         </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature</label>
+                                <input type="text" maxLength="200" value={signature}
+                                    onChange={(e) => setSignature(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature Date</label>
+                                <input type="date" value={signatureDate}
+                                    onChange={(e) => setSignatureDate(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                        </div>
                     </div>
 
                     </fieldset>
@@ -593,18 +670,32 @@ export default function Form10PestControlRecords() {
                     {/* Save / Edit Monthly Checks Button */}
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
                         {monthlyLocked ? (
-                            <button type="button" onClick={() => setMonthlyLocked(false)} style={{
-                                padding: '12px 40px',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                backgroundColor: '#6c757d',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                            }}>
-                                ✏️ Edit Monthly Checks
-                            </button>
+                            <>
+                                <button type="button" onClick={() => setMonthlyLocked(false)} style={{
+                                    padding: '12px 40px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    backgroundColor: '#6c757d',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}>
+                                    ✏️ Edit Monthly Checks
+                                </button>
+                                <button type="button" onClick={handleMarkMonthComplete} style={{
+                                    padding: '12px 40px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    backgroundColor: '#155724',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}>
+                                    ✓ Mark Month Complete
+                                </button>
+                            </>
                         ) : (
                             <button type="button" onClick={handleMonthlySubmit} style={{
                                 padding: '12px 40px',
