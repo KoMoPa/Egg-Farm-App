@@ -129,11 +129,16 @@ export default function Form10PestControlRecords() {
     const [rodentIndex, setRodentIndex] = useState('')
     const [comments, setComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
+    const [monthlyLocked, setMonthlyLocked] = useState(false)
 
     // Day state (lazy per-day loading)
     const [dayData, setDayData] = useState({})
     const [lockedDays, setLockedDays] = useState({})
-    const [selectedDay, setSelectedDay] = useState(1)
+    const [selectedDay, setSelectedDay] = useState(() => {
+        const t = new Date()
+        const [y, m] = monthYear.split('-')
+        return parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1
+    })
     const [loadingDay, setLoadingDay] = useState(false)
     const [saving, setSaving] = useState(false)
 
@@ -147,7 +152,65 @@ export default function Form10PestControlRecords() {
     useEffect(() => {
         setDayData({})
         setLockedDays({})
-        setSelectedDay(1)
+        const t = new Date()
+        const [y, m] = monthYear.split('-')
+        setSelectedDay(parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1)
+        setExteriorInspectionDate('')
+        setExteriorInspectionObservation('')
+        setWildBirdsObservation('')
+        setFlyMonitoring('')
+        setRangeGrass('')
+        setRangePondingWater('')
+        setRangeRotationHarrow('')
+        setRangeWildBirdDeterrents('')
+        setRangeGravelFences('')
+        setRangeOther('')
+        setInteriorInspectionDate('')
+        setInteriorInspectionObservation('')
+        setRodentIndex('')
+        setComments('')
+        setMonthlySaved(false)
+        setMonthlyLocked(false)
+    }, [selectedBarn?.id, monthYear])
+
+    // Load monthly checks data from DB
+    useEffect(() => {
+        if (!farm?.id || !selectedBarn?.id) return
+        let cancelled = false
+        const load = async () => {
+            try {
+                const monthStr = monthYear.substring(0, 7)
+                const { data: audit } = await supabase.from('monthly_audits').select('id')
+                    .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
+                if (!audit || cancelled) return
+                const { data: pest } = await supabase.from('pest_control_records').select('id')
+                    .eq('barn_id', selectedBarn.id).eq('audit_id', audit.id).maybeSingle()
+                if (!pest || cancelled) return
+                const { data: ma } = await supabase.from('pest_monthly_audit').select('*')
+                    .eq('pest_id', pest.id).maybeSingle()
+                if (cancelled) return
+                if (ma) {
+                    setExteriorInspectionDate(ma.exterior_inspection_date ?? '')
+                    setExteriorInspectionObservation(ma.exterior_inspection_observation ?? '')
+                    setWildBirdsObservation(ma.wild_birds_observation ?? '')
+                    setFlyMonitoring(ma.fly_monitoring ?? '')
+                    setRangeGrass(ma.range_grass ?? '')
+                    setRangePondingWater(ma.range_ponding_water ?? '')
+                    setRangeRotationHarrow(ma.range_rotation_harrow ?? '')
+                    setRangeWildBirdDeterrents(ma.range_wild_bird_deterrents ?? '')
+                    setRangeGravelFences(ma.range_gravel_fences ?? '')
+                    setRangeOther(ma.range_other ?? '')
+                    setInteriorInspectionDate(ma.interior_inspection_date ?? '')
+                    setInteriorInspectionObservation(ma.interior_inspection_observation ?? '')
+                    setRodentIndex(ma.rodent_index?.toString() ?? '')
+                    setComments(ma.comments ?? '')
+                    setMonthlySaved(true)
+                    setMonthlyLocked(true)
+                }
+            } catch (e) { /* silent */ }
+        }
+        load()
+        return () => { cancelled = true }
     }, [selectedBarn?.id, monthYear])
 
     // Lazy-load selected day
@@ -301,7 +364,7 @@ export default function Form10PestControlRecords() {
             if (auditError) throw auditError
 
             setMonthlySaved(true)
-            setTimeout(() => setMonthlySaved(false), 3000)
+            setMonthlyLocked(true)
         } catch (error) {
             alert('Error saving monthly checks: ' + error.message)
             console.error('Error:', error)
@@ -412,6 +475,7 @@ export default function Form10PestControlRecords() {
                 <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '2px solid #666' }}>
                     <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Monthly Checks</h3>
 
+                    <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
                     {/* Exterior Inspection */}
                     <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
                         <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Exterior Inspection</h4>
@@ -420,7 +484,7 @@ export default function Form10PestControlRecords() {
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
                                 <input type="date" value={exteriorInspectionDate}
                                     onChange={(e) => setExteriorInspectionDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
@@ -428,7 +492,7 @@ export default function Form10PestControlRecords() {
                                     onChange={(e) => setExteriorInspectionObservation(e.target.value)}
                                     maxLength="500"
                                     rows="3"
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
                             </div>
                         </div>
                     </div>
@@ -440,7 +504,7 @@ export default function Form10PestControlRecords() {
                             onChange={(e) => setWildBirdsObservation(e.target.value)}
                             maxLength="500"
                             rows="3"
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
                     </div>
 
                     {/* Fly Monitoring */}
@@ -475,7 +539,7 @@ export default function Form10PestControlRecords() {
                                     <input type="text" value={value}
                                         onChange={(e) => setter(e.target.value)}
                                         maxLength="500"
-                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
                                 </div>
                             ))}
                         </div>
@@ -489,7 +553,7 @@ export default function Form10PestControlRecords() {
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
                                 <input type="date" value={interiorInspectionDate}
                                     onChange={(e) => setInteriorInspectionDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
@@ -497,7 +561,7 @@ export default function Form10PestControlRecords() {
                                     onChange={(e) => setInteriorInspectionObservation(e.target.value)}
                                     maxLength="500"
                                     rows="3"
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
                             </div>
                         </div>
                     </div>
@@ -511,7 +575,7 @@ export default function Form10PestControlRecords() {
                                 <input type="text" value={rodentIndex}
                                     onChange={(e) => setRodentIndex(e.target.value)}
                                     maxLength="500"
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
                             </div>
                         </div>
                         <div style={{ marginBottom: '20px' }}>
@@ -520,25 +584,41 @@ export default function Form10PestControlRecords() {
                                 onChange={(e) => setComments(e.target.value)}
                                 maxLength="500"
                                 rows="4"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial' }} />
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
                         </div>
                     </div>
 
-                    {/* Save Monthly Checks Button */}
+                    </fieldset>
+
+                    {/* Save / Edit Monthly Checks Button */}
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
-                        <button type="button" onClick={handleMonthlySubmit} style={{
-                            padding: '12px 40px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            backgroundColor: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}>
-                            💾 Save Monthly Checks
-                        </button>
-                        {monthlySaved && <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Monthly checks saved!</span>}
+                        {monthlyLocked ? (
+                            <button type="button" onClick={() => setMonthlyLocked(false)} style={{
+                                padding: '12px 40px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                backgroundColor: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}>
+                                ✏️ Edit Monthly Checks
+                            </button>
+                        ) : (
+                            <button type="button" onClick={handleMonthlySubmit} style={{
+                                padding: '12px 40px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                backgroundColor: '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}>
+                                💾 Save Monthly Checks
+                            </button>
+                        )}
                     </div>
                 </div>
             )}

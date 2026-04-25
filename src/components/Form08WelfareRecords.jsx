@@ -188,6 +188,7 @@ export default function Form08WelfareRecords() {
     const [generatorCheckInitials, setGeneratorCheckInitials] = useState('')
     const [monthlyComments, setMonthlyComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
+    const [monthlyLocked, setMonthlyLocked] = useState(false)
 
     // View toggle
     const [viewMode, setViewMode] = useState('day')
@@ -195,7 +196,11 @@ export default function Form08WelfareRecords() {
     // Day state (lazy per-day loading)
     const [dayData, setDayData] = useState({})
     const [lockedDays, setLockedDays] = useState({})
-    const [selectedDay, setSelectedDay] = useState(1)
+    const [selectedDay, setSelectedDay] = useState(() => {
+        const t = new Date()
+        const [y, m] = monthYear.split('-')
+        return parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1
+    })
     const [loadingDay, setLoadingDay] = useState(false)
     const [saving, setSaving] = useState(false)
 
@@ -209,7 +214,56 @@ export default function Form08WelfareRecords() {
     useEffect(() => {
         setDayData({})
         setLockedDays({})
-        setSelectedDay(1)
+        const t = new Date()
+        const [y, m] = monthYear.split('-')
+        setSelectedDay(parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1)
+        setAmmoniaRange('')
+        setAlarmCheckDate('')
+        setAlarmCheckInitials('')
+        setGeneratorCheckDate('')
+        setGeneratorCheckInitials('')
+        setMonthlyComments('')
+        setMonthlySaved(false)
+        setMonthlyLocked(false)
+    }, [selectedBarn?.id, monthYear])
+
+    // Load monthly checks data from DB
+    useEffect(() => {
+        if (!farm?.id || !selectedBarn?.id) return
+        let cancelled = false
+        const load = async () => {
+            try {
+                const monthStr = monthYear.substring(0, 7)
+                const monthFirstDate = monthStr + '-01'
+                const { data: audit } = await supabase.from('monthly_audits').select('id')
+                    .eq('farm_id', farm.id).eq('month_year', monthFirstDate).maybeSingle()
+                if (!audit || cancelled) return
+                const { data: wr } = await supabase.from('welfare_records')
+                    .select('id, monthly_comments')
+                    .eq('barn_id', selectedBarn.id).eq('audit_id', audit.id).maybeSingle()
+                if (!wr || cancelled) return
+                const [{ data: ammonia }, { data: alarmGen }] = await Promise.all([
+                    supabase.from('welfare_ammonia_tests').select('ppm_range')
+                        .eq('welfare_id', wr.id).eq('test_date', monthFirstDate).maybeSingle(),
+                    supabase.from('welfare_weekly_inspections')
+                        .select('alarm_check_date, alarm_check_initials, generator_check_date, generator_check_initials')
+                        .eq('welfare_id', wr.id).eq('inspection_date', monthFirstDate).maybeSingle(),
+                ])
+                if (cancelled) return
+                setMonthlyComments(wr.monthly_comments ?? '')
+                setAmmoniaRange(ammonia?.ppm_range ?? '')
+                setAlarmCheckDate(alarmGen?.alarm_check_date ?? '')
+                setAlarmCheckInitials(alarmGen?.alarm_check_initials ?? '')
+                setGeneratorCheckDate(alarmGen?.generator_check_date ?? '')
+                setGeneratorCheckInitials(alarmGen?.generator_check_initials ?? '')
+                if (ammonia || alarmGen || wr.monthly_comments) {
+                    setMonthlySaved(true)
+                    setMonthlyLocked(true)
+                }
+            } catch (e) { /* silent */ }
+        }
+        load()
+        return () => { cancelled = true }
     }, [selectedBarn?.id, monthYear])
 
     // Lazy-load selected day
@@ -436,6 +490,7 @@ export default function Form08WelfareRecords() {
             }
 
             setMonthlySaved(true)
+            setMonthlyLocked(true)
             alert('✅ Monthly checks saved!')
         } catch (error) {
             alert('Error: ' + error.message)
@@ -577,6 +632,7 @@ export default function Form08WelfareRecords() {
                         Monthly Checks
                     </h3>
 
+                    <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
                     {/* Ammonia Range */}
                     <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
                         <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>
@@ -619,13 +675,13 @@ export default function Form08WelfareRecords() {
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
                                 <input type="date" value={alarmCheckDate}
                                     onChange={(e) => setAlarmCheckDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
                                 <input type="text" maxLength="10" value={alarmCheckInitials}
                                     onChange={(e) => setAlarmCheckInitials(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                             </div>
                         </div>
                     </div>
@@ -638,13 +694,13 @@ export default function Form08WelfareRecords() {
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
                                 <input type="date" value={generatorCheckDate}
                                     onChange={(e) => setGeneratorCheckDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
                                 <input type="text" maxLength="10" value={generatorCheckInitials}
                                     onChange={(e) => setGeneratorCheckInitials(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                             </div>
                         </div>
                     </div>
@@ -657,41 +713,61 @@ export default function Form08WelfareRecords() {
                         <textarea value={monthlyComments}
                             onChange={(e) => setMonthlyComments(e.target.value)}
                             rows="4"
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'Arial', boxSizing: 'border-box' }} />
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'Arial', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
                     </div>
+
+                    </fieldset>
 
                     {/* Buttons */}
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                        <button
-                            type="button"
-                            onClick={handleMonthlySubmit}
-                            style={{
-                                padding: '12px 40px',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                backgroundColor: '#28a745',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                            }}>
-                            💾 Save Monthly Checks
-                        </button>
-                        {monthlySaved && (
+                        {monthlyLocked ? (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setMonthlyLocked(false)}
+                                    style={{
+                                        padding: '12px 40px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        backgroundColor: '#6c757d',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}>
+                                    ✏️ Edit Monthly Checks
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleMarkMonthComplete}
+                                    style={{
+                                        padding: '12px 40px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        backgroundColor: '#0066cc',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}>
+                                    ✅ Mark Month Complete
+                                </button>
+                            </>
+                        ) : (
                             <button
                                 type="button"
-                                onClick={handleMarkMonthComplete}
+                                onClick={handleMonthlySubmit}
                                 style={{
                                     padding: '12px 40px',
                                     fontSize: '16px',
                                     fontWeight: 'bold',
-                                    backgroundColor: '#0066cc',
+                                    backgroundColor: '#28a745',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '4px',
                                     cursor: 'pointer'
                                 }}>
-                                ✅ Mark Month Complete
+                                💾 Save Monthly Checks
                             </button>
                         )}
                     </div>

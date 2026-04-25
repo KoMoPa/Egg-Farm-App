@@ -1,38 +1,42 @@
 /**
- * DaySelector – horizontal scrollable 1‑to‑N day picker.
+ * DaySelector – 7-column calendar grid day picker.
  *
  * Props:
- *   daysInMonth  – number of days to show (28‑31)
+ *   daysInMonth  – number of days in the month (28‑31)
  *   selectedDay  – currently highlighted day (1‑based)
  *   lockedDays   – { [day]: true } when a day has saved data
  *   onSelect     – callback(day: number)
  *   loading      – show a "loading…" label while fetching day data
  */
 export default function DaySelector({ daysInMonth, selectedDay, lockedDays = {}, onSelect, loading = false }) {
+  // Always render 35 cells (5 rows × 7); cells beyond daysInMonth are inactive
+  const cells = Array.from({ length: 35 }, (_, i) => i + 1)
+
   return (
-    <div style={{ marginBottom: '20px' }}>
+    <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <p style={{ fontWeight: 'bold', fontSize: '14px', color: '#333', margin: '0 0 8px 0' }}>
         Select Day
       </p>
 
       <div style={{
-        display: 'flex',
-        gap: '6px',
-        overflowX: 'auto',
-        paddingBottom: '8px',
-        scrollbarWidth: 'thin',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, 36px)',
+        gap: '4px',
+        width: 'fit-content',
       }}>
-        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
-          const isSelected = selectedDay === d
-          const isSaved = lockedDays[d] === true
+        {cells.map(d => {
+          const inactive = d > daysInMonth
+          const isSelected = !inactive && selectedDay === d
+          const isSaved = !inactive && lockedDays[d] === true
           return (
             <button
               key={d}
               type="button"
-              onClick={() => onSelect(d)}
-              title={isSaved ? `Day ${d} – already recorded` : `Day ${d}`}
+              onClick={() => !inactive && onSelect(d)}
+              title={inactive ? undefined : isSaved ? `Day ${d} – already recorded` : `Day ${d}`}
+              disabled={inactive}
               style={{
-                minWidth: '36px',
+                width: '36px',
                 height: '36px',
                 borderRadius: '50%',
                 border: isSelected
@@ -40,18 +44,18 @@ export default function DaySelector({ daysInMonth, selectedDay, lockedDays = {},
                   : isSaved
                     ? '2px solid #28a745'
                     : '1px solid #ccc',
-                backgroundColor: isSelected ? '#0066cc' : isSaved ? '#f0fff4' : 'white',
-                color: isSelected ? 'white' : '#333',
+                backgroundColor: isSelected ? '#0066cc' : isSaved ? '#f0fff4' : inactive ? 'transparent' : 'white',
+                color: isSelected ? 'white' : inactive ? '#ddd' : '#333',
                 fontWeight: '600',
                 fontSize: '13px',
-                cursor: loading ? 'wait' : 'pointer',
-                flexShrink: 0,
+                cursor: inactive ? 'default' : loading ? 'wait' : 'pointer',
                 padding: 0,
                 lineHeight: '34px',
                 textAlign: 'center',
+                borderColor: inactive ? 'transparent' : undefined,
               }}
             >
-              {d}
+              {inactive ? '' : d}
             </button>
           )
         })}

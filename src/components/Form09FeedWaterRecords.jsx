@@ -153,7 +153,11 @@ export default function Form09FeedWaterRecords() {
 
     const [dayData, setDayData] = useState({})
     const [lockedDays, setLockedDays] = useState({})
-    const [selectedDay, setSelectedDay] = useState(1)
+    const [selectedDay, setSelectedDay] = useState(() => {
+        const t = new Date()
+        const [y, m] = monthYear.split('-')
+        return parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1
+    })
     const [loadingDay, setLoadingDay] = useState(false)
     const [saving, setSaving] = useState(false)
     const [viewMode, setViewMode] = useState('day')
@@ -163,6 +167,7 @@ export default function Form09FeedWaterRecords() {
     const [monthlyMortalityPercent, setMonthlyMortalityPercent] = useState('')
     const [comments, setComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
+    const [monthlyLocked, setMonthlyLocked] = useState(false)
 
     const daysInMonth = new Date(
         parseInt(monthYear.substring(0, 4)),
@@ -174,7 +179,43 @@ export default function Form09FeedWaterRecords() {
     useEffect(() => {
         setDayData({})
         setLockedDays({})
-        setSelectedDay(1)
+        const t = new Date()
+        const [y, m] = monthYear.split('-')
+        setSelectedDay(parseInt(y) === t.getFullYear() && parseInt(m) === t.getMonth() + 1 ? t.getDate() : 1)
+        setFeedTarget('')
+        setMonthlyMortalityPercent('')
+        setComments('')
+        setMonthlySaved(false)
+        setMonthlyLocked(false)
+    }, [selectedBarn?.id, monthYear])
+
+    // Load monthly checks data from DB
+    useEffect(() => {
+        if (!farm?.id || !selectedBarn?.id) return
+        let cancelled = false
+        const load = async () => {
+            try {
+                const monthStr = monthYear.substring(0, 7)
+                const { data: audit } = await supabase.from('monthly_audits').select('id')
+                    .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
+                if (!audit || cancelled) return
+                const { data: fwr } = await supabase.from('feed_water_records').select('id')
+                    .eq('barn_id', selectedBarn.id).eq('audit_id', audit.id).maybeSingle()
+                if (!fwr || cancelled) return
+                const { data: meta } = await supabase.from('feed_water_monthly_metadata').select('*')
+                    .eq('fw_id', fwr.id).maybeSingle()
+                if (cancelled) return
+                if (meta) {
+                    setFeedTarget(meta.feed_target ?? '')
+                    setMonthlyMortalityPercent(meta.monthly_mortality_percent?.toString() ?? '')
+                    setComments(meta.comments ?? '')
+                    setMonthlySaved(true)
+                    setMonthlyLocked(true)
+                }
+            } catch (e) { /* silent */ }
+        }
+        load()
+        return () => { cancelled = true }
     }, [selectedBarn?.id, monthYear])
 
     // Lazy-load selected day data from DB
@@ -336,7 +377,7 @@ export default function Form09FeedWaterRecords() {
 
             if (error) throw error
             setMonthlySaved(true)
-            setTimeout(() => setMonthlySaved(false), 3000)
+            setMonthlyLocked(true)
         } catch (err) {
             alert('Error saving monthly checks: ' + err.message)
         }
@@ -469,18 +510,19 @@ export default function Form09FeedWaterRecords() {
                         Monthly Checks
                     </h3>
 
+                    <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
                     <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Feed Target</label>
                         <input type="text" value={feedTarget}
                             onChange={(e) => setFeedTarget(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }} />
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
                         <input type="number" step="0.01" value={monthlyMortalityPercent}
                             onChange={(e) => setMonthlyMortalityPercent(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }} />
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
                         <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>If greater than 0.5%, notify EFO</p>
                     </div>
 
@@ -489,37 +531,52 @@ export default function Form09FeedWaterRecords() {
                         <textarea value={comments}
                             onChange={(e) => setComments(e.target.value)}
                             rows={4}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
                     </div>
+                    </fieldset>
 
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button type="button" onClick={handleMonthlySubmit} style={{
-                            padding: '10px 32px',
-                            fontSize: '15px',
-                            fontWeight: 'bold',
-                            backgroundColor: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}>
-                            💾 Save Monthly Checks
-                        </button>
-                        {monthlySaved && (
-                            <button type="button" onClick={handleMarkMonthComplete} style={{
+                        {monthlyLocked ? (
+                            <>
+                                <button type="button" onClick={() => setMonthlyLocked(false)} style={{
+                                    padding: '10px 32px',
+                                    fontSize: '15px',
+                                    fontWeight: 'bold',
+                                    backgroundColor: '#6c757d',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}>
+                                    ✏️ Edit Monthly Checks
+                                </button>
+                                <button type="button" onClick={handleMarkMonthComplete} style={{
+                                    padding: '10px 32px',
+                                    fontSize: '15px',
+                                    fontWeight: 'bold',
+                                    backgroundColor: '#155724',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}>
+                                    ✓ Mark Month Complete
+                                </button>
+                            </>
+                        ) : (
+                            <button type="button" onClick={handleMonthlySubmit} style={{
                                 padding: '10px 32px',
                                 fontSize: '15px',
                                 fontWeight: 'bold',
-                                backgroundColor: '#155724',
+                                backgroundColor: '#28a745',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer'
                             }}>
-                                ✓ Mark Month Complete
+                                💾 Save Monthly Checks
                             </button>
                         )}
-                        {monthlySaved && <span style={{ color: '#28a745', fontWeight: 'bold' }}>✓ Saved!</span>}
                     </div>
                 </div>
             )}
