@@ -4,7 +4,14 @@ import { getOrCreateMonthlyAudit, getOrCreateWelfareRecord } from '../utils/farm
 import { useFarmContext } from '../contexts/FarmContext'
 
 // DAY VIEW COMPONENT
-const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
+const INSPECTION_CRITERIA_FIELDS = [
+  'overallAppearance', 'generalSound', 'abnormalBehavior', 'signsOfDisease',
+  'injuredBirds', 'respiratoryProblems', 'pantingHuddling', 'lameness',
+  'featherPecking', 'trappedBirds', 'deadBirds', 'feedWaterAvailable',
+  'equipmentOperating', 'amenitiesCondition', 'layFacilityEnvironment',
+]
+
+const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria }) => (
   <div style={{ marginBottom: '30px' }}>
     <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
       Daily Tracking - Day {day}
@@ -99,7 +106,13 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox }) => (
       </div>
     </div>
 
-    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Inspection Criteria (Check as applicable)</h4>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+      <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Inspection Criteria (Check as applicable)</h4>
+      <button type="button" onClick={() => onSelectAllCriteria(day)}
+        style={{ fontSize: '12px', padding: '4px 10px', background: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+        Select All
+      </button>
+    </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.overallAppearance}
@@ -268,6 +281,18 @@ export default function Form08WelfareRecords() {
       [day]: {
         ...prev[day],
         [field]: !prev[day][field]
+      }
+    }))
+  }
+
+  const handleSelectAllCriteria = (day) => {
+    const allChecked = INSPECTION_CRITERIA_FIELDS.every(f => dayData[day][f])
+    const newValue = !allChecked
+    setDayData(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        ...Object.fromEntries(INSPECTION_CRITERIA_FIELDS.map(f => [f, newValue]))
       }
     }))
   }
@@ -592,7 +617,8 @@ export default function Form08WelfareRecords() {
             day={parseInt(recordDate.split('-')[2])}
             data={dayData[parseInt(recordDate.split('-')[2])]}
             onDayChange={handleDayChange}
-            onDayCheckbox={handleDayCheckbox} />
+            onDayCheckbox={handleDayCheckbox}
+            onSelectAllCriteria={handleSelectAllCriteria} />
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
             <button type="submit" style={{
               padding: '12px 40px',
