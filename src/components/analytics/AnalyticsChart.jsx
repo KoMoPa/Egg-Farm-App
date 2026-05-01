@@ -1,0 +1,157 @@
+import { useState, useEffect } from 'react'
+import { useSupabase } from '../../contexts/SupabaseContext'
+import { useFarmContext } from '../../contexts/FarmContext'
+import LineChart from './LineChart'
+import WarningBanner from './WarningBanner'
+
+/**
+ * Reusable analytics chart component
+ * @param {Object} props
+ * @param {string} props.table - Table name (e.g., 'feed_water_daily')
+ * @param {string} props.dataColumn - Column to chart (e.g., 'auger_run_time_minutes')
+ * @param {string} props.targetColumn - Optional target column for deviation (e.g., 'feed_daily')
+ * @param {number} props.threshold - Deviation threshold % (default: 10)
+ * @param {string} props.icon - Emoji icon
+ * @param {string} props.warningMsg - Warning message template (use {deviation} and {pct} placeholders)
+ */
+export default function AnalyticsChart({
+  table = 'feed_water_daily',
+  dataColumn,
+  targetColumn = null,
+  threshold = 10,
+  icon = '📊',
+  warningMsg = 'Value {deviation} ({pct}%)',
+}) {
+  const supabase = useSupabase()
+  const { selectedBarn } = useFarmContext()
+  const [rows, setRows] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!selectedBarn?.id) {
+      setRows(null)
+      return
+    }
+
+    const fetch = async () => {
+      setLoading(true)
+      
+      // Build select columns
+      let selectCols = `record_date, ${dataColumn}`
+      if (targetColumn) {
+        selectCols += `, ${targetColumn}`
+      }
+      
+      // Most tables have a parent reference to a records table
+      const joinTable = table === 'feed_water_daily' ? 'feed_water_records!inner' : null
+      const joinTableName = table === 'feed_water_daily' ? 'feed_water_records' : null
+      
+      if (joinTable) {
+        selectCols += `, ${joinTable}(barn_id)`
+      }
+
+      let query = supabase
+        .from(table)
+        .select(selectCols)
+        .not(dataColumn, 'is', null)
+        .order('record_date', { ascending: false })
+        .limit(4)
+
+      if (joinTableName) {
+        query = query.eq(`${joinTableName}.barn_id`, selectedBarn.id)
+      }
+
+      const { data, error } = await query
+
+      if (error) console.error(error)
+      setRows(data || [])
+      setLoading(false)
+    }
+    fetch()
+  }, [selectedBarn?.id, table, dataColumn, targetColumn])
+
+  let content
+
+  if (!selectedBarn) {
+    content = <p className="analytics-info">Select a barn</p>
+  } else if (loading) {
+    content = <p className="analytics-info">Loading…</p>
+  } else if (!rows || rows.length < 4) {
+    content = <p className="analytics-info">Need 4+ days</p>
+  } else {
+    const today = rows[0]
+    const prior = rows.slice(1, 4)
+    
+    const todayValue = today[dataColumn]
+    const chartValues = rows.reverse().map(r => r[dataColumn] || 0)
+
+    let stat1 = { val: 0, lbl: '' }
+    let stat2 = { val: todayValue, lbl: 'Today' }
+    let warn = false
+    let warnType = 'info'
+    let warnMsg = ''
+
+    if (targetColumn) {
+      // Deviation mode (target vs actual)
+      const targetVal = today[targetColumn]
+      const deviation = todayValue - targetVal
+      const deviationPct = targetVal ? ((deviation / targetVal) * 100).toFixed(1) : 0
+      warn = Math.abs(deviationPct) >= threshold
+
+      stat1.val = targetVal
+      stat1.lbl = 'Target'
+      stat2.val = todayValue
+      stat2.lbl = 'Actual'
+
+      if (warn) {
+        warnType = deviation > 0 ? 'over' : 'under'
+        warnMsg = warningMsg
+          .replace('{deviation}', Math.abs(deviationPct))
+          .replace('{pct}', Math.abs(deviationPct))
+      }
+    } else {
+      // Trend mode (vs 3-day average)
+      const avg = prior.reduce((sum, r) => sum + (r[dataColumn] || 0), 0) / prior.length
+      const diff = todayValue - avg
+      const diffPct = avg ? ((diff / avg) * 100).toFixed(1) : 0
+      warn = Math.abs(diff) >= (threshold / 10) // For auger, threshold is minutes, so 3+ min
+
+      stat1.val = avg.toFixed(1)
+      stat1.lbl = '3-day avg'
+      stat2.val = todayValue
+      stat2.lbl = 'Today'
+
+      if (warn) {
+        warnType = diff > 0 ? 'over' : 'under'
+        warnMsg = warningMsg
+          .replace('{deviation}', Math.abs(diff).toFixed(1))
+          .replace('{pct}', Math.abs(diffPct))
+      }
+    }
+
+    content = (
+      <>
+        <div className="chart-mini-stats">
+          <div className="chart-mini-stat">
+            <div className="chart-mini-val">
+              {typeof stat1.val === 'number' ? stat1.val.toFixed(1) : (stat1.val || '0')}
+            </div>
+            <div className="chart-mini-lbl">{stat1.lbl}</div>
+          </div>
+          <div className="chart-mini-stat">
+            <div className={`chart-mini-val ${warn && warnType !== 'info' ? warnType : ''}`}>
+              {typeof stat2.val === 'number' ? stat2.val.toFixed(1) : (stat2.val || '0')}
+            </div>
+            <div className="chart-mini-lbl">{stat2.lbl}</div>
+          </div>
+        </div>
+
+        <LineChart data={chartValues} height={80} />
+
+        {warn && <WarningBanner message={warnMsg} type={warnType} icon={icon} />}
+      </>
+    )
+  }
+
+  return content
+}

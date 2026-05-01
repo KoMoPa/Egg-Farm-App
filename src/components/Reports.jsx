@@ -16,6 +16,8 @@ function Reports() {
     // Fetch all monthly audits for the farm
     useEffect(() => {
         const fetchAudits = async () => {
+            if (!farm?.id) return
+            
             setLoading(true)
             try {
                 const { data, error } = await supabase
@@ -111,9 +113,9 @@ function Reports() {
     }
 
     return (
-        <div style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ margin: '0 0 20px 0', fontSize: '24px' }}>
-                📊 Monthly Compliance Reports - {farm?.farm_name}
+        <div>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0066cc' }}>
+                📊 Monthly Compliance Reports
             </h2>
 
             {/* Search */}

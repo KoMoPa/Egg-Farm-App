@@ -4,21 +4,19 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { useAuth } from './contexts/AuthContext'
 import { FarmProvider, useFarmContext } from './contexts/FarmContext'
 import Login from './components/Login'
-import BarnManager from './components/BarnManager'
+import Dashboard from './components/Dashboard'
 import Form07DailyProduction from './components/Form07DailyProduction'
 import Form08WelfareRecords from './components/Form08WelfareRecords'
 import Form09FeedWaterRecords from './components/Form09FeedWaterRecords'
 import Form10PestControlRecords from './components/Form10PestControlRecords'
-import Reports from './components/Reports'
 import './App.css'
 
 const TABS = [
-  { key: 'home', label: 'Farm & Barns', emoji: '🏠' },
+  { key: 'home', label: 'Dashboard', emoji: '🏠' },
   { key: 'form07', label: 'Production', emoji: '🥚' },
   { key: 'form08', label: 'Welfare', emoji: '🐔' },
   { key: 'form09', label: 'Feed/Water', emoji: '🌾' },
   { key: 'form10', label: 'Pest Control', emoji: '🐀' },
-  { key: 'reports', label: 'Reports', emoji: '📋' },
 ]
 
 function App() {
@@ -74,8 +72,8 @@ function AppContent({ signOut, user }) {
       <main className="app-content">
         <div className="app-content-inner">
 
-          {/* Home / barn manager tab */}
-          {activeTab === 'home' && <BarnManager />}
+          {/* Dashboard tab */}
+          {activeTab === 'home' && <Dashboard />}
 
           {/* Form tabs */}
           {activeTab !== 'home' && activeTab !== 'reports' && (
@@ -107,7 +105,7 @@ function AppContent({ signOut, user }) {
             </>
           )}
 
-          {activeTab === 'reports' && <Reports />}
+
         </div>
       </main>
 
