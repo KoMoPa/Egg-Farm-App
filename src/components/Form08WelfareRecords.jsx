@@ -256,7 +256,6 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
 )
 
 
-
 export default function Form08WelfareRecords() {
   const { farm, selectedBarn, monthYear } = useFarmContext()
   const farmId = farm?.id
