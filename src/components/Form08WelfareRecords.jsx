@@ -234,7 +234,7 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
         Lay Facility Environment
       </label>
     </div>
-)
+);
 
 
 
