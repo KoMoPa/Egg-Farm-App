@@ -39,35 +39,39 @@ const BLANK_DAY = {
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
 
 // DAY VIEW COMPONENT
-const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
-    <div style={{ marginBottom: '30px', opacity: locked ? 0.8 : 1 }}>
-        <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
-            Daily Tracking - Day {day}
-        </h3>
+const INSPECTION_CRITERIA_FIELDS = [
+  'overallAppearance', 'generalSound', 'abnormalBehavior', 'signsOfDisease',
+  'injuredBirds', 'respiratoryProblems', 'pantingHuddling', 'lameness',
+  'featherPecking', 'trappedBirds', 'deadBirds', 'feedWaterAvailable',
+  'equipmentOperating', 'amenitiesCondition', 'layFacilityEnvironment',
+]
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
-                <input type="number" step="0.1" value={data.barnTempHi}
-                    onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
-                <input type="number" step="0.1" value={data.barnTempLo}
-                    onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
-                <input type="number" step="0.1" value={data.exteriorTemp}
-                    onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-        </div>
+const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria }) => (
+  <div style={{ marginBottom: '30px' }}>
+    <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+      Daily Tracking - Day {day}
+    </h3>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
+        <input type="number" step="0.1" value={data.barnTempHi}
+          onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
+        <input type="number" step="0.1" value={data.barnTempLo}
+          onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
+        <input type="number" step="0.1" value={data.exteriorTemp}
+          onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+      </div>
+    </div>
 
         <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Sanitation Checks</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
@@ -146,51 +150,89 @@ const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
             </div>
         </div>
 
-        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Inspection Criteria (Check as applicable)</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-            {[
-                ['overallAppearance', 'Overall appearance of birds'],
-                ['generalSound', 'General sound of flock'],
-                ['abnormalBehavior', 'Abnormal Behavior'],
-                ['signsOfDisease', 'Signs of Disease/Illness'],
-                ['injuredBirds', 'Injured Birds'],
-                ['respiratoryProblems', 'Respiratory Problems'],
-                ['pantingHuddling', 'Panting/Huddling'],
-                ['lameness', 'Lameness'],
-                ['featherPecking', 'Signs of Feather Pecking/Cannibalism'],
-                ['trappedBirds', 'Trapped Birds'],
-                ['deadBirds', 'Dead Birds'],
-                ['feedWaterAvailable', 'Feed & Water Available'],
-                ['equipmentOperating', 'Equipment Operating'],
-                ['amenitiesCondition', 'Condition of Amenities/Housing'],
-                ['layFacilityEnvironment', 'Lay Facility Environment'],
-            ].map(([field, label]) => (
-                <label key={field} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
-                    <input type="checkbox" checked={data[field]}
-                        onChange={(e) => onDayChange(day, field, e.target.checked)}
-                        disabled={locked} />
-                    {label}
-                </label>
-            ))}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', marginTop: '20px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Weekly Initials</label>
-                <input type="text" maxLength="20" value={data.weeklyInitials}
-                    onChange={(e) => onDayChange(day, 'weeklyInitials', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Inspection Comments</label>
-                <textarea value={data.weeklyComments}
-                    onChange={(e) => onDayChange(day, 'weeklyComments', e.target.value)}
-                    disabled={locked}
-                    rows="2"
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'inherit', ...(locked && inputLocked) }} />
-            </div>
-        </div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+      <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Inspection Criteria (Check as applicable)</h4>
+      <button type="button" onClick={() => onSelectAllCriteria(day)}
+        style={{ fontSize: '12px', padding: '4px 10px', background: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+        Select All
+      </button>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.overallAppearance}
+          onChange={() => onDayCheckbox(day, 'overallAppearance')} />
+        Overall appearance of birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.generalSound}
+          onChange={() => onDayCheckbox(day, 'generalSound')} />
+        General sound of flock
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.abnormalBehavior}
+          onChange={() => onDayCheckbox(day, 'abnormalBehavior')} />
+        Abnormal Behavior
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.signsOfDisease}
+          onChange={() => onDayCheckbox(day, 'signsOfDisease')} />
+        Signs of Disease/Illness
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.injuredBirds}
+          onChange={() => onDayCheckbox(day, 'injuredBirds')} />
+        Injured Birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.respiratoryProblems}
+          onChange={() => onDayCheckbox(day, 'respiratoryProblems')} />
+        Respiratory Problems
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.pantingHuddling}
+          onChange={() => onDayCheckbox(day, 'pantingHuddling')} />
+        Panting/Huddling
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.lameness}
+          onChange={() => onDayCheckbox(day, 'lameness')} />
+        Lameness
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.featherPecking}
+          onChange={() => onDayCheckbox(day, 'featherPecking')} />
+        Signs of Feather Pecking/Cannibalism
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.trappedBirds}
+          onChange={() => onDayCheckbox(day, 'trappedBirds')} />
+        Trapped Birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.deadBirds}
+          onChange={() => onDayCheckbox(day, 'deadBirds')} />
+        Dead Birds
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.feedWaterAvailable}
+          onChange={() => onDayCheckbox(day, 'feedWaterAvailable')} />
+        Feed & Water Available
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.equipmentOperating}
+          onChange={() => onDayCheckbox(day, 'equipmentOperating')} />
+        Equipment Operating
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.amenitiesCondition}
+          onChange={() => onDayCheckbox(day, 'amenitiesCondition')} />
+        Condition of Amenities/Housing
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="checkbox" checked={data.layFacilityEnvironment}
+          onChange={() => onDayCheckbox(day, 'layFacilityEnvironment')} />
+        Lay Facility Environment
+      </label>
     </div>
 )
 
@@ -476,8 +518,17 @@ export default function Form08WelfareRecords() {
     }))
   }
 
-  const currentDayData = dayData[selectedDay] ?? { ...BLANK_DAY }
-  const isLocked = lockedDays[selectedDay] === true
+  const handleSelectAllCriteria = (day) => {
+    const allChecked = INSPECTION_CRITERIA_FIELDS.every(f => dayData[day][f])
+    const newValue = !allChecked
+    setDayData(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        ...Object.fromEntries(INSPECTION_CRITERIA_FIELDS.map(f => [f, newValue]))
+      }
+    }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -637,41 +688,144 @@ export default function Form08WelfareRecords() {
         }
     }
 
-    return (
-        <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
-            {/* FORM HEADER */}
-            <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
-                <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
-                    Form 08 – Welfare Records
-                </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
-                    <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
-                    <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
-                    <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
-                </div>
+      {/* FORM HEADER */}
+      <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
+        <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
+          Form 08 - Welfare Records
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+          <div><strong>Farm Name:</strong> {farmName}</div>
+          <div><strong>Barn #:</strong> {barnNumber}</div>
+          <div><strong>Month/Year:</strong> {monthYear}</div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
+            <input type="date" value={recordDate}
+              onChange={(e) => setRecordDate(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+          </div>
+        </div>
 
-                {/* VIEW TOGGLE */}
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                    {['day', 'monthly'].map(mode => (
-                        <button
-                            key={mode}
-                            type="button"
-                            onClick={() => setViewMode(mode)}
-                            style={{
-                                padding: '8px 16px',
-                                fontSize: '14px',
-                                fontWeight: 'bold',
-                                backgroundColor: viewMode === mode ? '#0066cc' : '#ddd',
-                                color: viewMode === mode ? 'white' : '#333',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                            }}>
-                            {mode === 'day' ? 'Day View' : 'Monthly Checks'}
-                        </button>
-                    ))}
-                </div>
+        {/* VIEW TOGGLE */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          <button
+            type="button"
+            onClick={() => setViewMode('day')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              backgroundColor: viewMode === 'day' ? '#0066cc' : '#ddd',
+              color: viewMode === 'day' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+            Day View
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('monthly')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              backgroundColor: viewMode === 'monthly' ? '#0066cc' : '#ddd',
+              color: viewMode === 'monthly' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+            Monthly Checks
+          </button>
+        </div>
+      </div>
+
+      {/* DAY VIEW */}
+      {viewMode === 'day' && (
+        <div>
+          <DayViewForm
+            day={parseInt(recordDate.split('-')[2])}
+            data={dayData[parseInt(recordDate.split('-')[2])]}
+            onDayChange={handleDayChange}
+            onDayCheckbox={handleDayCheckbox}
+            onSelectAllCriteria={handleSelectAllCriteria} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+            <button type="submit" style={{
+              padding: '12px 40px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+              Save Daily Record
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MONTHLY CHECKS */}
+      {viewMode === 'monthly' && (
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '25px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+            Monthly Checks
+          </h3>
+
+          {/* Ammonia Range */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>
+              Ammonia Test (Oct–March only)
+            </h4>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '12px' }}>
+              Circle the PPM range at bird height (average of at least 3 locations):
+            </p>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              {['0-5', '5-10', '10-15', '15-20', '20+'].map(range => (
+                <label key={range} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="ammoniaRange"
+                    value={range}
+                    checked={ammoniaRange === range}
+                    onChange={(e) => setAmmoniaRange(e.target.value)}
+                  />
+                  {range} ppm
+                </label>
+              ))}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', color: '#888' }}>
+                <input
+                  type="radio"
+                  name="ammoniaRange"
+                  value=""
+                  checked={ammoniaRange === ''}
+                  onChange={() => setAmmoniaRange('')}
+                />
+                N/A
+              </label>
+            </div>
+          </div>
+
+          {/* Alarm Check */}
+          <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Alarm Check</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Date</label>
+                <input type="date" value={alarmCheckDate}
+                  onChange={(e) => setAlarmCheckDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
+                <input type="text" maxLength="10" value={alarmCheckInitials}
+                  onChange={(e) => setAlarmCheckInitials(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+              </div>
             </div>
 
             {/* DAY VIEW */}
