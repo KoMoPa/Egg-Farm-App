@@ -456,7 +456,7 @@ export default function Form10PestControlRecords() {
                 <div>
                     {/* Scrollable day selector */}
                     <DaySelector
-                        daysInMonth={daysInMonth}
+                        monthYear={monthYear}
                         selectedDay={selectedDay}
                         lockedDays={lockedDays}
                         onSelect={setSelectedDay}
@@ -519,151 +519,151 @@ export default function Form10PestControlRecords() {
                     <h3 style={{ fontSize: '18px', marginBottom: '30px', textAlign: 'center' }}>Monthly Checks</h3>
 
                     <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
-                    {/* Exterior Inspection */}
-                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Exterior Inspection</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
-                                <input type="date" value={exteriorInspectionDate}
-                                    onChange={(e) => setExteriorInspectionDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
-                                <textarea value={exteriorInspectionObservation}
-                                    onChange={(e) => setExteriorInspectionObservation(e.target.value)}
-                                    maxLength="500"
-                                    rows="3"
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Wild Birds */}
-                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Wild Birds</h4>
-                        <textarea value={wildBirdsObservation}
-                            onChange={(e) => setWildBirdsObservation(e.target.value)}
-                            maxLength="500"
-                            rows="3"
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
-                    </div>
-
-                    {/* Fly Monitoring */}
-                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Fly Monitoring</h4>
-                        <div style={{ display: 'flex', gap: '20px' }}>
-                            {['Very Few', 'Moderate', 'Severe'].map(level => (
-                                <label key={level} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input type="radio" name="flyMonitoring" value={level}
-                                        checked={flyMonitoring === level}
-                                        onChange={(e) => setFlyMonitoring(e.target.value)} />
-                                    {level}
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Range Management */}
-                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            {[
-                                ['Grass:', rangeGrass, setRangeGrass],
-                                ['Ponding Water:', rangePondingWater, setRangePondingWater],
-                                ['Rotation/Harrow:', rangeRotationHarrow, setRangeRotationHarrow],
-                                ['Wild Bird Deterrents:', rangeWildBirdDeterrents, setRangeWildBirdDeterrents],
-                                ['Gravel/Fences:', rangeGravelFences, setRangeGravelFences],
-                                ['Other:', rangeOther, setRangeOther],
-                            ].map(([label, value, setter]) => (
-                                <div key={label}>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>{label}</label>
-                                    <input type="text" value={value}
-                                        onChange={(e) => setter(e.target.value)}
-                                        maxLength="500"
+                        {/* Exterior Inspection */}
+                        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Exterior Inspection</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
+                                    <input type="date" value={exteriorInspectionDate}
+                                        onChange={(e) => setExteriorInspectionDate(e.target.value)}
                                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
                                 </div>
-                            ))}
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
+                                    <textarea value={exteriorInspectionObservation}
+                                        onChange={(e) => setExteriorInspectionObservation(e.target.value)}
+                                        maxLength="500"
+                                        rows="3"
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Interior Inspection */}
-                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Interior Inspection</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
-                                <input type="date" value={interiorInspectionDate}
-                                    onChange={(e) => setInteriorInspectionDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
-                                <textarea value={interiorInspectionObservation}
-                                    onChange={(e) => setInteriorInspectionObservation(e.target.value)}
-                                    maxLength="500"
-                                    rows="3"
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Summary */}
-                    <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Summary</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Mice Total</label>
-                                <input type="number" value={miceTotal}
-                                    onChange={(e) => setMiceTotal(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Traps Total</label>
-                                <input type="number" value={trapsTotal}
-                                    onChange={(e) => setTrapsTotal(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Days Monitored</label>
-                                <input type="number" value={daysMonitored}
-                                    onChange={(e) => setDaysMonitored(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
-                                <input type="number" step="0.0001" value={rodentIndex}
-                                    onChange={(e) => setRodentIndex(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                                <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
-                            </div>
-                        </div>
-                        <div style={{ marginBottom: '20px' }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
-                            <textarea value={comments}
-                                onChange={(e) => setComments(e.target.value)}
+                        {/* Wild Birds */}
+                        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Wild Birds</h4>
+                            <textarea value={wildBirdsObservation}
+                                onChange={(e) => setWildBirdsObservation(e.target.value)}
                                 maxLength="500"
-                                rows="4"
+                                rows="3"
                                 style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature</label>
-                                <input type="text" maxLength="200" value={signature}
-                                    onChange={(e) => setSignature(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature Date</label>
-                                <input type="date" value={signatureDate}
-                                    onChange={(e) => setSignatureDate(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+
+                        {/* Fly Monitoring */}
+                        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Fly Monitoring</h4>
+                            <div style={{ display: 'flex', gap: '20px' }}>
+                                {['Very Few', 'Moderate', 'Severe'].map(level => (
+                                    <label key={level} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input type="radio" name="flyMonitoring" value={level}
+                                            checked={flyMonitoring === level}
+                                            onChange={(e) => setFlyMonitoring(e.target.value)} />
+                                        {level}
+                                    </label>
+                                ))}
                             </div>
                         </div>
-                    </div>
+
+                        {/* Range Management */}
+                        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                {[
+                                    ['Grass:', rangeGrass, setRangeGrass],
+                                    ['Ponding Water:', rangePondingWater, setRangePondingWater],
+                                    ['Rotation/Harrow:', rangeRotationHarrow, setRangeRotationHarrow],
+                                    ['Wild Bird Deterrents:', rangeWildBirdDeterrents, setRangeWildBirdDeterrents],
+                                    ['Gravel/Fences:', rangeGravelFences, setRangeGravelFences],
+                                    ['Other:', rangeOther, setRangeOther],
+                                ].map(([label, value, setter]) => (
+                                    <div key={label}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>{label}</label>
+                                        <input type="text" value={value}
+                                            onChange={(e) => setter(e.target.value)}
+                                            maxLength="500"
+                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Interior Inspection */}
+                        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Interior Inspection</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Date</label>
+                                    <input type="date" value={interiorInspectionDate}
+                                        onChange={(e) => setInteriorInspectionDate(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Observation</label>
+                                    <textarea value={interiorInspectionObservation}
+                                        onChange={(e) => setInteriorInspectionObservation(e.target.value)}
+                                        maxLength="500"
+                                        rows="3"
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Summary */}
+                        <div style={{ marginBottom: '30px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Summary</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Mice Total</label>
+                                    <input type="number" value={miceTotal}
+                                        onChange={(e) => setMiceTotal(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Traps Total</label>
+                                    <input type="number" value={trapsTotal}
+                                        onChange={(e) => setTrapsTotal(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Days Monitored</label>
+                                    <input type="number" value={daysMonitored}
+                                        onChange={(e) => setDaysMonitored(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
+                                    <input type="number" step="0.0001" value={rodentIndex}
+                                        onChange={(e) => setRodentIndex(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                    <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
+                                </div>
+                            </div>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Comments</label>
+                                <textarea value={comments}
+                                    onChange={(e) => setComments(e.target.value)}
+                                    maxLength="500"
+                                    rows="4"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature</label>
+                                    <input type="text" maxLength="200" value={signature}
+                                        onChange={(e) => setSignature(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Signature Date</label>
+                                    <input type="date" value={signatureDate}
+                                        onChange={(e) => setSignatureDate(e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                            </div>
+                        </div>
 
                     </fieldset>
 

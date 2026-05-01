@@ -397,7 +397,7 @@ export default function Form07DailyProduction() {
 
                 {/* Scrollable day selector */}
                 <DaySelector
-                    daysInMonth={daysInMonth}
+                    monthYear={monthYear}
                     selectedDay={selectedDay}
                     lockedDays={lockedDays}
                     onSelect={setSelectedDay}
@@ -731,75 +731,75 @@ export default function Form07DailyProduction() {
             {viewMode === 'monthly' && (
                 <div>
                     <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
-                    {/* Thermometer Calibration */}
-                    <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
-                        <h3 style={{ fontSize: '18px', marginBottom: '16px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
-                            Thermometer Calibration (twice annually)
-                        </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '16px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Calibration Date</label>
-                                <input type="date" value={thermCalDate}
-                                    onChange={e => setThermCalDate(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Method</label>
-                                <select value={thermCalMethod} onChange={e => setThermCalMethod(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Result</label>
-                                <select value={thermCalPass ? 'pass' : 'fail'} onChange={e => setThermCalPass(e.target.value === 'pass')}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
-                                    <option value="pass">Pass</option>
-                                    <option value="fail">Fail</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Initials</label>
-                                <input type="text" value={thermCalInitials}
-                                    onChange={e => setThermCalInitials(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
-                                    placeholder="AB" maxLength={20} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Notes</label>
-                                <input type="text" value={thermCalNotes}
-                                    onChange={e => setThermCalNotes(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
-                                    placeholder="Optional notes" />
+                        {/* Thermometer Calibration */}
+                        <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
+                            <h3 style={{ fontSize: '18px', marginBottom: '16px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
+                                Thermometer Calibration (twice annually)
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '16px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Calibration Date</label>
+                                    <input type="date" value={thermCalDate}
+                                        onChange={e => setThermCalDate(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Method</label>
+                                    <select value={thermCalMethod} onChange={e => setThermCalMethod(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Result</label>
+                                    <select value={thermCalPass ? 'pass' : 'fail'} onChange={e => setThermCalPass(e.target.value === 'pass')}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
+                                        <option value="pass">Pass</option>
+                                        <option value="fail">Fail</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Initials</label>
+                                    <input type="text" value={thermCalInitials}
+                                        onChange={e => setThermCalInitials(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
+                                        placeholder="AB" maxLength={20} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Notes</label>
+                                    <input type="text" value={thermCalNotes}
+                                        onChange={e => setThermCalNotes(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
+                                        placeholder="Optional notes" />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Monthly Corrective Actions */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                            Corrective Actions (Monthly)
-                        </label>
-                        <textarea value={monthlyCorrectiveActions}
-                            onChange={e => setMonthlyCorrectiveActions(e.target.value)}
-                            rows={3}
-                            style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
-                            placeholder="Monthly corrective actions summary..." />
-                    </div>
+                        {/* Monthly Corrective Actions */}
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                                Corrective Actions (Monthly)
+                            </label>
+                            <textarea value={monthlyCorrectiveActions}
+                                onChange={e => setMonthlyCorrectiveActions(e.target.value)}
+                                rows={3}
+                                style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
+                                placeholder="Monthly corrective actions summary..." />
+                        </div>
 
-                    {/* Comments */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                            Comments
-                        </label>
-                        <textarea value={monthlyComments}
-                            onChange={e => setMonthlyComments(e.target.value)}
-                            rows={3}
-                            style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
-                            placeholder="Monthly comments..." />
-                    </div>
+                        {/* Comments */}
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                                Comments
+                            </label>
+                            <textarea value={monthlyComments}
+                                onChange={e => setMonthlyComments(e.target.value)}
+                                rows={3}
+                                style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
+                                placeholder="Monthly comments..." />
+                        </div>
 
                     </fieldset>
 

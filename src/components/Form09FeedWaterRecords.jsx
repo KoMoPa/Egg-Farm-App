@@ -488,7 +488,7 @@ export default function Form09FeedWaterRecords() {
                 <div>
                     {/* Scrollable day selector */}
                     <DaySelector
-                        daysInMonth={daysInMonth}
+                        monthYear={monthYear}
                         selectedDay={selectedDay}
                         lockedDays={lockedDays}
                         onSelect={setSelectedDay}
@@ -556,42 +556,42 @@ export default function Form09FeedWaterRecords() {
                     </h3>
 
                     <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Starting Inventory</label>
-                        <input type="number" value={startingInventory}
-                            onChange={(e) => setStartingInventory(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Starting Inventory</label>
+                            <input type="number" value={startingInventory}
+                                onChange={(e) => setStartingInventory(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Feed Target</label>
-                        <input type="text" value={feedTarget}
-                            onChange={(e) => setFeedTarget(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Feed Target</label>
+                            <input type="text" value={feedTarget}
+                                onChange={(e) => setFeedTarget(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
-                        <input type="number" step="0.01" value={monthlyMortalityPercent}
-                            onChange={(e) => setMonthlyMortalityPercent(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                        <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>If greater than 0.5%, notify EFO</p>
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
+                            <input type="number" step="0.01" value={monthlyMortalityPercent}
+                                onChange={(e) => setMonthlyMortalityPercent(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                            <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>If greater than 0.5%, notify EFO</p>
+                        </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Water Residual (Monthly)</label>
-                        <input type="text" value={waterResidualMonthly}
-                            onChange={(e) => setWaterResidualMonthly(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Water Residual (Monthly)</label>
+                            <input type="text" value={waterResidualMonthly}
+                                onChange={(e) => setWaterResidualMonthly(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
 
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Comments</label>
-                        <textarea value={comments}
-                            onChange={(e) => setComments(e.target.value)}
-                            rows={4}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Comments</label>
+                            <textarea value={comments}
+                                onChange={(e) => setComments(e.target.value)}
+                                rows={4}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
                     </fieldset>
 
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
