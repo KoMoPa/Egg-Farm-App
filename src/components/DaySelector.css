@@ -46,6 +46,20 @@
     color: #333;
 }
 
+/* Locked days (already filled out) - still clickable, but visually distinct */
+.day-selector-calendar .day-selector-locked {
+    background-color: #e8f5e9 !important;
+    color: #333;
+    border-radius: 50%;
+}
+
+.day-selector-calendar .day-selector-locked:hover,
+.day-selector-calendar .day-selector-locked:enabled:hover,
+.day-selector-calendar .day-selector-locked:focus {
+    background-color: #c8e6c9 !important;
+    border-radius: 50%;
+}
+
 /* Green dot under saved days */
 .day-selector-saved-dot {
     width: 5px;

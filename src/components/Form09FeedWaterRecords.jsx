@@ -182,6 +182,11 @@ export default function Form09FeedWaterRecords() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear } = useFarmContext()
 
+    // Month navigation state
+    const [allAudits, setAllAudits] = useState([])
+    const [viewingMonth, setViewingMonth] = useState(monthYear)
+    const [isCurrentMonth, setIsCurrentMonth] = useState(true)
+
     const [dayData, setDayData] = useState({})
     const [lockedDays, setLockedDays] = useState({})
     const [selectedDay, setSelectedDay] = useState(() => {
@@ -208,6 +213,12 @@ export default function Form09FeedWaterRecords() {
         0
     ).getDate()
 
+    // Scroll to top on view/month changes
+    useEffect(() => {
+        const contentEl = document.querySelector('.app-content')
+        if (contentEl) contentEl.scrollTop = 0
+    }, [viewMode, viewingMonth])
+
     // Reset when barn or month changes
     useEffect(() => {
         setDayData({})
@@ -222,7 +233,58 @@ export default function Form09FeedWaterRecords() {
         setComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
+        setViewingMonth(monthYear)
+        setIsCurrentMonth(true)
     }, [selectedBarn?.id, monthYear])
+
+    // Fetch all audits for month navigation
+    useEffect(() => {
+        const fetchAudits = async () => {
+            if (!farm?.id) return
+            try {
+                const { data, error } = await supabase
+                    .from('monthly_audits')
+                    .select('*')
+                    .eq('farm_id', farm.id)
+                    .order('month_year', { ascending: false })
+                if (error) throw error
+                setAllAudits(data || [])
+            } catch (err) {
+                console.error('Error fetching audits:', err)
+            }
+        }
+        fetchAudits()
+    }, [farm?.id])
+
+    // Check if viewing current month
+    useEffect(() => {
+        setIsCurrentMonth(viewingMonth === monthYear)
+    }, [viewingMonth, monthYear])
+
+    // Navigate to previous month
+    const handlePreviousMonth = () => {
+        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+        if (currentIndex < allAudits.length - 1) {
+            setViewingMonth(allAudits[currentIndex + 1].month_year)
+        }
+    }
+
+    // Navigate to next month
+    const handleNextMonth = () => {
+        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+        if (currentIndex > 0) {
+            setViewingMonth(allAudits[currentIndex - 1].month_year)
+        }
+    }
+
+    const formatMonth = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00')
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    }
+
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    const canGoPrevious = currentIndex < allAudits.length - 1
+    const canGoNext = currentIndex > 0
 
     // Load monthly checks data from DB
     useEffect(() => {
@@ -267,10 +329,7 @@ export default function Form09FeedWaterRecords() {
                 const monthStr = monthYear.substring(0, 7)
                 const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
 
-                const { data: audit } = await supabase
-                    .from('monthly_audits').select('id')
-                    .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
-
+                const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
                 if (!audit || cancelled) {
                     if (!cancelled) {
                         setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
@@ -279,9 +338,7 @@ export default function Form09FeedWaterRecords() {
                     return
                 }
 
-                const { data: fwr } = await supabase
-                    .from('feed_water_records').select('id')
-                    .eq('barn_id', selectedBarn.id).eq('audit_id', audit.id).maybeSingle()
+                const { record: fwr } = await getOrCreateFeedWaterRecord(farm.id, audit.id)
 
                 if (!fwr || cancelled) {
                     if (!cancelled) {
@@ -358,7 +415,7 @@ export default function Form09FeedWaterRecords() {
         setSaving(true)
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(farm.id, audit.id)
             const fwId = feedWaterRecord.id
             const monthPrefix = monthYear.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
@@ -406,7 +463,7 @@ export default function Form09FeedWaterRecords() {
         e.preventDefault()
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(farm.id, audit.id)
             const fwId = feedWaterRecord.id
 
             const { error } = await supabase
@@ -449,15 +506,73 @@ export default function Form09FeedWaterRecords() {
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
+            {/* MONTH NAVIGATION */}
+            {allAudits.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px',
+                    padding: '12px 16px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd'
+                }}>
+                    <button
+                        type="button"
+                        onClick={handlePreviousMonth}
+                        disabled={!canGoPrevious}
+                        style={{
+                            padding: '8px 12px',
+                            backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }}>
+                        ← Previous
+                    </button>
+
+                    <div style={{ textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+                            {formatMonth(viewingMonth)}
+                        </div>
+                        {!isCurrentMonth && (
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                                (View Only)
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleNextMonth}
+                        disabled={!canGoNext}
+                        style={{
+                            padding: '8px 12px',
+                            backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: canGoNext ? 'pointer' : 'not-allowed',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }}>
+                        Next →
+                    </button>
+                </div>
+            )}
+
             {/* FORM HEADER */}
             <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
                 <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
                     Form 09 – Feed &amp; Water Records
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
                     <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
                     <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
-                    <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
                 </div>
 
                 {/* VIEW TOGGLE */}

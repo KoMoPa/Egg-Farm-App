@@ -11,10 +11,10 @@ INSERT INTO monthly_audits (farm_id, month_year, form_07_completed, form_08_comp
 VALUES (
   '849e8e84-239e-433d-bbe3-1f4a6a2f6395',
   '2026-05-01',
-  true,
-  true,
-  true,
-  true
+  false,
+  false,
+  false,
+  false
 );
 
 -- =====================================================
@@ -26,6 +26,29 @@ SELECT
   id
 FROM monthly_audits
 WHERE farm_id = '849e8e84-239e-433d-bbe3-1f4a6a2f6395' AND month_year = '2026-05-01';
+
+-- Floor eggs collected (days 1-31)
+INSERT INTO production_floor_eggs (production_id, record_date, collection_1, collection_2)
+SELECT 
+  pcr.id,
+  '2026-05-01'::date + (days.d - 1)::integer,
+  floor(random() * 50 + 100)::integer,
+  floor(random() * 50 + 100)::integer
+FROM production_cooler_records pcr,
+     generate_series(1, 31) as days(d)
+WHERE pcr.barn_id = '03e42953-c5c8-455d-821e-f047a36f2c65'
+  AND pcr.audit_id = (SELECT id FROM monthly_audits WHERE farm_id = '849e8e84-239e-433d-bbe3-1f4a6a2f6395' AND month_year = '2026-05-01');
+
+-- Flock age (days 1-31) - incrementing from week 52
+INSERT INTO production_flock_age (production_id, record_date, flock_age_weeks)
+SELECT 
+  pcr.id,
+  '2026-05-01'::date + (days.d - 1)::integer,
+  52 + floor((days.d - 1) / 7)::integer
+FROM production_cooler_records pcr,
+     generate_series(1, 31) as days(d)
+WHERE pcr.barn_id = '03e42953-c5c8-455d-821e-f047a36f2c65'
+  AND pcr.audit_id = (SELECT id FROM monthly_audits WHERE farm_id = '849e8e84-239e-433d-bbe3-1f4a6a2f6395' AND month_year = '2026-05-01');
 
 -- Daily egg output (days 1-31)
 INSERT INTO production_egg_output (production_id, record_date, egg_production_1, egg_production_2, egg_production_daily, egg_production_percent)

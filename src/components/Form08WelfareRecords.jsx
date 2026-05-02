@@ -57,37 +57,40 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
         <input type="number" step="0.1" value={data.barnTempHi}
           onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+          disabled={locked}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
       </div>
       <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
         <input type="number" step="0.1" value={data.barnTempLo}
           onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+          disabled={locked}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
       </div>
       <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
         <input type="number" step="0.1" value={data.exteriorTemp}
           onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
+          disabled={locked}
+          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
       </div>
     </div>
 
     <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Sanitation Checks</h4>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.6 : 1 }}>
         <input type="checkbox" checked={data.floorsChecked}
           onChange={(e) => onDayChange(day, 'floorsChecked', e.target.checked)}
           disabled={locked} />
         Floors Checked
       </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.6 : 1 }}>
         <input type="checkbox" checked={data.wallsFansCeilingChecked}
           onChange={(e) => onDayChange(day, 'wallsFansCeilingChecked', e.target.checked)}
           disabled={locked} />
         Walls/Fans/Ceiling Checked
       </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.6 : 1 }}>
         <input type="checkbox" checked={data.manureChecked}
           onChange={(e) => onDayChange(day, 'manureChecked', e.target.checked)}
           disabled={locked} />
@@ -153,84 +156,100 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
       <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Inspection Criteria (Check as applicable)</h4>
       <button type="button" onClick={() => onSelectAllCriteria(day)}
-        style={{ fontSize: '12px', padding: '4px 10px', background: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+        disabled={locked}
+        style={{ fontSize: '12px', padding: '4px 10px', background: locked ? '#ccc' : '#0066cc', color: locked ? '#666' : 'white', border: 'none', borderRadius: '4px', cursor: locked ? 'default' : 'pointer' }}>
         Select All
       </button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', opacity: locked ? 0.6 : 1 }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.overallAppearance}
-          onChange={() => onDayCheckbox(day, 'overallAppearance')} />
+          onChange={() => onDayCheckbox(day, 'overallAppearance')}
+          disabled={locked} />
         Overall appearance of birds
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.generalSound}
-          onChange={() => onDayCheckbox(day, 'generalSound')} />
+          onChange={() => onDayCheckbox(day, 'generalSound')}
+          disabled={locked} />
         General sound of flock
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.abnormalBehavior}
-          onChange={() => onDayCheckbox(day, 'abnormalBehavior')} />
+          onChange={() => onDayCheckbox(day, 'abnormalBehavior')}
+          disabled={locked} />
         Abnormal Behavior
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.signsOfDisease}
-          onChange={() => onDayCheckbox(day, 'signsOfDisease')} />
+          onChange={() => onDayCheckbox(day, 'signsOfDisease')}
+          disabled={locked} />
         Signs of Disease/Illness
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.injuredBirds}
-          onChange={() => onDayCheckbox(day, 'injuredBirds')} />
+          onChange={() => onDayCheckbox(day, 'injuredBirds')}
+          disabled={locked} />
         Injured Birds
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.respiratoryProblems}
-          onChange={() => onDayCheckbox(day, 'respiratoryProblems')} />
+          onChange={() => onDayCheckbox(day, 'respiratoryProblems')}
+          disabled={locked} />
         Respiratory Problems
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.pantingHuddling}
-          onChange={() => onDayCheckbox(day, 'pantingHuddling')} />
+          onChange={() => onDayCheckbox(day, 'pantingHuddling')}
+          disabled={locked} />
         Panting/Huddling
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.lameness}
-          onChange={() => onDayCheckbox(day, 'lameness')} />
+          onChange={() => onDayCheckbox(day, 'lameness')}
+          disabled={locked} />
         Lameness
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.featherPecking}
-          onChange={() => onDayCheckbox(day, 'featherPecking')} />
+          onChange={() => onDayCheckbox(day, 'featherPecking')}
+          disabled={locked} />
         Signs of Feather Pecking/Cannibalism
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.trappedBirds}
-          onChange={() => onDayCheckbox(day, 'trappedBirds')} />
+          onChange={() => onDayCheckbox(day, 'trappedBirds')}
+          disabled={locked} />
         Trapped Birds
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.deadBirds}
-          onChange={() => onDayCheckbox(day, 'deadBirds')} />
+          onChange={() => onDayCheckbox(day, 'deadBirds')}
+          disabled={locked} />
         Dead Birds
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.feedWaterAvailable}
-          onChange={() => onDayCheckbox(day, 'feedWaterAvailable')} />
+          onChange={() => onDayCheckbox(day, 'feedWaterAvailable')}
+          disabled={locked} />
         Feed & Water Available
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.equipmentOperating}
-          onChange={() => onDayCheckbox(day, 'equipmentOperating')} />
+          onChange={() => onDayCheckbox(day, 'equipmentOperating')}
+          disabled={locked} />
         Equipment Operating
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.amenitiesCondition}
-          onChange={() => onDayCheckbox(day, 'amenitiesCondition')} />
+          onChange={() => onDayCheckbox(day, 'amenitiesCondition')}
+          disabled={locked} />
         Condition of Amenities/Housing
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.layFacilityEnvironment}
-          onChange={() => onDayCheckbox(day, 'layFacilityEnvironment')} />
+          onChange={() => onDayCheckbox(day, 'layFacilityEnvironment')}
+          disabled={locked} />
         Lay Facility Environment
       </label>
     </div>
@@ -310,6 +329,11 @@ export default function Form08WelfareRecords() {
 
   const supabase = useSupabase()
 
+  // Month navigation state
+  const [allAudits, setAllAudits] = useState([])
+  const [viewingMonth, setViewingMonth] = useState(monthYear)
+  const [isCurrentMonth, setIsCurrentMonth] = useState(true)
+
   const [dayData, setDayData] = useState({})
   const [lockedDays, setLockedDays] = useState({})
   const [selectedDay, setSelectedDay] = useState(() => {
@@ -342,6 +366,12 @@ export default function Form08WelfareRecords() {
     0
   ).getDate()
 
+  // Scroll to top on view/month changes
+  useEffect(() => {
+    const contentEl = document.querySelector('.app-content')
+    if (contentEl) contentEl.scrollTop = 0
+  }, [viewMode, viewingMonth])
+
   // Reset on barn/month change
   useEffect(() => {
     setDayData({})
@@ -362,7 +392,58 @@ export default function Form08WelfareRecords() {
     setMonthlyLocked(false)
     setLoadingDay(false)
     setSaving(false)
+    setViewingMonth(monthYear)
+    setIsCurrentMonth(true)
   }, [selectedBarn?.id, monthYear])
+
+  // Fetch all audits for month navigation
+  useEffect(() => {
+    const fetchAudits = async () => {
+      if (!farmId) return
+      try {
+        const { data, error } = await supabase
+          .from('monthly_audits')
+          .select('*')
+          .eq('farm_id', farmId)
+          .order('month_year', { ascending: false })
+        if (error) throw error
+        setAllAudits(data || [])
+      } catch (err) {
+        console.error('Error fetching audits:', err)
+      }
+    }
+    fetchAudits()
+  }, [farmId])
+
+  // Check if viewing current month
+  useEffect(() => {
+    setIsCurrentMonth(viewingMonth === monthYear)
+  }, [viewingMonth, monthYear])
+
+  // Navigate to previous month
+  const handlePreviousMonth = () => {
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    if (currentIndex < allAudits.length - 1) {
+      setViewingMonth(allAudits[currentIndex + 1].month_year)
+    }
+  }
+
+  // Navigate to next month
+  const handleNextMonth = () => {
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    if (currentIndex > 0) {
+      setViewingMonth(allAudits[currentIndex - 1].month_year)
+    }
+  }
+
+  const formatMonth = (dateStr) => {
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+  }
+
+  const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+  const canGoPrevious = currentIndex < allAudits.length - 1
+  const canGoNext = currentIndex > 0
 
   // Load monthly checks data from DB
   useEffect(() => {
@@ -712,15 +793,73 @@ export default function Form08WelfareRecords() {
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
+      {/* MONTH NAVIGATION */}
+      {allAudits.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '20px',
+          padding: '12px 16px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #ddd'
+        }}>
+          <button
+            type="button"
+            onClick={handlePreviousMonth}
+            disabled={!canGoPrevious}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+            ← Previous
+          </button>
+
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+              {formatMonth(viewingMonth)}
+            </div>
+            {!isCurrentMonth && (
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                (View Only)
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            disabled={!canGoNext}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+            Next →
+          </button>
+        </div>
+      )}
+
       {/* FORM HEADER */}
       <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 08 - Welfare Records
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
           <div><strong>Farm Name:</strong> {farmName}</div>
           <div><strong>Barn #:</strong> {barnNumber}</div>
-          <div><strong>Month/Year:</strong> {monthYear}</div>
         </div>
 
         {/* VIEW TOGGLE */}

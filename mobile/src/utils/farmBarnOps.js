@@ -68,11 +68,11 @@ export async function getOrCreateMonthlyAudit(farmId, monthYear) {
   return { audit: newAudit, created: true }
 }
 
-export async function getOrCreateProductionRecord(barnId, auditId) {
+export async function getOrCreateProductionRecord(farmId, auditId) {
   const { data: existing, error: fetchError } = await supabase
     .from('production_cooler_records')
     .select('*')
-    .eq('barn_id', barnId)
+    .eq('farm_id', farmId)
     .eq('audit_id', auditId)
     .single()
 
@@ -82,7 +82,7 @@ export async function getOrCreateProductionRecord(barnId, auditId) {
 
   const { data: newRecord, error: createError } = await supabase
     .from('production_cooler_records')
-    .insert([{ barn_id: barnId, audit_id: auditId }])
+    .insert([{ farm_id: farmId, audit_id: auditId }])
     .select()
     .single()
 
@@ -112,11 +112,11 @@ export async function getOrCreateWelfareRecord(barnId, auditId) {
   return { record: newRecord, created: true }
 }
 
-export async function getOrCreateFeedWaterRecord(barnId, auditId) {
+export async function getOrCreateFeedWaterRecord(farmId, auditId) {
   const { data: existing, error: fetchError } = await supabase
     .from('feed_water_records')
     .select('*')
-    .eq('barn_id', barnId)
+    .eq('farm_id', farmId)
     .eq('audit_id', auditId)
     .single()
 
@@ -126,7 +126,7 @@ export async function getOrCreateFeedWaterRecord(barnId, auditId) {
 
   const { data: newRecord, error: createError } = await supabase
     .from('feed_water_records')
-    .insert([{ barn_id: barnId, audit_id: auditId }])
+    .insert([{ farm_id: farmId, audit_id: auditId }])
     .select()
     .single()
 
@@ -134,11 +134,11 @@ export async function getOrCreateFeedWaterRecord(barnId, auditId) {
   return { record: newRecord, created: true }
 }
 
-export async function getOrCreatePestControlRecord(barnId, auditId) {
+export async function getOrCreatePestControlRecord(farmId, auditId) {
   const { data: existing, error: fetchError } = await supabase
     .from('pest_control_records')
     .select('*')
-    .eq('barn_id', barnId)
+    .eq('farm_id', farmId)
     .eq('audit_id', auditId)
     .single()
 
@@ -148,7 +148,7 @@ export async function getOrCreatePestControlRecord(barnId, auditId) {
 
   const { data: newRecord, error: createError } = await supabase
     .from('pest_control_records')
-    .insert([{ barn_id: barnId, audit_id: auditId }])
+    .insert([{ farm_id: farmId, audit_id: auditId }])
     .select()
     .single()
 

@@ -31,6 +31,13 @@ export default function DaySelector({ monthYear, selectedDay, lockedDays = {}, o
     return null
   }
 
+  const tileClassName = ({ date, view }) => {
+    if (view === 'month' && lockedDays[date.getDate()] === true) {
+      return 'day-selector-locked'
+    }
+    return null
+  }
+
   return (
     <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <Calendar
@@ -45,6 +52,7 @@ export default function DaySelector({ monthYear, selectedDay, lockedDays = {}, o
         showNeighboringMonth={false}
         calendarType="gregory"
         tileContent={tileContent}
+        tileClassName={tileClassName}
         locale="en-US"
         className="day-selector-calendar"
       />

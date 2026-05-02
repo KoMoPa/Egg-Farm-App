@@ -5,13 +5,36 @@ import MonthlyAuditSummary from './MonthlyAuditSummary'
 
 function Reports() {
     const supabase = useSupabase()
-    const { farm } = useFarmContext()
+    const { farm, selectedBarn } = useFarmContext()
     const [audits, setAudits] = useState([])
-    const [filteredAudits, setFilteredAudits] = useState([])
-    const [searchMonth, setSearchMonth] = useState('')
     const [loading, setLoading] = useState(true)
-    const [selectedAuditId, setSelectedAuditId] = useState(null)
     const [selectedMonth, setSelectedMonth] = useState(null)
+    const [selectedAuditId, setSelectedAuditId] = useState(null)
+    const [showPrintModal, setShowPrintModal] = useState(false)
+    const [barnFormStatus, setBarnFormStatus] = useState({ f07: false, f08: false, f09: false, f10: false })
+
+    // Fetch barn-level record existence for the selected barn + audit
+    useEffect(() => {
+        const checkBarnForms = async () => {
+            if (!selectedBarn?.id || !selectedAuditId) {
+                setBarnFormStatus({ f07: false, f08: false, f09: false, f10: false })
+                return
+            }
+            const [r07, r08, r09, r10] = await Promise.all([
+                supabase.from('production_cooler_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
+                supabase.from('welfare_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
+                supabase.from('feed_water_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
+                supabase.from('pest_control_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
+            ])
+            setBarnFormStatus({
+                f07: !!r07.data,
+                f08: !!r08.data,
+                f09: !!r09.data,
+                f10: !!r10.data,
+            })
+        }
+        checkBarnForms()
+    }, [selectedBarn?.id, selectedAuditId])
 
     // Fetch all monthly audits for the farm
     useEffect(() => {
@@ -28,7 +51,15 @@ function Reports() {
 
                 if (error) throw error
                 setAudits(data || [])
-                setFilteredAudits(data || [])
+                
+                // Set initial selected month to most recent
+                if (data && data.length > 0) {
+                    setSelectedMonth(data[0].month_year)
+                    setSelectedAuditId(data[0].id)
+                } else {
+                    setSelectedMonth(null)
+                    setSelectedAuditId(null)
+                }
             } catch (err) {
                 console.error('Error fetching audits:', err)
             } finally {
@@ -37,25 +68,19 @@ function Reports() {
         }
 
         fetchAudits()
-    }, [farm?.id])
+    }, [farm?.id, selectedBarn?.id])
 
-    // Filter audits by month search
-    const handleSearch = (e) => {
-        const value = e.target.value
-        setSearchMonth(value)
-
-        if (!value) {
-            setFilteredAudits(audits)
-        } else {
-            const filtered = audits.filter(audit =>
-                audit.month_year.includes(value)
-            )
-            setFilteredAudits(filtered)
-        }
+    // Format date for display
+    const formatMonth = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00')
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
     }
 
+    // Get current audit
+    const currentAudit = audits.find(a => a.month_year === selectedMonth)
+
     // Calculate days remaining for incomplete form
-    const getDaysRemaining = (completed, completedDate, monthYear) => {
+    const getDaysRemaining = (completed, monthYear) => {
         if (completed) return null
 
         const auditMonth = new Date(monthYear)
@@ -71,15 +96,9 @@ function Reports() {
         return Math.max(0, daysInMonth - today.getDate())
     }
 
-    // Format date for display
-    const formatMonth = (dateStr) => {
-        const date = new Date(dateStr + 'T00:00:00')
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-    }
-
-    // Get form status badge
-    const FormStatusBadge = ({ completed, completedDate, monthYear, formName }) => {
-        const daysRemaining = getDaysRemaining(completed, completedDate, monthYear)
+    // Form status box component
+    const FormStatusBox = ({ completed, monthYear, formNumber, formName }) => {
+        const daysRemaining = getDaysRemaining(completed, monthYear)
 
         if (completed) {
             return (
@@ -97,11 +116,12 @@ function Reports() {
             )
         }
 
+        const isUrgent = daysRemaining !== null && daysRemaining <= 3
         return (
             <div style={{
                 padding: '8px 12px',
-                backgroundColor: daysRemaining <= 3 ? '#dc3545' : '#ffc107',
-                color: daysRemaining <= 3 ? 'white' : '#333',
+                backgroundColor: isUrgent ? '#dc3545' : '#ffc107',
+                color: isUrgent ? 'white' : '#333',
                 borderRadius: '4px',
                 fontSize: '12px',
                 fontWeight: 'bold',
@@ -112,184 +132,251 @@ function Reports() {
         )
     }
 
+    // Navigate to previous month
+    const handlePreviousMonth = () => {
+        const contentEl = document.querySelector('.app-content')
+        if (contentEl) contentEl.scrollTop = 0
+        const currentIndex = audits.findIndex(a => a.month_year === selectedMonth)
+        if (currentIndex < audits.length - 1) {
+            const prevAudit = audits[currentIndex + 1]
+            setSelectedMonth(prevAudit.month_year)
+            setSelectedAuditId(prevAudit.id)
+        }
+    }
+
+    // Navigate to next month
+    const handleNextMonth = () => {
+        const contentEl = document.querySelector('.app-content')
+        if (contentEl) contentEl.scrollTop = 0
+        const currentIndex = audits.findIndex(a => a.month_year === selectedMonth)
+        if (currentIndex > 0) {
+            const nextAudit = audits[currentIndex - 1]
+            setSelectedMonth(nextAudit.month_year)
+            setSelectedAuditId(nextAudit.id)
+        }
+    }
+
+    const currentIndex = audits.findIndex(a => a.month_year === selectedMonth)
+    const canGoPrevious = currentIndex < audits.length - 1
+    const canGoNext = currentIndex > 0
+
     return (
-        <div>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0066cc' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+            <h2 style={{ margin: '0 0 30px 0', fontSize: '24px', fontWeight: 700, color: '#0066cc' }}>
                 📊 Monthly Compliance Reports
             </h2>
 
-            {/* Search */}
-            <div style={{ marginBottom: '30px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
-                    Search by Month (YYYY-MM)
-                </label>
-                <input
-                    type="text"
-                    placeholder="e.g., 2026-03 or 2026"
-                    value={searchMonth}
-                    onChange={handleSearch}
-                    style={{
-                        width: '100%',
-                        maxWidth: '300px',
-                        padding: '10px',
-                        fontSize: '14px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px'
-                    }}
-                />
-            </div>
+            {loading && <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>Loading reports...</p>}
 
-            {/* Loading */}
-            {loading && <p style={{ textAlign: 'center', color: '#666' }}>Loading reports...</p>}
-
-            {/* No results */}
-            {!loading && filteredAudits.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
-                    No audits found for "{searchMonth}"
+            {!loading && audits.length === 0 && (
+                <p style={{ textAlign: 'center', color: '#999', padding: '40px' }}>
+                    No audit records found. Start entering data in a form to create an audit.
                 </p>
             )}
 
-            {/* Audits table */}
-            {!loading && filteredAudits.length > 0 && (
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{
-                        width: '100%',
-                        borderCollapse: 'collapse',
-                        border: '1px solid #ddd',
-                        fontSize: '14px'
+            {!loading && audits.length > 0 && currentAudit && (
+                <>
+                    {/* Month Selector Navigation */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '30px',
+                        padding: '16px',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd'
                     }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f0f0f0', borderBottom: '2px solid #333' }}>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>
-                                    Month
-                                </th>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                    Form 07 - Production
-                                </th>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                    Form 08 - Welfare
-                                </th>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                    Form 09 - Feed Water
-                                </th>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                    Form 10 - Pest Control
-                                </th>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                    Overall Status
-                                </th>
-                                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                    Action
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAudits.map((audit) => {
-                                const allComplete = audit.form_07_completed && audit.form_08_completed && audit.form_09_completed && audit.form_10_completed
-                                const completedCount = [
-                                    audit.form_07_completed,
-                                    audit.form_08_completed,
-                                    audit.form_09_completed,
-                                    audit.form_10_completed
-                                ].filter(Boolean).length
+                        <button
+                            onClick={handlePreviousMonth}
+                            disabled={!canGoPrevious}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+                                fontSize: '14px',
+                                fontWeight: 'bold'
+                            }}>
+                            ← Previous
+                        </button>
 
-                                return (
-                                    <tr key={audit.id} style={{ borderBottom: '1px solid #ddd' }}>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', fontWeight: 'bold' }}>
-                                            {formatMonth(audit.month_year)}
-                                        </td>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
-                                            <FormStatusBadge
-                                                completed={audit.form_07_completed}
-                                                completedDate={audit.form_07_completed_date}
-                                                monthYear={audit.month_year}
-                                                formName="Form 07"
-                                            />
-                                        </td>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
-                                            <FormStatusBadge
-                                                completed={audit.form_08_completed}
-                                                completedDate={audit.form_08_completed_date}
-                                                monthYear={audit.month_year}
-                                                formName="Form 08"
-                                            />
-                                        </td>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
-                                            <FormStatusBadge
-                                                completed={audit.form_09_completed}
-                                                completedDate={audit.form_09_completed_date}
-                                                monthYear={audit.month_year}
-                                                formName="Form 09"
-                                            />
-                                        </td>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
-                                            <FormStatusBadge
-                                                completed={audit.form_10_completed}
-                                                completedDate={audit.form_10_completed_date}
-                                                monthYear={audit.month_year}
-                                                formName="Form 10"
-                                            />
-                                        </td>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                                            <div style={{
-                                                padding: '8px 12px',
-                                                backgroundColor: allComplete ? '#28a745' : '#ffc107',
-                                                color: allComplete ? 'white' : '#333',
-                                                borderRadius: '4px',
-                                                fontSize: '12px'
-                                            }}>
-                                                {allComplete ? '✓ All Complete' : `${completedCount}/4 Forms`}
-                                            </div>
-                                        </td>
-                                        <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedAuditId(audit.id)
-                                                    setSelectedMonth(audit.month_year)
-                                                }}
-                                                style={{
-                                                    padding: '6px 12px',
-                                                    fontSize: '12px',
-                                                    fontWeight: 'bold',
-                                                    backgroundColor: '#0066cc',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer'
-                                                }}>
-                                                🖨 Print
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0066cc', marginBottom: '4px' }}>
+                                {formatMonth(selectedMonth)}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                {audits.findIndex(a => a.month_year === selectedMonth) + 1} of {audits.length}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleNextMonth}
+                            disabled={!canGoNext}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: canGoNext ? 'pointer' : 'not-allowed',
+                                fontSize: '14px',
+                                fontWeight: 'bold'
+                            }}>
+                            Next →
+                        </button>
+                    </div>
+
+                    {/* Month Summary */}
+                    <div style={{
+                        marginBottom: '30px',
+                        padding: '20px',
+                        backgroundColor: '#f0f7ff',
+                        borderRadius: '8px',
+                        border: '1px solid #d0e8ff'
+                    }}>
+                        {(() => {
+                            const completed = [
+                                barnFormStatus.f07,
+                                barnFormStatus.f08,
+                                barnFormStatus.f09,
+                                barnFormStatus.f10,
+                            ].filter(Boolean).length
+                            const total = 4
+                            const allComplete = completed === total
+
+                            return (
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{
+                                        fontSize: '32px',
+                                        fontWeight: 'bold',
+                                        color: allComplete ? '#28a745' : '#ffc107',
+                                        marginBottom: '8px'
+                                    }}>
+                                        {completed}/{total} Forms Complete
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: '#666' }}>
+                                        {allComplete
+                                            ? '✓ All compliance records submitted for this month'
+                                            : `${total - completed} form${total - completed !== 1 ? 's' : ''} remaining`}
+                                    </div>
+                                </div>
+                            )
+                        })()}
+                    </div>
+
+                    {/* Form Status Boxes */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: '12px',
+                        marginBottom: '30px'
+                    }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+                                Form 07
+                            </div>
+                            <FormStatusBox
+                                completed={barnFormStatus.f07}
+                                monthYear={selectedMonth}
+                                formNumber="07"
+                                formName="Daily Production"
+                            />
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+                                Form 08
+                            </div>
+                            <FormStatusBox
+                                completed={barnFormStatus.f08}
+                                monthYear={selectedMonth}
+                                formNumber="08"
+                                formName="Welfare Records"
+                            />
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+                                Form 09
+                            </div>
+                            <FormStatusBox
+                                completed={barnFormStatus.f09}
+                                monthYear={selectedMonth}
+                                formNumber="09"
+                                formName="Feed & Water"
+                            />
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+                                Form 10
+                            </div>
+                            <FormStatusBox
+                                completed={barnFormStatus.f10}
+                                monthYear={selectedMonth}
+                                formNumber="10"
+                                formName="Pest Control"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Print Button */}
+                    <div style={{ textAlign: 'center' }}>
+                        <button
+                            onClick={() => setShowPrintModal(true)}
+                            style={{
+                                padding: '16px 40px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                backgroundColor: '#0066cc',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 8px rgba(0, 102, 204, 0.3)',
+                                transition: 'background-color 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.backgroundColor = '#0052a3'}
+                            onMouseOut={(e) => e.target.style.backgroundColor = '#0066cc'}>
+                            🖨 Print Monthly Report
+                        </button>
+                    </div>
+                </>
             )}
 
-            {/* Summary */}
-            {!loading && filteredAudits.length > 0 && (
-                <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px', borderLeft: '4px solid #0066cc' }}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Summary</h3>
-                    <p style={{ margin: '5px 0', color: '#666', fontSize: '14px' }}>
-                        Showing <strong>{filteredAudits.length}</strong> month{filteredAudits.length !== 1 ? 's' : ''} of reports
-                    </p>
-                    <p style={{ margin: '5px 0', color: '#666', fontSize: '14px' }}>
-                        <strong>{filteredAudits.filter(a => a.form_07_completed && a.form_08_completed && a.form_09_completed && a.form_10_completed).length}</strong> fully completed
-                    </p>
+            {/* Print Modal */}
+            {showPrintModal && selectedAuditId && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000,
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                        maxWidth: '90vw',
+                        maxHeight: '90vh',
+                        overflow: 'auto',
+                        width: '100%'
+                    }}>
+                        <MonthlyAuditSummary
+                            farmId={farm?.id}
+                            farmName={farm?.farm_name}
+                            auditId={selectedAuditId}
+                            monthYear={selectedMonth}
+                            onClose={() => setShowPrintModal(false)}
+                        />
+                    </div>
                 </div>
-            )}
-
-            {/* Monthly Audit Summary Modal */}
-            {selectedAuditId && (
-                <MonthlyAuditSummary
-                    farmId={farm?.id}
-                    farmName={farm?.farm_name}
-                    auditId={selectedAuditId}
-                    monthYear={selectedMonth}
-                    onClose={() => setSelectedAuditId(null)}
-                />
             )}
         </div>
     )
