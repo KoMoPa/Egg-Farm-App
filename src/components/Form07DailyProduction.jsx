@@ -199,7 +199,7 @@ export default function Form07DailyProduction() {
                     return
                 }
 
-                const { record: prod } = await getOrCreateProductionRecord(farm.id, audit.id)
+                const { record: prod } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
 
                 if (!prod || cancelled) {
                     if (!cancelled) {
@@ -302,7 +302,7 @@ export default function Form07DailyProduction() {
         }
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: productionRecord } = await getOrCreateProductionRecord(farm.id, audit.id)
+            const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
             const productionId = productionRecord.id
             const monthPrefix = monthYear.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
@@ -383,7 +383,7 @@ export default function Form07DailyProduction() {
         e.preventDefault()
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: productionRecord } = await getOrCreateProductionRecord(farm.id, audit.id)
+            const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
             const productionId = productionRecord.id
 
             if (thermCalDate) {
