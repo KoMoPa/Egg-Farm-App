@@ -6,7 +6,7 @@ import { ProductionReportPDF } from './ProductionReportPDF'
 import { FeedWaterReportPDF } from './FeedWaterReportPDF'
 import { PestControlReportPDF } from './PestControlReportPDF'
 
-function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
+function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onClose }) {
     const supabase = useSupabase()
     const [form07Data, setForm07Data] = useState([])
     const [form08Data, setForm08Data] = useState([])
@@ -27,6 +27,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: prodRecord } = await supabase
                     .from('production_cooler_records')
                     .select('*')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -59,6 +60,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: welfareRecord } = await supabase
                     .from('welfare_records')
                     .select('id, monthly_comments, barns(barn_number)')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -99,6 +101,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: fwRecord } = await supabase
                     .from('feed_water_records')
                     .select('*')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -118,6 +121,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: pestRecord } = await supabase
                     .from('pest_control_records')
                     .select('*')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -147,7 +151,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
         }
 
         fetchData()
-    }, [auditId])
+    }, [auditId, barnId])
 
     const formatMonth = (dateStr) => {
         const date = new Date(dateStr + 'T00:00:00')

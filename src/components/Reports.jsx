@@ -371,6 +371,7 @@ function Reports() {
                         <MonthlyAuditSummary
                             farmId={farm?.id}
                             farmName={farm?.farm_name}
+                            barnId={selectedBarn?.id}
                             auditId={selectedAuditId}
                             monthYear={selectedMonth}
                             onClose={() => setShowPrintModal(false)}
