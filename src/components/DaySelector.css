@@ -9,6 +9,25 @@
     overflow: hidden;
 }
 
+@media (min-width: 768px) {
+    .day-selector-calendar {
+        width: 420px;
+    }
+
+    .day-selector-calendar .react-calendar__tile {
+        padding: 0;
+        height: 52px;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .day-selector-calendar .react-calendar__month-view__weekdays__weekday {
+        font-size: 13px;
+    }
+}
+
 .day-selector-calendar .react-calendar__tile {
     color: #333;
     border-radius: 50%;

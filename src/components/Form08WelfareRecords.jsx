@@ -144,7 +144,7 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
         Select All
       </button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', opacity: locked ? 0.6 : 1 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px', opacity: locked ? 0.6 : 1 }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={data.overallAppearance}
           onChange={() => onDayCheckbox(day, 'overallAppearance')}

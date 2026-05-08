@@ -445,7 +445,6 @@ export default function Form09FeedWaterRecords() {
                 mortality_reason: d.mortalityReason || null,
                 hospital_pen_monitoring: d.hospitalPenMonitoring || null,
                 inventory: d.inventory ? parseInt(d.inventory) : null,
-                efo_notified: false,
             }], { onConflict: 'fw_id,record_date' })
             if (healthError) throw healthError
 
