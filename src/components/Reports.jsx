@@ -40,7 +40,7 @@ function Reports() {
     useEffect(() => {
         const fetchAudits = async () => {
             if (!farm?.id) return
-            
+
             setLoading(true)
             try {
                 const { data, error } = await supabase
@@ -51,7 +51,7 @@ function Reports() {
 
                 if (error) throw error
                 setAudits(data || [])
-                
+
                 // Set initial selected month to most recent
                 if (data && data.length > 0) {
                     setSelectedMonth(data[0].month_year)

@@ -13,10 +13,8 @@ const BLANK_DAY = {
   manureChecked: false,
   beddingUsed: false,
   chemicalsUsed: false,
-  routineHenEquip1stInitial: '',
-  routineHenEquip1stDaily: '',
-  routineHenEquip2ndInitial: '',
-  routineHenEquip2ndDaily: '',
+  routineHenEquipAmInitial: '',
+  routineHenEquipPmInitial: '',
   overallAppearance: false,
   generalSound: false,
   abnormalBehavior: false,
@@ -32,7 +30,6 @@ const BLANK_DAY = {
   equipmentOperating: false,
   amenitiesCondition: false,
   layFacilityEnvironment: false,
-  weeklyInitials: '',
   weeklyComments: '',
 }
 
@@ -121,40 +118,26 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
       </div>
     </div>
 
-    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Weekly Welfare Inspection</h4>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px', marginBottom: '30px' }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Initial</label>
-        <input type="text" maxLength="3" value={data.routineHenEquip1stInitial}
-          onChange={(e) => onDayChange(day, 'routineHenEquip1stInitial', e.target.value)}
+    <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Hen Inspection</h4>
+    <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginBottom: '50px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>AM Initial</label>
+        <input type="text" maxLength="3" value={data.routineHenEquipAmInitial}
+          onChange={(e) => onDayChange(day, 'routineHenEquipAmInitial', e.target.value)}
           disabled={locked}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
+          style={{ width: '70px', padding: '8px', border: '1px solid #ccc', textAlign: 'center', ...(locked && inputLocked) }} />
       </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Daily</label>
-        <input type="text" maxLength="3" value={data.routineHenEquip1stDaily}
-          onChange={(e) => onDayChange(day, 'routineHenEquip1stDaily', e.target.value)}
+      <div style={{ textAlign: 'center' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>PM Initial</label>
+        <input type="text" maxLength="3" value={data.routineHenEquipPmInitial}
+          onChange={(e) => onDayChange(day, 'routineHenEquipPmInitial', e.target.value)}
           disabled={locked}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Initial</label>
-        <input type="text" maxLength="3" value={data.routineHenEquip2ndInitial}
-          onChange={(e) => onDayChange(day, 'routineHenEquip2ndInitial', e.target.value)}
-          disabled={locked}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Daily</label>
-        <input type="text" maxLength="3" value={data.routineHenEquip2ndDaily}
-          onChange={(e) => onDayChange(day, 'routineHenEquip2ndDaily', e.target.value)}
-          disabled={locked}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
+          style={{ width: '70px', padding: '8px', border: '1px solid #ccc', textAlign: 'center', ...(locked && inputLocked) }} />
       </div>
     </div>
 
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
-      <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Inspection Criteria (Check as applicable)</h4>
+      <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Weekly Welfare Inspection (Check as applicable)</h4>
       <button type="button" onClick={() => onSelectAllCriteria(day)}
         disabled={locked}
         style={{ fontSize: '12px', padding: '4px 10px', background: locked ? '#ccc' : '#0066cc', color: locked ? '#666' : 'white', border: 'none', borderRadius: '4px', cursor: locked ? 'default' : 'pointer' }}>
@@ -254,14 +237,7 @@ const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
       </label>
     </div>
 
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Weekly Initials</label>
-        <input type="text" maxLength="10" value={data.weeklyInitials}
-          onChange={(e) => onDayChange(day, 'weeklyInitials', e.target.value)}
-          disabled={locked}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-      </div>
+    <div style={{ marginTop: '20px' }}>
       <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Weekly Comments</label>
         <textarea value={data.weeklyComments}
@@ -298,11 +274,9 @@ export default function Form08WelfareRecords() {
         beddingUsed: false,
         chemicalsUsed: false,
 
-        // PAGE 2 - Weekly Inspections
-        routineHenEquip1stInitial: '',
-        routineHenEquip1stDaily: '',
-        routineHenEquip2ndInitial: '',
-        routineHenEquip2ndDaily: '',
+        // Hen Inspection initials
+        routineHenEquipAmInitial: '',
+        routineHenEquipPmInitial: '',
 
         // Inspection criteria checkboxes
         overallAppearance: false,
@@ -320,7 +294,6 @@ export default function Form08WelfareRecords() {
         equipmentOperating: false,
         amenitiesCondition: false,
         layFacilityEnvironment: false,
-        weeklyInitials: '',
         weeklyComments: '',
       }
     }
@@ -558,10 +531,8 @@ export default function Form08WelfareRecords() {
             manureChecked: dailyCheck?.manure_sanitation_code === 'Y',
             beddingUsed: dailyCheck?.bedding_notes === 'Yes',
             chemicalsUsed: dailyCheck?.chemicals_notes === 'Yes',
-            routineHenEquip1stInitial: dailyCheck?.hen_inspection_am ?? '',
-            routineHenEquip1stDaily: '',
-            routineHenEquip2ndInitial: dailyCheck?.hen_inspection_pm ?? '',
-            routineHenEquip2ndDaily: '',
+            routineHenEquipAmInitial: dailyCheck?.hen_inspection_am ?? '',
+            routineHenEquipPmInitial: dailyCheck?.hen_inspection_pm ?? '',
             overallAppearance: weeklyInspection?.check_overall_appearance ?? false,
             generalSound: weeklyInspection?.check_general_sound ?? false,
             abnormalBehavior: weeklyInspection?.check_abnormal_behavior ?? false,
@@ -577,7 +548,6 @@ export default function Form08WelfareRecords() {
             equipmentOperating: weeklyInspection?.check_equipment_operating ?? false,
             amenitiesCondition: weeklyInspection?.check_amenities_condition ?? false,
             layFacilityEnvironment: weeklyInspection?.check_lay_facility ?? false,
-            weeklyInitials: weeklyInspection?.weekly_initials ?? '',
             weeklyComments: weeklyInspection?.comments ?? '',
           },
         }))
@@ -653,8 +623,8 @@ export default function Form08WelfareRecords() {
           manure_sanitation_code: d.manureChecked ? 'Y' : null,
           bedding_notes: d.beddingUsed ? 'Yes' : null,
           chemicals_notes: d.chemicalsUsed ? 'Yes' : null,
-          hen_inspection_am: d.routineHenEquip1stInitial || null,
-          hen_inspection_pm: d.routineHenEquip2ndInitial || null,
+          hen_inspection_am: d.routineHenEquipAmInitial || null,
+          hen_inspection_pm: d.routineHenEquipPmInitial || null,
         }], { onConflict: 'welfare_id,record_date' })
       if (dailyError) throw dailyError
 
@@ -678,7 +648,6 @@ export default function Form08WelfareRecords() {
           check_equipment_operating: d.equipmentOperating,
           check_amenities_condition: d.amenitiesCondition,
           check_lay_facility: d.layFacilityEnvironment,
-          weekly_initials: d.weeklyInitials || null,
           comments: d.weeklyComments || null,
         }], { onConflict: 'welfare_id,inspection_date' })
       if (weeklyError) throw weeklyError
