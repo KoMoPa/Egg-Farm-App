@@ -11,8 +11,6 @@ const BLANK_DAY = {
     flush: false, medsVit: false, treatment: false,
     notes: '',
     mortalityDaily: '', mortalityReason: '',
-    pileupCount: '',
-    efoNotified: false,
     hospitalPenMonitoring: '',
     inventory: '',
 }
@@ -136,24 +134,7 @@ const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
             </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Pileup Count</label>
-                <input type="number" value={data.pileupCount}
-                    onChange={(e) => onDayChange(day, 'pileupCount', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-                <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0' }}>Notify EFO if any single pileup &gt; 50 birds</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', paddingTop: '24px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
-                    <input type="checkbox" checked={data.efoNotified}
-                        onChange={(e) => onDayChange(day, 'efoNotified', e.target.checked)}
-                        disabled={locked} />
-                    EFO Notified
-                </label>
-            </div>
-        </div>
+
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
             <div>
@@ -202,7 +183,8 @@ export default function Form09FeedWaterRecords() {
     const [feedTarget, setFeedTarget] = useState('')
     const [startingInventory, setStartingInventory] = useState('')
     const [waterResidualMonthly, setWaterResidualMonthly] = useState('')
-    const [monthlyMortalityPercent, setMonthlyMortalityPercent] = useState('')
+    const [calculatedMortalityTotal, setCalculatedMortalityTotal] = useState(null)
+    const [monthlyEfoNotified, setMonthlyEfoNotified] = useState(false)
     const [comments, setComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
     const [monthlyLocked, setMonthlyLocked] = useState(false)
@@ -229,7 +211,8 @@ export default function Form09FeedWaterRecords() {
         setFeedTarget('')
         setStartingInventory('')
         setWaterResidualMonthly('')
-        setMonthlyMortalityPercent('')
+        setCalculatedMortalityTotal(null)
+        setMonthlyEfoNotified(false)
         setComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
@@ -306,7 +289,7 @@ export default function Form09FeedWaterRecords() {
                     setFeedTarget(meta.feed_target ?? '')
                     setStartingInventory(meta.starting_inventory?.toString() ?? '')
                     setWaterResidualMonthly(meta.water_residual_monthly ?? '')
-                    setMonthlyMortalityPercent(meta.monthly_mortality_percent?.toString() ?? '')
+                    setMonthlyEfoNotified(meta.monthly_efo_notified ?? false)
                     setComments(meta.comments ?? '')
                     setMonthlySaved(true)
                     setMonthlyLocked(true)
@@ -316,6 +299,27 @@ export default function Form09FeedWaterRecords() {
         load()
         return () => { cancelled = true }
     }, [selectedBarn?.id, monthYear])
+
+    // Auto-calculate monthly mortality total from all daily records
+    useEffect(() => {
+        if (!farm?.id || !selectedBarn?.id || viewMode !== 'monthly') return
+        let cancelled = false
+        const fetchSum = async () => {
+            try {
+                const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+                const { record: fwr } = await getOrCreateFeedWaterRecord(farm.id, audit.id)
+                const { data } = await supabase
+                    .from('feed_water_health')
+                    .select('mortality_daily')
+                    .eq('fw_id', fwr.id)
+                if (cancelled) return
+                const total = (data || []).reduce((sum, r) => sum + (r.mortality_daily || 0), 0)
+                setCalculatedMortalityTotal(total)
+            } catch (e) { /* silent */ }
+        }
+        fetchSum()
+        return () => { cancelled = true }
+    }, [viewMode, selectedBarn?.id, monthYear])
 
     // Lazy-load selected day data from DB
     useEffect(() => {
@@ -378,8 +382,6 @@ export default function Form09FeedWaterRecords() {
                         notes: fwd.notes ?? '',
                         mortalityDaily: fwh?.mortality_daily?.toString() ?? '',
                         mortalityReason: fwh?.mortality_reason ?? '',
-                        pileupCount: fwh?.pileup_count?.toString() ?? '',
-                        efoNotified: fwh?.efo_notified ?? false,
                         hospitalPenMonitoring: fwh?.hospital_pen_monitoring ?? '',
                         inventory: fwh?.inventory?.toString() ?? '',
                     },
@@ -440,8 +442,6 @@ export default function Form09FeedWaterRecords() {
                 fw_id: fwId,
                 record_date: recDate,
                 mortality_daily: d.mortalityDaily ? parseInt(d.mortalityDaily) : 0,
-                pileup_count: d.pileupCount ? parseInt(d.pileupCount) : null,
-                efo_notified: d.efoNotified ?? false,
                 mortality_reason: d.mortalityReason || null,
                 hospital_pen_monitoring: d.hospitalPenMonitoring || null,
                 inventory: d.inventory ? parseInt(d.inventory) : null,
@@ -458,6 +458,10 @@ export default function Form09FeedWaterRecords() {
         }
     }
 
+    const computedMortalityPct = (startingInventory && calculatedMortalityTotal !== null)
+        ? (calculatedMortalityTotal / parseInt(startingInventory)) * 100
+        : null
+
     const handleMonthlySubmit = async (e) => {
         e.preventDefault()
         try {
@@ -472,7 +476,8 @@ export default function Form09FeedWaterRecords() {
                     feed_target: feedTarget || null,
                     starting_inventory: startingInventory ? parseInt(startingInventory) : null,
                     water_residual_monthly: waterResidualMonthly || null,
-                    monthly_mortality_percent: monthlyMortalityPercent ? parseFloat(monthlyMortalityPercent) : null,
+                    monthly_mortality_percent: computedMortalityPct !== null ? parseFloat(computedMortalityPct.toFixed(2)) : null,
+                    monthly_efo_notified: monthlyEfoNotified,
                     comments: comments || null
                 }], { onConflict: 'fw_id' })
 
@@ -686,10 +691,46 @@ export default function Form09FeedWaterRecords() {
 
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
-                            <input type="number" step="0.01" value={monthlyMortalityPercent}
-                                onChange={(e) => setMonthlyMortalityPercent(e.target.value)}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                            <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>If greater than 0.5%, notify EFO</p>
+                            <div style={{
+                                padding: '10px 12px',
+                                background: '#f5f5f5',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                color: computedMortalityPct !== null && computedMortalityPct > 0.5 ? '#cc0000' : '#333'
+                            }}>
+                                {computedMortalityPct !== null
+                                    ? `${computedMortalityPct.toFixed(2)}%`
+                                    : startingInventory
+                                        ? '0.00%'
+                                        : 'Enter starting inventory to calculate'}
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>
+                                Auto-calculated from daily mortality ÷ starting inventory
+                            </p>
+                            {computedMortalityPct !== null && computedMortalityPct > 0.5 && (
+                                <div style={{
+                                    marginTop: '10px',
+                                    padding: '12px',
+                                    backgroundColor: '#fff3cd',
+                                    border: '1px solid #ffc107',
+                                    borderRadius: '4px'
+                                }}>
+                                    <p style={{ margin: '0 0 8px', fontWeight: 'bold', color: '#856404' }}>
+                                        ⚠️ Monthly mortality exceeds 0.5% — EFO notification required
+                                    </p>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: monthlyLocked ? 'default' : 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={monthlyEfoNotified}
+                                            onChange={(e) => setMonthlyEfoNotified(e.target.checked)}
+                                            disabled={monthlyLocked}
+                                        />
+                                        EFO Notified
+                                    </label>
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>
