@@ -51,7 +51,7 @@ export async function getFarmBarns(farmId) {
       .from('barns')
       .select('*')
       .eq('farm_id', farmId)
-      .order('barn_number', { ascending: true })
+      .order('barn_name', { ascending: true })
 
     if (error) throw error
     return barns || []
@@ -64,14 +64,16 @@ export async function getFarmBarns(farmId) {
 /**
  * Create a new barn
  */
-export async function createBarn(farmId, barnName, barnNumber) {
+export async function createBarn(farmId, barnName, options = {}) {
   try {
     const { data: newBarn, error } = await supabase
       .from('barns')
       .insert([{
         farm_id: farmId,
         barn_name: barnName,
-        barn_number: barnNumber
+        has_floor_eggs: options.has_floor_eggs ?? false,
+        two_collections_per_day: options.two_collections_per_day ?? false,
+        has_bedding: options.has_bedding ?? false,
       }])
       .select()
       .single()

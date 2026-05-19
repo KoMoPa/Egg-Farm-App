@@ -15,6 +15,8 @@ export default function Form07DayView({
     lockedDays,
     loadingDay,
     onSelectDay,
+    hasFloorEggs = true,
+    twoCollections = true,
 }) {
     return (
         <>
@@ -65,7 +67,7 @@ export default function Form07DayView({
             </div>
 
             {/* Floor Eggs */}
-            <div style={{ background: '#fff3cd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+            {hasFloorEggs && <div style={{ background: '#fff3cd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
                 <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
                     Floor Eggs
                 </h3>
@@ -99,14 +101,14 @@ export default function Form07DayView({
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>}
 
             {/* Egg Production */}
             <div style={{ background: '#d4edda', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
                 <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #28a745', paddingBottom: '8px' }}>
                     Egg Production
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: twoCollections ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: '15px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
                         <input
@@ -118,7 +120,7 @@ export default function Form07DayView({
                             placeholder="6000"
                         />
                     </div>
-                    <div>
+                    {twoCollections && <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
                         <input
                             type="number"
@@ -128,7 +130,7 @@ export default function Form07DayView({
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                             placeholder="6500"
                         />
-                    </div>
+                    </div>}
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Daily</label>
                         <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#28a745', color: 'white', borderRadius: '8px', textAlign: 'center' }}>

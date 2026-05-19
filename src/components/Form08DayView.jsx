@@ -9,7 +9,7 @@ const INSPECTION_CRITERIA_FIELDS = [
     'equipmentOperating', 'amenitiesCondition', 'layFacilityEnvironment',
 ]
 
-function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria, locked }) {
+function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria, locked, hasBedding = true }) {
     return (
         <div style={{ marginBottom: '30px' }}>
             <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
@@ -62,8 +62,8 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 </label>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-                <div>
+            <div style={{ display: 'grid', gridTemplateColumns: hasBedding ? '1fr 1fr' : '1fr', gap: '20px', marginBottom: '30px' }}>
+                {hasBedding && <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
                     <select value={data.beddingUsed ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value === 'true')}
@@ -72,7 +72,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
-                </div>
+                </div>}
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
                     <select value={data.chemicalsUsed ? 'true' : 'false'}
@@ -214,6 +214,7 @@ export default function Form08DayView({
     lockedDays,
     loadingDay,
     onSelectDay,
+    hasBedding = true,
 }) {
     return (
         <div>
@@ -255,6 +256,7 @@ export default function Form08DayView({
                 onDayCheckbox={onDayCheckbox}
                 onSelectAllCriteria={onSelectAllCriteria}
                 locked={isLocked}
+                hasBedding={hasBedding}
             />
 
             {!isLocked && (

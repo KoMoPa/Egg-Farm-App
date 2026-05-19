@@ -529,6 +529,8 @@ export default function Form07DailyProduction() {
                 lockedDays={lockedDays}
                 loadingDay={loadingDay}
                 onSelectDay={setSelectedDay}
+                hasFloorEggs={selectedBarn?.has_floor_eggs ?? true}
+                twoCollections={selectedBarn?.two_collections_per_day ?? true}
             />)}
 
             {/* ============ MONTHLY CHECKS TAB ============ */}

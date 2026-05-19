@@ -59,7 +59,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                 // Step 1: get welfare_records entry (join barns to get barn_number)
                 const { data: welfareRecord } = await supabase
                     .from('welfare_records')
-                    .select('id, monthly_comments, barns(barn_number)')
+                    .select('id, monthly_comments, barns(barn_name)')
                     .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
@@ -140,7 +140,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                 setForm08Comments(weeklyInspections)
                 setForm08MonthlyInspections(monthlyInspections)
                 setForm08AmmoniaData(ammoniaTests)
-                setBarnNumber(welfareRecord?.barns?.barn_number ?? '')
+                setBarnNumber(welfareRecord?.barns?.barn_name ?? '')
                 setForm09Data({ fwRecord, daily: fw09Daily, health: fw09Health, metadata: fw09Meta })
                 setForm10Data({ pestRecord, daily: pest10Daily, audit: pest10Audit })
             } catch (err) {

@@ -48,7 +48,7 @@ export default function Form08WelfareRecords() {
   const farmId = farm?.id
   const farmName = farm?.farm_name
   const barnId = selectedBarn?.id
-  const barnNumber = selectedBarn?.barn_number
+  const barnName = selectedBarn?.barn_name
   // Initialize form data for 31 days
   const initializeDayData = () => {
     const days = {}
@@ -620,7 +620,7 @@ export default function Form08WelfareRecords() {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
           <div><strong>Farm Name:</strong> {farmName}</div>
-          <div><strong>Barn #:</strong> {barnNumber}</div>
+          <div><strong>Barn:</strong> {barnName}</div>
         </div>
 
         {/* VIEW TOGGLE */}
@@ -673,6 +673,7 @@ export default function Form08WelfareRecords() {
           lockedDays={lockedDays}
           loadingDay={loadingDay}
           onSelectDay={setSelectedDay}
+          hasBedding={selectedBarn?.has_bedding ?? true}
         />
       )}
 
