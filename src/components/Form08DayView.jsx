@@ -9,7 +9,7 @@ const INSPECTION_CRITERIA_FIELDS = [
     'equipmentOperating', 'amenitiesCondition', 'layFacilityEnvironment',
 ]
 
-function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria, locked, hasBedding = true }) {
+function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria, locked, hasBedding = true, hasChemicals = true }) {
     return (
         <div style={{ marginBottom: '30px' }}>
             <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
@@ -62,7 +62,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 </label>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: hasBedding ? '1fr 1fr' : '1fr', gap: '20px', marginBottom: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: (hasBedding && hasChemicals) ? '1fr 1fr' : '1fr', gap: '20px', marginBottom: '30px' }}>
                 {hasBedding && <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
                     <select value={data.beddingUsed ? 'true' : 'false'}
@@ -73,7 +73,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="true">Yes</option>
                     </select>
                 </div>}
-                <div>
+                {hasChemicals && <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
                     <select value={data.chemicalsUsed ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value === 'true')}
@@ -82,22 +82,22 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
-                </div>
+                </div>}
             </div>
 
             <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Hen Inspection</h4>
             <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginBottom: '50px' }}>
                 <div style={{ textAlign: 'center' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>AM Initial</label>
-                    <input type="text" maxLength="3" value={data.routineHenEquipAmInitial}
-                        onChange={(e) => onDayChange(day, 'routineHenEquipAmInitial', e.target.value)}
+                    <input type="text" maxLength={6} value={data.routineHenEquipAmInitial}
+                        onChange={(e) => onDayChange(day, 'routineHenEquipAmInitial', e.target.value.replace(/[^a-zA-Z]/g, ''))}
                         disabled={locked}
                         style={{ width: '70px', padding: '8px', border: '1px solid #ccc', textAlign: 'center', ...(locked && inputLocked) }} />
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>PM Initial</label>
-                    <input type="text" maxLength="3" value={data.routineHenEquipPmInitial}
-                        onChange={(e) => onDayChange(day, 'routineHenEquipPmInitial', e.target.value)}
+                    <input type="text" maxLength={6} value={data.routineHenEquipPmInitial}
+                        onChange={(e) => onDayChange(day, 'routineHenEquipPmInitial', e.target.value.replace(/[^a-zA-Z]/g, ''))}
                         disabled={locked}
                         style={{ width: '70px', padding: '8px', border: '1px solid #ccc', textAlign: 'center', ...(locked && inputLocked) }} />
                 </div>
@@ -215,6 +215,7 @@ export default function Form08DayView({
     loadingDay,
     onSelectDay,
     hasBedding = true,
+    hasChemicals = true,
 }) {
     return (
         <div>
@@ -257,6 +258,7 @@ export default function Form08DayView({
                 onSelectAllCriteria={onSelectAllCriteria}
                 locked={isLocked}
                 hasBedding={hasBedding}
+                hasChemicals={hasChemicals}
             />
 
             {!isLocked && (

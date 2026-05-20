@@ -674,6 +674,7 @@ export default function Form08WelfareRecords() {
           loadingDay={loadingDay}
           onSelectDay={setSelectedDay}
           hasBedding={selectedBarn?.has_bedding ?? true}
+          hasChemicals={selectedBarn?.has_chemicals ?? true}
         />
       )}
 
@@ -728,8 +729,8 @@ export default function Form08WelfareRecords() {
                 </label>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
-                  <input type="text" maxLength="20" value={ammoniaInitials}
-                    onChange={(e) => setAmmoniaInitials(e.target.value)}
+                  <input type="text" maxLength={6} value={ammoniaInitials}
+                    onChange={(e) => setAmmoniaInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                 </div>
                 <div>
@@ -754,8 +755,8 @@ export default function Form08WelfareRecords() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
-                  <input type="text" maxLength="10" value={alarmCheckInitials}
-                    onChange={(e) => setAlarmCheckInitials(e.target.value)}
+                  <input type="text" maxLength={6} value={alarmCheckInitials}
+                    onChange={(e) => setAlarmCheckInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                 </div>
               </div>
@@ -773,8 +774,8 @@ export default function Form08WelfareRecords() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
-                  <input type="text" maxLength="10" value={generatorCheckInitials}
-                    onChange={(e) => setGeneratorCheckInitials(e.target.value)}
+                  <input type="text" maxLength={6} value={generatorCheckInitials}
+                    onChange={(e) => setGeneratorCheckInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                 </div>
               </div>

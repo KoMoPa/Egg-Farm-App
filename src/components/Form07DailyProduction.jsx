@@ -569,9 +569,9 @@ export default function Form07DailyProduction() {
                                 <div>
                                     <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Initials</label>
                                     <input type="text" value={thermCalInitials}
-                                        onChange={e => setThermCalInitials(e.target.value)}
+                                        onChange={e => setThermCalInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                                         style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
-                                        placeholder="AB" maxLength={20} />
+                                        placeholder="AB" maxLength={6} />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Notes</label>

@@ -74,6 +74,7 @@ export async function createBarn(farmId, barnName, options = {}) {
         has_floor_eggs: options.has_floor_eggs ?? false,
         two_collections_per_day: options.two_collections_per_day ?? false,
         has_bedding: options.has_bedding ?? false,
+        has_chemicals: options.has_chemicals ?? false,
       }])
       .select()
       .single()

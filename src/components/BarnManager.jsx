@@ -12,11 +12,13 @@ export default function BarnManager() {
   const [newHasFloorEggs, setNewHasFloorEggs] = useState(false)
   const [newTwoCollections, setNewTwoCollections] = useState(false)
   const [newHasBedding, setNewHasBedding] = useState(false)
+  const [newHasChemicals, setNewHasChemicals] = useState(false)
   const [editingBarn, setEditingBarn] = useState(null)
   const [editName, setEditName] = useState('')
   const [editHasFloorEggs, setEditHasFloorEggs] = useState(false)
   const [editTwoCollections, setEditTwoCollections] = useState(false)
   const [editHasBedding, setEditHasBedding] = useState(false)
+  const [editHasChemicals, setEditHasChemicals] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -32,12 +34,14 @@ export default function BarnManager() {
         has_floor_eggs: newHasFloorEggs,
         two_collections_per_day: newTwoCollections,
         has_bedding: newHasBedding,
+        has_chemicals: newHasChemicals,
       })
       setBarns([...barns, newBarn])
       setNewBarnName('')
       setNewHasFloorEggs(false)
       setNewTwoCollections(false)
       setNewHasBedding(false)
+      setNewHasChemicals(false)
       setShowAddForm(false)
       setSelectedBarn(newBarn)
       setShowBarnSelector(false)
@@ -55,6 +59,7 @@ export default function BarnManager() {
     setEditHasFloorEggs(barn.has_floor_eggs ?? false)
     setEditTwoCollections(barn.two_collections_per_day ?? false)
     setEditHasBedding(barn.has_bedding ?? false)
+    setEditHasChemicals(barn.has_chemicals ?? false)
   }
 
   const handleSaveEdit = async (e) => {
@@ -68,6 +73,7 @@ export default function BarnManager() {
           has_floor_eggs: editHasFloorEggs,
           two_collections_per_day: editTwoCollections,
           has_bedding: editHasBedding,
+          has_chemicals: editHasChemicals,
         })
         .eq('id', editingBarn.id)
         .select()
@@ -218,6 +224,7 @@ export default function BarnManager() {
                   [newHasFloorEggs, setNewHasFloorEggs, 'Collects floor eggs (Form 07)'],
                   [newTwoCollections, setNewTwoCollections, 'Two egg collections per day (Form 07)'],
                   [newHasBedding, setNewHasBedding, 'Uses bedding (Form 08)'],
+                  [newHasChemicals, setNewHasChemicals, 'Uses chemicals (Form 08)'],
                 ].map(([value, setter, label]) => (
                   <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                     <input type="checkbox" checked={value} onChange={(e) => setter(e.target.checked)} />
@@ -287,13 +294,12 @@ export default function BarnManager() {
               {[
                 [editHasFloorEggs, setEditHasFloorEggs, 'Collects floor eggs (Form 07)'],
                 [editTwoCollections, setEditTwoCollections, 'Two egg collections per day (Form 07)'],
-                [editHasBedding, setEditHasBedding, 'Uses bedding (Form 08)'],
-              ].map(([value, setter, label]) => (
-                <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
-                  <input type="checkbox" checked={value} onChange={(e) => setter(e.target.checked)} />
-                  {label}
-                </label>
-              ))}
+                [editHasBedding, setEditHasBedding, 'Uses bedding (Form 08)'], [editHasChemicals, setEditHasChemicals, 'Uses chemicals (Form 08)'],].map(([value, setter, label]) => (
+                  <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                    <input type="checkbox" checked={value} onChange={(e) => setter(e.target.checked)} />
+                    {label}
+                  </label>
+                ))}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button type="submit" style={{ flex: 1, padding: '10px', fontWeight: 'bold', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
