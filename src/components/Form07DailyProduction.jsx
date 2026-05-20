@@ -3,6 +3,7 @@ import { useSupabase } from '../contexts/SupabaseContext'
 import { getOrCreateMonthlyAudit, getOrCreateProductionRecord } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
 import DaySelector from './DaySelector'
+import Form07DayView from './Form07DayView'
 
 const BLANK_FORM = {
     age: '',
@@ -30,6 +31,11 @@ export default function Form07DailyProduction() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear } = useFarmContext()
     const [viewMode, setViewMode] = useState('day')
+
+    // Month navigation state
+    const [allAudits, setAllAudits] = useState([])
+    const [viewingMonth, setViewingMonth] = useState(monthYear)
+    const [isCurrentMonth, setIsCurrentMonth] = useState(true)
 
     // Monthly Checks state
     const [thermCalDate, setThermCalDate] = useState('')
@@ -59,6 +65,12 @@ export default function Form07DailyProduction() {
         0
     ).getDate()
 
+    // Scroll to top on view/month changes
+    useEffect(() => {
+        const contentEl = document.querySelector('.app-content')
+        if (contentEl) contentEl.scrollTop = 0
+    }, [viewMode, viewingMonth])
+
     // Reset on barn/month change
     useEffect(() => {
         setDayData({})
@@ -75,7 +87,58 @@ export default function Form07DailyProduction() {
         setMonthlyComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
+        setViewingMonth(monthYear)
+        setIsCurrentMonth(true)
     }, [selectedBarn?.id, monthYear])
+
+    // Fetch all audits for month navigation
+    useEffect(() => {
+        const fetchAudits = async () => {
+            if (!farm?.id) return
+            try {
+                const { data, error } = await supabase
+                    .from('monthly_audits')
+                    .select('*')
+                    .eq('farm_id', farm.id)
+                    .order('month_year', { ascending: false })
+                if (error) throw error
+                setAllAudits(data || [])
+            } catch (err) {
+                console.error('Error fetching audits:', err)
+            }
+        }
+        fetchAudits()
+    }, [farm?.id])
+
+    // Check if viewing current month
+    useEffect(() => {
+        setIsCurrentMonth(viewingMonth === monthYear)
+    }, [viewingMonth, monthYear])
+
+    // Navigate to previous month
+    const handlePreviousMonth = () => {
+        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+        if (currentIndex < allAudits.length - 1) {
+            setViewingMonth(allAudits[currentIndex + 1].month_year)
+        }
+    }
+
+    // Navigate to next month
+    const handleNextMonth = () => {
+        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+        if (currentIndex > 0) {
+            setViewingMonth(allAudits[currentIndex - 1].month_year)
+        }
+    }
+
+    const formatMonth = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00')
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    }
+
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    const canGoPrevious = currentIndex < allAudits.length - 1
+    const canGoNext = currentIndex > 0
 
     // Load monthly checks data from DB
     useEffect(() => {
@@ -125,10 +188,9 @@ export default function Form07DailyProduction() {
             try {
                 const monthStr = monthYear.substring(0, 7)
                 const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
+                const auditMonthYear = `${monthStr}-01`
 
-                const { data: audit } = await supabase
-                    .from('monthly_audits').select('id')
-                    .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
+                const { audit } = await getOrCreateMonthlyAudit(farm.id, auditMonthYear)
 
                 if (!audit || cancelled) {
                     if (!cancelled) {
@@ -138,9 +200,7 @@ export default function Form07DailyProduction() {
                     return
                 }
 
-                const { data: prod } = await supabase
-                    .from('production_cooler_records').select('id')
-                    .eq('barn_id', selectedBarn.id).eq('audit_id', audit.id).maybeSingle()
+                const { record: prod } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
 
                 if (!prod || cancelled) {
                     if (!cancelled) {
@@ -151,11 +211,11 @@ export default function Form07DailyProduction() {
                 }
 
                 const [
-                    { data: floorEggs },
-                    { data: eggOutput },
-                    { data: coolerTemps },
-                    { data: sanitation },
-                    { data: flockAge },
+                    { data: floorEggs, error: feError },
+                    { data: eggOutput, error: eoError },
+                    { data: coolerTemps, error: ctError },
+                    { data: sanitation, error: sError },
+                    { data: flockAge, error: faError },
                 ] = await Promise.all([
                     supabase.from('production_floor_eggs').select('*').eq('production_id', prod.id).eq('record_date', recDate).maybeSingle(),
                     supabase.from('production_egg_output').select('*').eq('production_id', prod.id).eq('record_date', recDate).maybeSingle(),
@@ -164,7 +224,12 @@ export default function Form07DailyProduction() {
                     supabase.from('production_flock_age').select('*').eq('production_id', prod.id).eq('record_date', recDate).maybeSingle(),
                 ])
 
-                if (!floorEggs || cancelled) {
+                if (feError) console.error('[Form07] floorEggs error:', feError)
+
+                // Allow partial data - data is considered found if ANY table has content
+                const hasAnyData = !!floorEggs || !!eggOutput || !!coolerTemps || !!sanitation || !!flockAge
+
+                if (!hasAnyData || cancelled) {
                     if (!cancelled) {
                         setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_FORM } }))
                         setLockedDays(p => ({ ...p, [selectedDay]: false }))
@@ -198,7 +263,7 @@ export default function Form07DailyProduction() {
                 setLockedDays(p => ({ ...p, [selectedDay]: true }))
             } catch (e) {
                 if (!cancelled) {
-                    console.error('Error loading day:', e)
+                    console.error('[Form07] Error loading day:', e.message, e)
                     setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_FORM } }))
                     setLockedDays(p => ({ ...p, [selectedDay]: false }))
                 }
@@ -357,449 +422,190 @@ export default function Form07DailyProduction() {
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
+            {/* MONTH NAVIGATION */}
+            {allAudits.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px',
+                    padding: '12px 16px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd'
+                }}>
+                    <button
+                        type="button"
+                        onClick={handlePreviousMonth}
+                        disabled={!canGoPrevious}
+                        style={{
+                            padding: '8px 12px',
+                            backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }}>
+                        ← Previous
+                    </button>
+
+                    <div style={{ textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+                            {formatMonth(viewingMonth)}
+                        </div>
+                        {!isCurrentMonth && (
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                                (View Only)
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleNextMonth}
+                        disabled={!canGoNext}
+                        style={{
+                            padding: '8px 12px',
+                            backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: canGoNext ? 'pointer' : 'not-allowed',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }}>
+                        Next →
+                    </button>
+                </div>
+            )}
+
             {/* FORM HEADER */}
             <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
                     Form 07 – Egg Production &amp; Cooler Records
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px' }}>
                     <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
                     <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
-                    <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
                 </div>
-            </div>
 
-            {/* TAB TOGGLE */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-                {['day', 'monthly'].map(mode => (
-                    <button
-                        key={mode}
-                        type="button"
-                        onClick={() => setViewMode(mode)}
-                        style={{
-                            padding: '10px 24px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            border: '2px solid #28a745',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            background: viewMode === mode ? '#28a745' : 'white',
-                            color: viewMode === mode ? 'white' : '#28a745'
-                        }}
-                    >
-                        {mode === 'day' ? 'Day View' : 'Monthly Checks'}
-                    </button>
-                ))}
+
+                {/* TAB TOGGLE */}
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+                    {['day', 'monthly'].map(mode => (
+                        <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setViewMode(mode)}
+                            style={{
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                backgroundColor: viewMode === mode ? '#0066cc' : '#ddd',
+                                color: viewMode === mode ? 'white' : '#333',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}>
+                            {mode === 'day' ? 'Day View' : 'Monthly Checks'}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* ============ DAY VIEW ============ */}
-            {viewMode === 'day' && (<>
-
-                {/* Scrollable day selector */}
-                <DaySelector
-                    daysInMonth={daysInMonth}
-                    selectedDay={selectedDay}
-                    lockedDays={lockedDays}
-                    onSelect={setSelectedDay}
-                    loading={loadingDay}
-                />
-
-                {/* Locked banner */}
-                {isLocked && (
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        backgroundColor: '#d4edda', borderRadius: '8px', padding: '12px 16px',
-                        marginBottom: '16px', border: '1px solid #28a745'
-                    }}>
-                        <span style={{ color: '#155724', fontWeight: '600', fontSize: '14px' }}>
-                            ✓ Already recorded for Day {selectedDay}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
-                            style={{
-                                backgroundColor: '#0066cc', color: 'white', border: 'none',
-                                borderRadius: '6px', padding: '7px 14px',
-                                fontWeight: '700', fontSize: '13px', cursor: 'pointer'
-                            }}
-                        >
-                            Re-enter data
-                        </button>
-                    </div>
-                )}
-
-                {/* ============ PAGE 1 FIELDS ============ */}
-
-                {/* Age */}
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-                        Age (weeks)
-                    </label>
-                    <input
-                        type="number"
-                        value={currentDayData.age}
-                        onChange={(e) => setField('age', e.target.value)}
-                        disabled={isLocked}
-                        style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                        placeholder="25"
-                    />
-                </div>
-
-                {/* Floor Eggs */}
-                <div style={{ background: '#fff3cd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
-                        Floor Eggs
-                    </h3>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
-                            <input
-                                type="number"
-                                value={currentDayData.floorEggs1}
-                                onChange={(e) => setField('floorEggs1', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="150"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
-                            <input
-                                type="number"
-                                value={currentDayData.floorEggs2}
-                                onChange={(e) => setField('floorEggs2', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="120"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Total</label>
-                            <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#ffc107', borderRadius: '8px', textAlign: 'center' }}>
-                                {floorEggsTotal}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Egg Production */}
-                <div style={{ background: '#d4edda', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #28a745', paddingBottom: '8px' }}>
-                        Egg Production
-                    </h3>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
-                            <input
-                                type="number"
-                                value={currentDayData.eggProduction1}
-                                onChange={(e) => setField('eggProduction1', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="6000"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
-                            <input
-                                type="number"
-                                value={currentDayData.eggProduction2}
-                                onChange={(e) => setField('eggProduction2', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="6500"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Daily</label>
-                            <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#28a745', color: 'white', borderRadius: '8px', textAlign: 'center' }}>
-                                {eggProductionDaily}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>% Daily</label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={currentDayData.eggProductionPercent}
-                                onChange={(e) => setField('eggProductionPercent', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="92.5"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Egg Production Notes */}
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-                        Production Notes
-                    </label>
-                    <textarea
-                        value={currentDayData.notes}
-                        onChange={(e) => setField('notes', e.target.value)}
-                        disabled={isLocked}
-                        rows="3"
-                        style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(isLocked && inputLocked) }}
-                        placeholder="Any notes about today's egg production..."
-                    />
-                </div>
-
-                {/* Cooler Temperature & Humidity */}
-                <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
-                        Cooler Temperature &amp; RH%
-                    </h3>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp HI (°C)</label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={currentDayData.coolerTempHi}
-                                onChange={(e) => setField('coolerTempHi', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="4.5"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp LO (°C)</label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={currentDayData.coolerTempLo}
-                                onChange={(e) => setField('coolerTempLo', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="3.8"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% HI</label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={currentDayData.coolerRhHi}
-                                onChange={(e) => setField('coolerRhHi', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="75.0"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% LO</label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={currentDayData.coolerRhLo}
-                                onChange={(e) => setField('coolerRhLo', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                                placeholder="70.0"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Time</label>
-                            <input
-                                type="time"
-                                value={currentDayData.coolerCheckTime}
-                                onChange={(e) => setField('coolerCheckTime', e.target.value)}
-                                disabled={isLocked}
-                                style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* PAGE BREAK VISUAL */}
-                <div style={{ borderTop: '4px dashed #999', margin: '40px 0', padding: '20px 0', textAlign: 'center', color: '#666', fontSize: '18px', fontWeight: 'bold' }}>
-                    ═══ PAGE 2: SANITATION ═══
-                </div>
-
-                {/* ============ PAGE 2 FIELDS ============ */}
-
-                {/* Dirty Trays */}
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-                        Dirty Trays (Daily count)
-                    </label>
-                    <input
-                        type="number"
-                        value={currentDayData.dirtyTrays}
-                        onChange={(e) => setField('dirtyTrays', e.target.value)}
-                        disabled={isLocked}
-                        style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                        placeholder="5"
-                    />
-                </div>
-
-                {/* Sanitation - As Completed */}
-                <div style={{ background: '#e7f3ff', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0066cc', paddingBottom: '8px' }}>
-                        Sanitation - As Completed
-                    </h3>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                            <input
-                                type="checkbox"
-                                checked={currentDayData.eggCoolerCleaned}
-                                onChange={(e) => setField('eggCoolerCleaned', e.target.checked)}
-                                disabled={isLocked}
-                                style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                            />
-                            <span style={{ fontSize: '18px' }}>Egg Cooler</span>
-                        </label>
-
-                        <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                            <input
-                                type="checkbox"
-                                checked={currentDayData.packRoomCleaned}
-                                onChange={(e) => setField('packRoomCleaned', e.target.checked)}
-                                disabled={isLocked}
-                                style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                            />
-                            <span style={{ fontSize: '18px' }}>Pack Room</span>
-                        </label>
-
-                        <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                            <input
-                                type="checkbox"
-                                checked={currentDayData.tablesPackingEquipCleaned}
-                                onChange={(e) => setField('tablesPackingEquipCleaned', e.target.checked)}
-                                disabled={isLocked}
-                                style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                            />
-                            <span style={{ fontSize: '18px' }}>Tables/Packing Equip</span>
-                        </label>
-                    </div>
-                </div>
-
-                {/* Corrective Actions */}
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-                        Corrective Actions
-                    </label>
-                    <textarea
-                        value={currentDayData.correctiveActions}
-                        onChange={(e) => setField('correctiveActions', e.target.value)}
-                        disabled={isLocked}
-                        style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(isLocked && inputLocked) }}
-                        rows="4"
-                        placeholder="Describe any issues found and corrective actions taken..."
-                    />
-                </div>
-
-                {/* Submit Button */}
-                {!isLocked && (
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        style={{
-                            width: '100%',
-                            padding: '20px',
-                            fontSize: '22px',
-                            fontWeight: 'bold',
-                            background: saving ? '#aaa' : '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: saving ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {saving ? 'Saving…' : `💾 Save Day ${selectedDay} Record`}
-                    </button>
-                )}
-
-            </>)}
+            {viewMode === 'day' && (<Form07DayView
+                day={selectedDay}
+                data={currentDayData}
+                setField={setField}
+                isLocked={isLocked}
+                saving={saving}
+                floorEggsTotal={floorEggsTotal}
+                eggProductionDaily={eggProductionDaily}
+                onUnlock={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
+                monthYear={monthYear}
+                lockedDays={lockedDays}
+                loadingDay={loadingDay}
+                onSelectDay={setSelectedDay}
+                hasFloorEggs={selectedBarn?.has_floor_eggs ?? true}
+                twoCollections={selectedBarn?.two_collections_per_day ?? true}
+            />)}
 
             {/* ============ MONTHLY CHECKS TAB ============ */}
             {viewMode === 'monthly' && (
                 <div>
                     <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
-                    {/* Thermometer Calibration */}
-                    <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
-                        <h3 style={{ fontSize: '18px', marginBottom: '16px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
-                            Thermometer Calibration (twice annually)
-                        </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '16px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Calibration Date</label>
-                                <input type="date" value={thermCalDate}
-                                    onChange={e => setThermCalDate(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Method</label>
-                                <select value={thermCalMethod} onChange={e => setThermCalMethod(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Result</label>
-                                <select value={thermCalPass ? 'pass' : 'fail'} onChange={e => setThermCalPass(e.target.value === 'pass')}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
-                                    <option value="pass">Pass</option>
-                                    <option value="fail">Fail</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Initials</label>
-                                <input type="text" value={thermCalInitials}
-                                    onChange={e => setThermCalInitials(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
-                                    placeholder="AB" maxLength={20} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Notes</label>
-                                <input type="text" value={thermCalNotes}
-                                    onChange={e => setThermCalNotes(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
-                                    placeholder="Optional notes" />
+                        {/* Thermometer Calibration */}
+                        <div style={{ background: '#d1ecf1', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
+                            <h3 style={{ fontSize: '18px', marginBottom: '16px', borderBottom: '2px solid #0c5460', paddingBottom: '8px' }}>
+                                Thermometer Calibration (twice annually)
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '16px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Calibration Date</label>
+                                    <input type="date" value={thermCalDate}
+                                        onChange={e => setThermCalDate(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Method</label>
+                                    <select value={thermCalMethod} onChange={e => setThermCalMethod(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Result</label>
+                                    <select value={thermCalPass ? 'pass' : 'fail'} onChange={e => setThermCalPass(e.target.value === 'pass')}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}>
+                                        <option value="pass">Pass</option>
+                                        <option value="fail">Fail</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Initials</label>
+                                    <input type="text" value={thermCalInitials}
+                                        onChange={e => setThermCalInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
+                                        placeholder="AB" maxLength={6} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Notes</label>
+                                    <input type="text" value={thermCalNotes}
+                                        onChange={e => setThermCalNotes(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', fontSize: '15px', ...(monthlyLocked && inputLocked) }}
+                                        placeholder="Optional notes" />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Monthly Corrective Actions */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                            Corrective Actions (Monthly)
-                        </label>
-                        <textarea value={monthlyCorrectiveActions}
-                            onChange={e => setMonthlyCorrectiveActions(e.target.value)}
-                            rows={3}
-                            style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
-                            placeholder="Monthly corrective actions summary..." />
-                    </div>
+                        {/* Monthly Corrective Actions */}
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                                Corrective Actions (Monthly)
+                            </label>
+                            <textarea value={monthlyCorrectiveActions}
+                                onChange={e => setMonthlyCorrectiveActions(e.target.value)}
+                                rows={3}
+                                style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
+                                placeholder="Monthly corrective actions summary..." />
+                        </div>
 
-                    {/* Comments */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                            Comments
-                        </label>
-                        <textarea value={monthlyComments}
-                            onChange={e => setMonthlyComments(e.target.value)}
-                            rows={3}
-                            style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
-                            placeholder="Monthly comments..." />
-                    </div>
+                        {/* Comments */}
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                                Comments
+                            </label>
+                            <textarea value={monthlyComments}
+                                onChange={e => setMonthlyComments(e.target.value)}
+                                rows={3}
+                                style={{ width: '100%', padding: '12px', fontSize: '15px', border: '2px solid #ddd', borderRadius: '8px', fontFamily: 'inherit', ...(monthlyLocked && inputLocked) }}
+                                placeholder="Monthly comments..." />
+                        </div>
 
                     </fieldset>
 

@@ -2,43 +2,39 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { getOrCreateMonthlyAudit, getOrCreateWelfareRecord } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
-import DaySelector from './DaySelector'
+import Form08DayView from './Form08DayView'
 
 const BLANK_DAY = {
-    barnTempHi: '',
-    barnTempLo: '',
-    exteriorTemp: '',
-    floorsChecked: false,
-    wallsFansCeilingChecked: false,
-    manureChecked: false,
-    beddingUsed: false,
-    chemicalsUsed: false,
-    routineHenEquip1stInitial: '',
-    routineHenEquip1stDaily: '',
-    routineHenEquip2ndInitial: '',
-    routineHenEquip2ndDaily: '',
-    overallAppearance: false,
-    generalSound: false,
-    abnormalBehavior: false,
-    signsOfDisease: false,
-    injuredBirds: false,
-    respiratoryProblems: false,
-    pantingHuddling: false,
-    lameness: false,
-    featherPecking: false,
-    trappedBirds: false,
-    deadBirds: false,
-    feedWaterAvailable: false,
-    equipmentOperating: false,
-    amenitiesCondition: false,
-    layFacilityEnvironment: false,
-    weeklyInitials: '',
-    weeklyComments: '',
+  barnTempHi: '',
+  barnTempLo: '',
+  exteriorTemp: '',
+  floorsChecked: false,
+  wallsFansCeilingChecked: false,
+  manureChecked: false,
+  beddingUsed: false,
+  chemicalsUsed: false,
+  routineHenEquipAmInitial: '',
+  routineHenEquipPmInitial: '',
+  overallAppearance: false,
+  generalSound: false,
+  abnormalBehavior: false,
+  signsOfDisease: false,
+  injuredBirds: false,
+  respiratoryProblems: false,
+  pantingHuddling: false,
+  lameness: false,
+  featherPecking: false,
+  trappedBirds: false,
+  deadBirds: false,
+  feedWaterAvailable: false,
+  equipmentOperating: false,
+  amenitiesCondition: false,
+  layFacilityEnvironment: false,
+  weeklyComments: '',
 }
 
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
 
-// DAY VIEW COMPONENT
 const INSPECTION_CRITERIA_FIELDS = [
   'overallAppearance', 'generalSound', 'abnormalBehavior', 'signsOfDisease',
   'injuredBirds', 'respiratoryProblems', 'pantingHuddling', 'lameness',
@@ -46,223 +42,13 @@ const INSPECTION_CRITERIA_FIELDS = [
   'equipmentOperating', 'amenitiesCondition', 'layFacilityEnvironment',
 ]
 
-const DayViewForm = ({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteria, locked }) => (
-  <div style={{ marginBottom: '30px' }}>
-    <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
-      Daily Tracking - Day {day}
-    </h3>
-
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
-        <input type="number" step="0.1" value={data.barnTempHi}
-          onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
-        <input type="number" step="0.1" value={data.barnTempLo}
-          onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
-        <input type="number" step="0.1" value={data.exteriorTemp}
-          onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }} />
-      </div>
-    </div>
-
-        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Sanitation Checks</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
-                <input type="checkbox" checked={data.floorsChecked}
-                    onChange={(e) => onDayChange(day, 'floorsChecked', e.target.checked)}
-                    disabled={locked} />
-                Floors Checked
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
-                <input type="checkbox" checked={data.wallsFansCeilingChecked}
-                    onChange={(e) => onDayChange(day, 'wallsFansCeilingChecked', e.target.checked)}
-                    disabled={locked} />
-                Walls/Fans/Ceiling Checked
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
-                <input type="checkbox" checked={data.manureChecked}
-                    onChange={(e) => onDayChange(day, 'manureChecked', e.target.checked)}
-                    disabled={locked} />
-                Manure Checked
-            </label>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
-                <select value={data.beddingUsed ? 'true' : 'false'}
-                    onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value === 'true')}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                </select>
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
-                <select value={data.chemicalsUsed ? 'true' : 'false'}
-                    onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value === 'true')}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                </select>
-            </div>
-        </div>
-
-        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Weekly Welfare Inspection</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Initial</label>
-                <input type="text" maxLength="3" value={data.routineHenEquip1stInitial}
-                    onChange={(e) => onDayChange(day, 'routineHenEquip1stInitial', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>1st Daily</label>
-                <input type="text" maxLength="3" value={data.routineHenEquip1stDaily}
-                    onChange={(e) => onDayChange(day, 'routineHenEquip1stDaily', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Initial</label>
-                <input type="text" maxLength="3" value={data.routineHenEquip2ndInitial}
-                    onChange={(e) => onDayChange(day, 'routineHenEquip2ndInitial', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>2nd Daily</label>
-                <input type="text" maxLength="3" value={data.routineHenEquip2ndDaily}
-                    onChange={(e) => onDayChange(day, 'routineHenEquip2ndDaily', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-            </div>
-        </div>
-
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
-      <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Inspection Criteria (Check as applicable)</h4>
-      <button type="button" onClick={() => onSelectAllCriteria(day)}
-        style={{ fontSize: '12px', padding: '4px 10px', background: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-        Select All
-      </button>
-    </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.overallAppearance}
-          onChange={() => onDayCheckbox(day, 'overallAppearance')} />
-        Overall appearance of birds
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.generalSound}
-          onChange={() => onDayCheckbox(day, 'generalSound')} />
-        General sound of flock
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.abnormalBehavior}
-          onChange={() => onDayCheckbox(day, 'abnormalBehavior')} />
-        Abnormal Behavior
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.signsOfDisease}
-          onChange={() => onDayCheckbox(day, 'signsOfDisease')} />
-        Signs of Disease/Illness
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.injuredBirds}
-          onChange={() => onDayCheckbox(day, 'injuredBirds')} />
-        Injured Birds
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.respiratoryProblems}
-          onChange={() => onDayCheckbox(day, 'respiratoryProblems')} />
-        Respiratory Problems
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.pantingHuddling}
-          onChange={() => onDayCheckbox(day, 'pantingHuddling')} />
-        Panting/Huddling
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.lameness}
-          onChange={() => onDayCheckbox(day, 'lameness')} />
-        Lameness
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.featherPecking}
-          onChange={() => onDayCheckbox(day, 'featherPecking')} />
-        Signs of Feather Pecking/Cannibalism
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.trappedBirds}
-          onChange={() => onDayCheckbox(day, 'trappedBirds')} />
-        Trapped Birds
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.deadBirds}
-          onChange={() => onDayCheckbox(day, 'deadBirds')} />
-        Dead Birds
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.feedWaterAvailable}
-          onChange={() => onDayCheckbox(day, 'feedWaterAvailable')} />
-        Feed & Water Available
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.equipmentOperating}
-          onChange={() => onDayCheckbox(day, 'equipmentOperating')} />
-        Equipment Operating
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.amenitiesCondition}
-          onChange={() => onDayCheckbox(day, 'amenitiesCondition')} />
-        Condition of Amenities/Housing
-      </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <input type="checkbox" checked={data.layFacilityEnvironment}
-          onChange={() => onDayCheckbox(day, 'layFacilityEnvironment')} />
-        Lay Facility Environment
-      </label>
-    </div>
-
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Weekly Initials</label>
-        <input type="text" maxLength="10" value={data.weeklyInitials}
-          onChange={(e) => onDayChange(day, 'weeklyInitials', e.target.value)}
-          disabled={locked}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Weekly Comments</label>
-        <textarea value={data.weeklyComments}
-          onChange={(e) => onDayChange(day, 'weeklyComments', e.target.value)}
-          disabled={locked}
-          rows="2"
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'inherit', ...(locked && inputLocked) }} />
-      </div>
-    </div>
-  </div>
-)
-
-
 
 export default function Form08WelfareRecords() {
-  const { farm, selectedBarn, monthYear } = useFarmContext()
+  const { farm, selectedBarn, monthYear, setMonthYear } = useFarmContext()
   const farmId = farm?.id
   const farmName = farm?.farm_name
   const barnId = selectedBarn?.id
-  const barnNumber = selectedBarn?.barn_number
+  const barnName = selectedBarn?.barn_name
   // Initialize form data for 31 days
   const initializeDayData = () => {
     const days = {}
@@ -280,11 +66,9 @@ export default function Form08WelfareRecords() {
         beddingUsed: false,
         chemicalsUsed: false,
 
-        // PAGE 2 - Weekly Inspections
-        routineHenEquip1stInitial: '',
-        routineHenEquip1stDaily: '',
-        routineHenEquip2ndInitial: '',
-        routineHenEquip2ndDaily: '',
+        // Hen Inspection initials
+        routineHenEquipAmInitial: '',
+        routineHenEquipPmInitial: '',
 
         // Inspection criteria checkboxes
         overallAppearance: false,
@@ -302,7 +86,6 @@ export default function Form08WelfareRecords() {
         equipmentOperating: false,
         amenitiesCondition: false,
         layFacilityEnvironment: false,
-        weeklyInitials: '',
         weeklyComments: '',
       }
     }
@@ -310,6 +93,11 @@ export default function Form08WelfareRecords() {
   }
 
   const supabase = useSupabase()
+
+  // Month navigation state
+  const [allAudits, setAllAudits] = useState([])
+  const [viewingMonth, setViewingMonth] = useState(monthYear)
+  const [isCurrentMonth, setIsCurrentMonth] = useState(true)
 
   const [dayData, setDayData] = useState({})
   const [lockedDays, setLockedDays] = useState({})
@@ -343,6 +131,12 @@ export default function Form08WelfareRecords() {
     0
   ).getDate()
 
+  // Scroll to top on view/month changes
+  useEffect(() => {
+    const contentEl = document.querySelector('.app-content')
+    if (contentEl) contentEl.scrollTop = 0
+  }, [viewMode, viewingMonth])
+
   // Reset on barn/month change
   useEffect(() => {
     setDayData({})
@@ -363,7 +157,62 @@ export default function Form08WelfareRecords() {
     setMonthlyLocked(false)
     setLoadingDay(false)
     setSaving(false)
+    setViewingMonth(monthYear)
+    setIsCurrentMonth(true)
   }, [selectedBarn?.id, monthYear])
+
+  // Fetch all audits for month navigation
+  useEffect(() => {
+    const fetchAudits = async () => {
+      if (!farmId) return
+      try {
+        const { data, error } = await supabase
+          .from('monthly_audits')
+          .select('*')
+          .eq('farm_id', farmId)
+          .order('month_year', { ascending: false })
+        if (error) throw error
+        setAllAudits(data || [])
+      } catch (err) {
+        console.error('Error fetching audits:', err)
+      }
+    }
+    fetchAudits()
+  }, [farmId])
+
+  // Check if viewing current month
+  useEffect(() => {
+    setIsCurrentMonth(viewingMonth === monthYear)
+  }, [viewingMonth, monthYear])
+
+  // Navigate to previous month
+  const handlePreviousMonth = () => {
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    if (currentIndex < allAudits.length - 1) {
+      const newMonth = allAudits[currentIndex + 1].month_year
+      setViewingMonth(newMonth)
+      setMonthYear(newMonth)
+    }
+  }
+
+  // Navigate to next month
+  const handleNextMonth = () => {
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    if (currentIndex > 0) {
+      const newMonth = allAudits[currentIndex - 1].month_year
+      setViewingMonth(newMonth)
+      setMonthYear(newMonth)
+    }
+  }
+
+  const formatMonth = (dateStr) => {
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+  }
+
+  const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+  const canGoPrevious = currentIndex < allAudits.length - 1
+  const canGoNext = currentIndex > 0
 
   // Load monthly checks data from DB
   useEffect(() => {
@@ -478,10 +327,8 @@ export default function Form08WelfareRecords() {
             manureChecked: dailyCheck?.manure_sanitation_code === 'Y',
             beddingUsed: dailyCheck?.bedding_notes === 'Yes',
             chemicalsUsed: dailyCheck?.chemicals_notes === 'Yes',
-            routineHenEquip1stInitial: dailyCheck?.hen_inspection_am ?? '',
-            routineHenEquip1stDaily: '',
-            routineHenEquip2ndInitial: dailyCheck?.hen_inspection_pm ?? '',
-            routineHenEquip2ndDaily: '',
+            routineHenEquipAmInitial: dailyCheck?.hen_inspection_am ?? '',
+            routineHenEquipPmInitial: dailyCheck?.hen_inspection_pm ?? '',
             overallAppearance: weeklyInspection?.check_overall_appearance ?? false,
             generalSound: weeklyInspection?.check_general_sound ?? false,
             abnormalBehavior: weeklyInspection?.check_abnormal_behavior ?? false,
@@ -497,7 +344,6 @@ export default function Form08WelfareRecords() {
             equipmentOperating: weeklyInspection?.check_equipment_operating ?? false,
             amenitiesCondition: weeklyInspection?.check_amenities_condition ?? false,
             layFacilityEnvironment: weeklyInspection?.check_lay_facility ?? false,
-            weeklyInitials: weeklyInspection?.weekly_initials ?? '',
             weeklyComments: weeklyInspection?.comments ?? '',
           },
         }))
@@ -573,8 +419,8 @@ export default function Form08WelfareRecords() {
           manure_sanitation_code: d.manureChecked ? 'Y' : null,
           bedding_notes: d.beddingUsed ? 'Yes' : null,
           chemicals_notes: d.chemicalsUsed ? 'Yes' : null,
-          hen_inspection_am: d.routineHenEquip1stInitial || null,
-          hen_inspection_pm: d.routineHenEquip2ndInitial || null,
+          hen_inspection_am: d.routineHenEquipAmInitial || null,
+          hen_inspection_pm: d.routineHenEquipPmInitial || null,
         }], { onConflict: 'welfare_id,record_date' })
       if (dailyError) throw dailyError
 
@@ -598,7 +444,6 @@ export default function Form08WelfareRecords() {
           check_equipment_operating: d.equipmentOperating,
           check_amenities_condition: d.amenitiesCondition,
           check_lay_facility: d.layFacilityEnvironment,
-          weekly_initials: d.weeklyInitials || null,
           comments: d.weeklyComments || null,
         }], { onConflict: 'welfare_id,inspection_date' })
       if (weeklyError) throw weeklyError
@@ -613,99 +458,99 @@ export default function Form08WelfareRecords() {
     }
   }
 
-    const handleMonthlySubmit = async () => {
-        try {
-            if (!selectedBarn?.id) {
-                alert('Error: Barn is missing. Please select a barn.')
-                return
-            }
+  const handleMonthlySubmit = async () => {
+    try {
+      if (!selectedBarn?.id) {
+        alert('Error: Barn is missing. Please select a barn.')
+        return
+      }
 
-            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
-            const welfareId = welfareRecord.id
-            const monthFirstDate = monthYear.substring(0, 7) + '-01'
+      const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+      const welfareId = welfareRecord.id
+      const monthFirstDate = monthYear.substring(0, 7) + '-01'
 
-            // Update monthly comments
-            const { error: commentError } = await supabase
-                .from('welfare_records')
-                .update({ monthly_comments: monthlyComments || null })
-                .eq('id', welfareId)
-            if (commentError) throw commentError
+      // Update monthly comments
+      const { error: commentError } = await supabase
+        .from('welfare_records')
+        .update({ monthly_comments: monthlyComments || null })
+        .eq('id', welfareId)
+      if (commentError) throw commentError
 
-            // Save ammonia test
-            if (ammoniaRange) {
-                const { error: ammoniaError } = await supabase
-                    .from('welfare_ammonia_tests')
-                    .upsert([{
-                        welfare_id: welfareId,
-                        test_date: monthFirstDate,
-                        ppm_range: ammoniaRange,
-                        distilled_water_used: ammoniaDistilledWater,
-                        initials: ammoniaInitials || null,
-                        notes: ammoniaNotes || null,
-                    }], { onConflict: 'welfare_id,test_date' })
-                if (ammoniaError) throw ammoniaError
-            }
+      // Save ammonia test
+      if (ammoniaRange) {
+        const { error: ammoniaError } = await supabase
+          .from('welfare_ammonia_tests')
+          .upsert([{
+            welfare_id: welfareId,
+            test_date: monthFirstDate,
+            ppm_range: ammoniaRange,
+            distilled_water_used: ammoniaDistilledWater,
+            initials: ammoniaInitials || null,
+            notes: ammoniaNotes || null,
+          }], { onConflict: 'welfare_id,test_date' })
+        if (ammoniaError) throw ammoniaError
+      }
 
-            // Save alarm/generator checks
-            if (alarmCheckDate || alarmCheckInitials || generatorCheckDate || generatorCheckInitials) {
-                const alarmGenFields = {
-                    alarm_check_date: alarmCheckDate || null,
-                    alarm_check_initials: alarmCheckInitials || null,
-                    generator_check_date: generatorCheckDate || null,
-                    generator_check_initials: generatorCheckInitials || null,
-                }
-                const { data: existingInspection } = await supabase
-                    .from('welfare_weekly_inspections').select('welfare_id')
-                    .eq('welfare_id', welfareId).eq('inspection_date', monthFirstDate).maybeSingle()
-
-                if (existingInspection) {
-                    const { error } = await supabase.from('welfare_weekly_inspections')
-                        .update(alarmGenFields).eq('welfare_id', welfareId).eq('inspection_date', monthFirstDate)
-                    if (error) throw error
-                } else {
-                    const { error } = await supabase.from('welfare_weekly_inspections')
-                        .insert([{ welfare_id: welfareId, inspection_date: monthFirstDate, ...alarmGenFields }])
-                    if (error) throw error
-                }
-            }
-
-            setMonthlySaved(true)
-            setMonthlyLocked(true)
-            alert('✅ Monthly checks saved!')
-        } catch (error) {
-            alert('Error: ' + error.message)
-            console.error(error)
+      // Save alarm/generator checks
+      if (alarmCheckDate || alarmCheckInitials || generatorCheckDate || generatorCheckInitials) {
+        const alarmGenFields = {
+          alarm_check_date: alarmCheckDate || null,
+          alarm_check_initials: alarmCheckInitials || null,
+          generator_check_date: generatorCheckDate || null,
+          generator_check_initials: generatorCheckInitials || null,
         }
-    }
+        const { data: existingInspection } = await supabase
+          .from('welfare_weekly_inspections').select('welfare_id')
+          .eq('welfare_id', welfareId).eq('inspection_date', monthFirstDate).maybeSingle()
 
-    const handleMarkMonthComplete = async () => {
-        if (!window.confirm('Mark Form 08 as complete for ' + monthYear + '? This confirms all records for the month have been entered.')) return
-        try {
-            const { data: audit, error: findError } = await supabase
-                .from('monthly_audits').select('id')
-                .eq('farm_id', farm.id).eq('month_year', monthYear).maybeSingle()
-
-            if (findError) throw findError
-            if (!audit) {
-                alert('No audit record found. Please save records first.')
-                return
-            }
-
-            const { error } = await supabase
-                .from('monthly_audits')
-                .update({
-                    form_08_completed: true,
-                    form_08_completed_date: new Date().toISOString()
-                })
-                .eq('id', audit.id)
-
-            if (error) throw error
-            alert('✅ Form 08 marked as complete for ' + monthYear)
-        } catch (err) {
-            alert('Error marking complete: ' + err.message)
+        if (existingInspection) {
+          const { error } = await supabase.from('welfare_weekly_inspections')
+            .update(alarmGenFields).eq('welfare_id', welfareId).eq('inspection_date', monthFirstDate)
+          if (error) throw error
+        } else {
+          const { error } = await supabase.from('welfare_weekly_inspections')
+            .insert([{ welfare_id: welfareId, inspection_date: monthFirstDate, ...alarmGenFields }])
+          if (error) throw error
         }
+      }
+
+      setMonthlySaved(true)
+      setMonthlyLocked(true)
+      alert('✅ Monthly checks saved!')
+    } catch (error) {
+      alert('Error: ' + error.message)
+      console.error(error)
     }
+  }
+
+  const handleMarkMonthComplete = async () => {
+    if (!window.confirm('Mark Form 08 as complete for ' + monthYear + '? This confirms all records for the month have been entered.')) return
+    try {
+      const { data: audit, error: findError } = await supabase
+        .from('monthly_audits').select('id')
+        .eq('farm_id', farm.id).eq('month_year', monthYear).maybeSingle()
+
+      if (findError) throw findError
+      if (!audit) {
+        alert('No audit record found. Please save records first.')
+        return
+      }
+
+      const { error } = await supabase
+        .from('monthly_audits')
+        .update({
+          form_08_completed: true,
+          form_08_completed_date: new Date().toISOString()
+        })
+        .eq('id', audit.id)
+
+      if (error) throw error
+      alert('✅ Form 08 marked as complete for ' + monthYear)
+    } catch (err) {
+      alert('Error marking complete: ' + err.message)
+    }
+  }
 
   const isLocked = lockedDays[selectedDay] ?? false
   const currentDayData = dayData[selectedDay] ?? BLANK_DAY
@@ -713,15 +558,73 @@ export default function Form08WelfareRecords() {
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
+      {/* MONTH NAVIGATION */}
+      {allAudits.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '20px',
+          padding: '12px 16px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #ddd'
+        }}>
+          <button
+            type="button"
+            onClick={handlePreviousMonth}
+            disabled={!canGoPrevious}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+            ← Previous
+          </button>
+
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+              {formatMonth(viewingMonth)}
+            </div>
+            {!isCurrentMonth && (
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                (View Only)
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            disabled={!canGoNext}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+            Next →
+          </button>
+        </div>
+      )}
+
       {/* FORM HEADER */}
       <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 08 - Welfare Records
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
           <div><strong>Farm Name:</strong> {farmName}</div>
-          <div><strong>Barn #:</strong> {barnNumber}</div>
-          <div><strong>Month/Year:</strong> {monthYear}</div>
+          <div><strong>Barn:</strong> {barnName}</div>
         </div>
 
         {/* VIEW TOGGLE */}
@@ -761,64 +664,22 @@ export default function Form08WelfareRecords() {
 
       {/* DAY VIEW */}
       {viewMode === 'day' && (
-        <div>
-          <DaySelector
-            daysInMonth={daysInMonth}
-            selectedDay={selectedDay}
-            lockedDays={lockedDays}
-            onSelect={setSelectedDay}
-            loading={loadingDay}
-          />
-
-          {isLocked && (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              backgroundColor: '#d4edda', borderRadius: '8px', padding: '12px 16px',
-              marginBottom: '16px', border: '1px solid #28a745'
-            }}>
-              <span style={{ color: '#155724', fontWeight: '600', fontSize: '14px' }}>
-                ✓ Already recorded for Day {selectedDay}
-              </span>
-              <button
-                type="button"
-                onClick={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
-                style={{
-                  backgroundColor: '#0066cc', color: 'white', border: 'none',
-                  borderRadius: '6px', padding: '7px 14px',
-                  fontWeight: '700', fontSize: '13px', cursor: 'pointer'
-                }}
-              >
-                Re-enter data
-              </button>
-            </div>
-          )}
-
-          <DayViewForm
-            day={selectedDay}
-            data={currentDayData}
-            onDayChange={handleDayChange}
-            onDayCheckbox={handleDayCheckbox}
-            onSelectAllCriteria={handleSelectAllCriteria}
-            locked={isLocked}
-          />
-
-          {!isLocked && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
-              <button type="submit" disabled={saving} style={{
-                padding: '12px 40px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                backgroundColor: saving ? '#aaa' : '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: saving ? 'not-allowed' : 'pointer'
-              }}>
-                {saving ? 'Saving…' : `💾 Save Day ${selectedDay} Record`}
-              </button>
-            </div>
-          )}
-        </div>
+        <Form08DayView
+          day={selectedDay}
+          data={currentDayData}
+          isLocked={isLocked}
+          saving={saving}
+          onDayChange={handleDayChange}
+          onDayCheckbox={handleDayCheckbox}
+          onSelectAllCriteria={handleSelectAllCriteria}
+          onUnlock={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
+          monthYear={monthYear}
+          lockedDays={lockedDays}
+          loadingDay={loadingDay}
+          onSelectDay={setSelectedDay}
+          hasBedding={selectedBarn?.has_bedding ?? true}
+          hasChemicals={selectedBarn?.has_chemicals ?? true}
+        />
       )}
 
       {/* MONTHLY CHECKS */}
@@ -872,8 +733,8 @@ export default function Form08WelfareRecords() {
                 </label>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
-                  <input type="text" maxLength="20" value={ammoniaInitials}
-                    onChange={(e) => setAmmoniaInitials(e.target.value)}
+                  <input type="text" maxLength={6} value={ammoniaInitials}
+                    onChange={(e) => setAmmoniaInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                 </div>
                 <div>
@@ -898,8 +759,8 @@ export default function Form08WelfareRecords() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
-                  <input type="text" maxLength="10" value={alarmCheckInitials}
-                    onChange={(e) => setAlarmCheckInitials(e.target.value)}
+                  <input type="text" maxLength={6} value={alarmCheckInitials}
+                    onChange={(e) => setAlarmCheckInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                 </div>
               </div>
@@ -917,8 +778,8 @@ export default function Form08WelfareRecords() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px' }}>Initials</label>
-                  <input type="text" maxLength="10" value={generatorCheckInitials}
-                    onChange={(e) => setGeneratorCheckInitials(e.target.value)}
+                  <input type="text" maxLength={6} value={generatorCheckInitials}
+                    onChange={(e) => setGeneratorCheckInitials(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', ...(monthlyLocked && inputLocked) }} />
                 </div>
               </div>

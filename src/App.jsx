@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useAuth } from './contexts/AuthContext'
@@ -34,6 +34,14 @@ function App() {
 function AppContent({ signOut, user }) {
   const [activeTab, setActiveTab] = useState('home')
   const { farm, monthYear, setMonthYear, selectedBarn } = useFarmContext()
+  const contentRef = useRef(null)
+
+  // Scroll to top when changing tabs
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0
+    }
+  }, [activeTab])
 
   const activeTabDef = TABS.find(t => t.key === activeTab)
 
@@ -69,7 +77,7 @@ function AppContent({ signOut, user }) {
       </header>
 
       {/* ── Scrollable content area ── */}
-      <main className="app-content">
+      <main className="app-content" ref={contentRef}>
         <div className="app-content-inner">
 
           {/* Dashboard tab */}
@@ -84,18 +92,6 @@ function AppContent({ signOut, user }) {
                 </div>
               ) : (
                 <>
-                  {/* Month picker */}
-                  <div className="app-month-bar">
-                    <label className="app-month-label">Month / Year:</label>
-                    <DatePicker
-                      selected={selectedDate}
-                      onChange={handleDateChange}
-                      renderMonthContent={renderMonthContent}
-                      showMonthYearPicker
-                      dateFormat="MM/yyyy"
-                    />
-                  </div>
-
                   {activeTab === 'form07' && <Form07DailyProduction />}
                   {activeTab === 'form08' && <Form08WelfareRecords />}
                   {activeTab === 'form09' && <Form09FeedWaterRecords />}

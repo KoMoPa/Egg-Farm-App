@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { getOrCreateMonthlyAudit, getOrCreateFeedWaterRecord } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
-import DaySelector from './DaySelector'
+import Form09DayView from './Form09DayView'
 
 const BLANK_DAY = {
     feedDaily: '', feedActual: '',
@@ -11,8 +11,6 @@ const BLANK_DAY = {
     flush: false, medsVit: false, treatment: false,
     notes: '',
     mortalityDaily: '', mortalityReason: '',
-    pileupCount: '',
-    efoNotified: false,
     hospitalPenMonitoring: '',
     inventory: '',
 }
@@ -21,166 +19,15 @@ const inputLocked = { backgroundColor: '#f0f0f0', color: '#888', cursor: 'not-al
 const selectLocked = { backgroundColor: '#f0f0f0', color: '#888', cursor: 'not-allowed' }
 
 // DAY VIEW COMPONENT
-const DayViewForm = ({ day, data, onDayChange, locked = false }) => (
-    <div style={{ marginBottom: '30px', opacity: locked ? 0.8 : 1 }}>
-        <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
-            Daily Tracking – Day {day}
-        </h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Feed Daily Target</label>
-                <input type="number" step="0.1" value={data.feedDaily}
-                    onChange={(e) => onDayChange(day, 'feedDaily', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Feed Actual</label>
-                <input type="number" step="0.1" value={data.feedActual}
-                    onChange={(e) => onDayChange(day, 'feedActual', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Water Daily Target</label>
-                <input type="number" step="0.1" value={data.waterDaily}
-                    onChange={(e) => onDayChange(day, 'waterDaily', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Water Actual</label>
-                <input type="number" step="0.1" value={data.waterActual}
-                    onChange={(e) => onDayChange(day, 'waterActual', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Auger Run Time (minutes)</label>
-                <input type="number" value={data.augerRunTimeMinutes}
-                    onChange={(e) => onDayChange(day, 'augerRunTimeMinutes', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-        </div>
-
-        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Water Treatments</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Flush</label>
-                <select value={data.flush ? 'true' : 'false'}
-                    onChange={(e) => onDayChange(day, 'flush', e.target.value === 'true')}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && selectLocked) }}>
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                </select>
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Meds/Vit</label>
-                <select value={data.medsVit ? 'true' : 'false'}
-                    onChange={(e) => onDayChange(day, 'medsVit', e.target.value === 'true')}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && selectLocked) }}>
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                </select>
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Treatment</label>
-                <select value={data.treatment ? 'true' : 'false'}
-                    onChange={(e) => onDayChange(day, 'treatment', e.target.value === 'true')}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && selectLocked) }}>
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                </select>
-            </div>
-        </div>
-
-        <div style={{ marginBottom: '30px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Daily Notes</label>
-            <textarea value={data.notes}
-                onChange={(e) => onDayChange(day, 'notes', e.target.value)}
-                disabled={locked}
-                rows="2"
-                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontFamily: 'inherit', ...(locked && inputLocked) }} />
-        </div>
-
-        <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Mortality Records</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Daily Mortality Count</label>
-                <input type="number" value={data.mortalityDaily}
-                    onChange={(e) => onDayChange(day, 'mortalityDaily', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Reason</label>
-                <select value={data.mortalityReason}
-                    onChange={(e) => onDayChange(day, 'mortalityReason', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && selectLocked) }}>
-                    <option value="">Select...</option>
-                    <option value="natural">Natural</option>
-                    <option value="euthanized">Euthanized</option>
-                </select>
-            </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Pileup Count</label>
-                <input type="number" value={data.pileupCount}
-                    onChange={(e) => onDayChange(day, 'pileupCount', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-                <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0' }}>Notify EFO if any single pileup &gt; 50 birds</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', paddingTop: '24px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: locked ? 'default' : 'pointer' }}>
-                    <input type="checkbox" checked={data.efoNotified}
-                        onChange={(e) => onDayChange(day, 'efoNotified', e.target.checked)}
-                        disabled={locked} />
-                    EFO Notified
-                </label>
-            </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Hospital Pen Monitoring</label>
-                <select value={data.hospitalPenMonitoring}
-                    onChange={(e) => onDayChange(day, 'hospitalPenMonitoring', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && selectLocked) }}>
-                    <option value="">Select...</option>
-                    <option value="improved">Improved</option>
-                    <option value="euthanized">Euthanized</option>
-                </select>
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Inventory</label>
-                <input type="number" value={data.inventory}
-                    onChange={(e) => onDayChange(day, 'inventory', e.target.value)}
-                    disabled={locked}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-            </div>
-        </div>
-    </div>
-)
 
 export default function Form09FeedWaterRecords() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear } = useFarmContext()
+
+    // Month navigation state
+    const [allAudits, setAllAudits] = useState([])
+    const [viewingMonth, setViewingMonth] = useState(monthYear)
+    const [isCurrentMonth, setIsCurrentMonth] = useState(true)
 
     const [dayData, setDayData] = useState({})
     const [lockedDays, setLockedDays] = useState({})
@@ -197,7 +44,8 @@ export default function Form09FeedWaterRecords() {
     const [feedTarget, setFeedTarget] = useState('')
     const [startingInventory, setStartingInventory] = useState('')
     const [waterResidualMonthly, setWaterResidualMonthly] = useState('')
-    const [monthlyMortalityPercent, setMonthlyMortalityPercent] = useState('')
+    const [calculatedMortalityTotal, setCalculatedMortalityTotal] = useState(null)
+    const [monthlyEfoNotified, setMonthlyEfoNotified] = useState(false)
     const [comments, setComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
     const [monthlyLocked, setMonthlyLocked] = useState(false)
@@ -207,6 +55,12 @@ export default function Form09FeedWaterRecords() {
         parseInt(monthYear.substring(5, 7)),
         0
     ).getDate()
+
+    // Scroll to top on view/month changes
+    useEffect(() => {
+        const contentEl = document.querySelector('.app-content')
+        if (contentEl) contentEl.scrollTop = 0
+    }, [viewMode, viewingMonth])
 
     // Reset when barn or month changes
     useEffect(() => {
@@ -218,11 +72,63 @@ export default function Form09FeedWaterRecords() {
         setFeedTarget('')
         setStartingInventory('')
         setWaterResidualMonthly('')
-        setMonthlyMortalityPercent('')
+        setCalculatedMortalityTotal(null)
+        setMonthlyEfoNotified(false)
         setComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
+        setViewingMonth(monthYear)
+        setIsCurrentMonth(true)
     }, [selectedBarn?.id, monthYear])
+
+    // Fetch all audits for month navigation
+    useEffect(() => {
+        const fetchAudits = async () => {
+            if (!farm?.id) return
+            try {
+                const { data, error } = await supabase
+                    .from('monthly_audits')
+                    .select('*')
+                    .eq('farm_id', farm.id)
+                    .order('month_year', { ascending: false })
+                if (error) throw error
+                setAllAudits(data || [])
+            } catch (err) {
+                console.error('Error fetching audits:', err)
+            }
+        }
+        fetchAudits()
+    }, [farm?.id])
+
+    // Check if viewing current month
+    useEffect(() => {
+        setIsCurrentMonth(viewingMonth === monthYear)
+    }, [viewingMonth, monthYear])
+
+    // Navigate to previous month
+    const handlePreviousMonth = () => {
+        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+        if (currentIndex < allAudits.length - 1) {
+            setViewingMonth(allAudits[currentIndex + 1].month_year)
+        }
+    }
+
+    // Navigate to next month
+    const handleNextMonth = () => {
+        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+        if (currentIndex > 0) {
+            setViewingMonth(allAudits[currentIndex - 1].month_year)
+        }
+    }
+
+    const formatMonth = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00')
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    }
+
+    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
+    const canGoPrevious = currentIndex < allAudits.length - 1
+    const canGoNext = currentIndex > 0
 
     // Load monthly checks data from DB
     useEffect(() => {
@@ -244,7 +150,7 @@ export default function Form09FeedWaterRecords() {
                     setFeedTarget(meta.feed_target ?? '')
                     setStartingInventory(meta.starting_inventory?.toString() ?? '')
                     setWaterResidualMonthly(meta.water_residual_monthly ?? '')
-                    setMonthlyMortalityPercent(meta.monthly_mortality_percent?.toString() ?? '')
+                    setMonthlyEfoNotified(meta.monthly_efo_notified ?? false)
                     setComments(meta.comments ?? '')
                     setMonthlySaved(true)
                     setMonthlyLocked(true)
@@ -254,6 +160,27 @@ export default function Form09FeedWaterRecords() {
         load()
         return () => { cancelled = true }
     }, [selectedBarn?.id, monthYear])
+
+    // Auto-calculate monthly mortality total from all daily records
+    useEffect(() => {
+        if (!farm?.id || !selectedBarn?.id || viewMode !== 'monthly') return
+        let cancelled = false
+        const fetchSum = async () => {
+            try {
+                const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+                const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+                const { data } = await supabase
+                    .from('feed_water_health')
+                    .select('mortality_daily')
+                    .eq('fw_id', fwr.id)
+                if (cancelled) return
+                const total = (data || []).reduce((sum, r) => sum + (r.mortality_daily || 0), 0)
+                setCalculatedMortalityTotal(total)
+            } catch (e) { /* silent */ }
+        }
+        fetchSum()
+        return () => { cancelled = true }
+    }, [viewMode, selectedBarn?.id, monthYear])
 
     // Lazy-load selected day data from DB
     useEffect(() => {
@@ -267,10 +194,7 @@ export default function Form09FeedWaterRecords() {
                 const monthStr = monthYear.substring(0, 7)
                 const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
 
-                const { data: audit } = await supabase
-                    .from('monthly_audits').select('id')
-                    .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
-
+                const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
                 if (!audit || cancelled) {
                     if (!cancelled) {
                         setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
@@ -279,9 +203,7 @@ export default function Form09FeedWaterRecords() {
                     return
                 }
 
-                const { data: fwr } = await supabase
-                    .from('feed_water_records').select('id')
-                    .eq('barn_id', selectedBarn.id).eq('audit_id', audit.id).maybeSingle()
+                const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
 
                 if (!fwr || cancelled) {
                     if (!cancelled) {
@@ -321,8 +243,6 @@ export default function Form09FeedWaterRecords() {
                         notes: fwd.notes ?? '',
                         mortalityDaily: fwh?.mortality_daily?.toString() ?? '',
                         mortalityReason: fwh?.mortality_reason ?? '',
-                        pileupCount: fwh?.pileup_count?.toString() ?? '',
-                        efoNotified: fwh?.efo_notified ?? false,
                         hospitalPenMonitoring: fwh?.hospital_pen_monitoring ?? '',
                         inventory: fwh?.inventory?.toString() ?? '',
                     },
@@ -383,12 +303,9 @@ export default function Form09FeedWaterRecords() {
                 fw_id: fwId,
                 record_date: recDate,
                 mortality_daily: d.mortalityDaily ? parseInt(d.mortalityDaily) : 0,
-                pileup_count: d.pileupCount ? parseInt(d.pileupCount) : null,
-                efo_notified: d.efoNotified ?? false,
                 mortality_reason: d.mortalityReason || null,
                 hospital_pen_monitoring: d.hospitalPenMonitoring || null,
                 inventory: d.inventory ? parseInt(d.inventory) : null,
-                efo_notified: false,
             }], { onConflict: 'fw_id,record_date' })
             if (healthError) throw healthError
 
@@ -401,6 +318,10 @@ export default function Form09FeedWaterRecords() {
             setSaving(false)
         }
     }
+
+    const computedMortalityPct = (startingInventory && calculatedMortalityTotal !== null)
+        ? (calculatedMortalityTotal / parseInt(startingInventory)) * 100
+        : null
 
     const handleMonthlySubmit = async (e) => {
         e.preventDefault()
@@ -416,7 +337,8 @@ export default function Form09FeedWaterRecords() {
                     feed_target: feedTarget || null,
                     starting_inventory: startingInventory ? parseInt(startingInventory) : null,
                     water_residual_monthly: waterResidualMonthly || null,
-                    monthly_mortality_percent: monthlyMortalityPercent ? parseFloat(monthlyMortalityPercent) : null,
+                    monthly_mortality_percent: computedMortalityPct !== null ? parseFloat(computedMortalityPct.toFixed(2)) : null,
+                    monthly_efo_notified: monthlyEfoNotified,
                     comments: comments || null
                 }], { onConflict: 'fw_id' })
 
@@ -449,15 +371,73 @@ export default function Form09FeedWaterRecords() {
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
+            {/* MONTH NAVIGATION */}
+            {allAudits.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px',
+                    padding: '12px 16px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd'
+                }}>
+                    <button
+                        type="button"
+                        onClick={handlePreviousMonth}
+                        disabled={!canGoPrevious}
+                        style={{
+                            padding: '8px 12px',
+                            backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }}>
+                        ← Previous
+                    </button>
+
+                    <div style={{ textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+                            {formatMonth(viewingMonth)}
+                        </div>
+                        {!isCurrentMonth && (
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                                (View Only)
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleNextMonth}
+                        disabled={!canGoNext}
+                        style={{
+                            padding: '8px 12px',
+                            backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: canGoNext ? 'pointer' : 'not-allowed',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }}>
+                        Next →
+                    </button>
+                </div>
+            )}
+
             {/* FORM HEADER */}
             <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
                 <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
                     Form 09 – Feed &amp; Water Records
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
                     <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
                     <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
-                    <div><strong>Month/Year:</strong> {monthYear.substring(0, 7)}</div>
                 </div>
 
                 {/* VIEW TOGGLE */}
@@ -485,67 +465,18 @@ export default function Form09FeedWaterRecords() {
 
             {/* DAY VIEW */}
             {viewMode === 'day' && (
-                <div>
-                    {/* Scrollable day selector */}
-                    <DaySelector
-                        daysInMonth={daysInMonth}
-                        selectedDay={selectedDay}
-                        lockedDays={lockedDays}
-                        onSelect={setSelectedDay}
-                        loading={loadingDay}
-                    />
-
-                    {/* Locked banner */}
-                    {isLocked && (
-                        <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            backgroundColor: '#d4edda', borderRadius: '8px', padding: '12px 16px',
-                            marginBottom: '16px', border: '1px solid #28a745'
-                        }}>
-                            <span style={{ color: '#155724', fontWeight: '600', fontSize: '14px' }}>
-                                ✓ Already recorded for Day {selectedDay}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
-                                style={{
-                                    backgroundColor: '#0066cc', color: 'white', border: 'none',
-                                    borderRadius: '6px', padding: '7px 14px',
-                                    fontWeight: '700', fontSize: '13px', cursor: 'pointer'
-                                }}
-                            >
-                                Re-enter data
-                            </button>
-                        </div>
-                    )}
-
-                    <DayViewForm
-                        day={selectedDay}
-                        data={currentDayData}
-                        onDayChange={handleDayChange}
-                        locked={isLocked}
-                    />
-
-                    {!isLocked && (
-                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                style={{
-                                    padding: '12px 40px',
-                                    fontSize: '16px',
-                                    fontWeight: 'bold',
-                                    backgroundColor: saving ? '#aaa' : '#28a745',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: saving ? 'not-allowed' : 'pointer'
-                                }}>
-                                {saving ? 'Saving…' : `💾 Save Day ${selectedDay} Record`}
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <Form09DayView
+                    day={selectedDay}
+                    data={currentDayData}
+                    isLocked={isLocked}
+                    saving={saving}
+                    onDayChange={handleDayChange}
+                    onUnlock={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
+                    monthYear={monthYear}
+                    lockedDays={lockedDays}
+                    loadingDay={loadingDay}
+                    onSelectDay={setSelectedDay}
+                />
             )}
 
             {/* MONTHLY CHECKS TAB */}
@@ -556,42 +487,78 @@ export default function Form09FeedWaterRecords() {
                     </h3>
 
                     <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Starting Inventory</label>
-                        <input type="number" value={startingInventory}
-                            onChange={(e) => setStartingInventory(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Starting Inventory</label>
+                            <input type="number" value={startingInventory}
+                                onChange={(e) => setStartingInventory(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Feed Target</label>
-                        <input type="text" value={feedTarget}
-                            onChange={(e) => setFeedTarget(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Feed Target</label>
+                            <input type="text" value={feedTarget}
+                                onChange={(e) => setFeedTarget(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
-                        <input type="number" step="0.01" value={monthlyMortalityPercent}
-                            onChange={(e) => setMonthlyMortalityPercent(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                        <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>If greater than 0.5%, notify EFO</p>
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Monthly Mortality %</label>
+                            <div style={{
+                                padding: '10px 12px',
+                                background: '#f5f5f5',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                color: computedMortalityPct !== null && computedMortalityPct > 0.5 ? '#cc0000' : '#333'
+                            }}>
+                                {computedMortalityPct !== null
+                                    ? `${computedMortalityPct.toFixed(2)}%`
+                                    : startingInventory
+                                        ? '0.00%'
+                                        : 'Enter starting inventory to calculate'}
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>
+                                Auto-calculated from daily mortality ÷ starting inventory
+                            </p>
+                            {computedMortalityPct !== null && computedMortalityPct > 0.5 && (
+                                <div style={{
+                                    marginTop: '10px',
+                                    padding: '12px',
+                                    backgroundColor: '#fff3cd',
+                                    border: '1px solid #ffc107',
+                                    borderRadius: '4px'
+                                }}>
+                                    <p style={{ margin: '0 0 8px', fontWeight: 'bold', color: '#856404' }}>
+                                        ⚠️ Monthly mortality exceeds 0.5% — EFO notification required
+                                    </p>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: monthlyLocked ? 'default' : 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={monthlyEfoNotified}
+                                            onChange={(e) => setMonthlyEfoNotified(e.target.checked)}
+                                            disabled={monthlyLocked}
+                                        />
+                                        EFO Notified
+                                    </label>
+                                </div>
+                            )}
+                        </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Water Residual (Monthly)</label>
-                        <input type="text" value={waterResidualMonthly}
-                            onChange={(e) => setWaterResidualMonthly(e.target.value)}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Water Residual (Monthly)</label>
+                            <input type="text" value={waterResidualMonthly}
+                                onChange={(e) => setWaterResidualMonthly(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
 
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Comments</label>
-                        <textarea value={comments}
-                            onChange={(e) => setComments(e.target.value)}
-                            rows={4}
-                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
-                    </div>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Comments</label>
+                            <textarea value={comments}
+                                onChange={(e) => setComments(e.target.value)}
+                                rows={4}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'inherit', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                        </div>
                     </fieldset>
 
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>

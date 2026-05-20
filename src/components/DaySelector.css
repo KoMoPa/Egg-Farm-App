@@ -1,0 +1,89 @@
+/* DaySelector — react-calendar overrides for iOS-style look */
+
+.day-selector-calendar {
+    width: 280px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .day-selector-calendar {
+        width: 420px;
+    }
+
+    .day-selector-calendar .react-calendar__tile {
+        padding: 0;
+        height: 52px;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .day-selector-calendar .react-calendar__month-view__weekdays__weekday {
+        font-size: 13px;
+    }
+}
+
+.day-selector-calendar .react-calendar__tile {
+    color: #333;
+    border-radius: 50%;
+    padding: 6px 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.day-selector-calendar .react-calendar__tile--active,
+.day-selector-calendar .react-calendar__tile--active:enabled:hover,
+.day-selector-calendar .react-calendar__tile--active:enabled:focus {
+    background: #0066cc;
+    color: white;
+    border-radius: 50%;
+}
+
+.day-selector-calendar .react-calendar__tile:enabled:hover,
+.day-selector-calendar .react-calendar__tile:enabled:focus {
+    background: #e6f0ff;
+    border-radius: 50%;
+}
+
+.day-selector-calendar .react-calendar__month-view__weekdays__weekday {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.day-selector-calendar .react-calendar__month-view__weekdays__weekday abbr {
+    text-decoration: none;
+}
+
+.day-selector-calendar .react-calendar__month-view__days__day--weekend {
+    color: #333;
+}
+
+/* Locked days (already filled out) - still clickable, but visually distinct */
+.day-selector-calendar .day-selector-locked {
+    background-color: #e8f5e9 !important;
+    color: #333;
+    border-radius: 50%;
+}
+
+.day-selector-calendar .day-selector-locked:hover,
+.day-selector-calendar .day-selector-locked:enabled:hover,
+.day-selector-calendar .day-selector-locked:focus {
+    background-color: #c8e6c9 !important;
+    border-radius: 50%;
+}
+
+/* Green dot under saved days */
+.day-selector-saved-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #28a745;
+    margin: 1px auto 0;
+}

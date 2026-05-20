@@ -6,7 +6,7 @@ import { ProductionReportPDF } from './ProductionReportPDF'
 import { FeedWaterReportPDF } from './FeedWaterReportPDF'
 import { PestControlReportPDF } from './PestControlReportPDF'
 
-function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) {
+function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onClose }) {
     const supabase = useSupabase()
     const [form07Data, setForm07Data] = useState([])
     const [form08Data, setForm08Data] = useState([])
@@ -27,6 +27,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: prodRecord } = await supabase
                     .from('production_cooler_records')
                     .select('*')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -58,7 +59,8 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 // Step 1: get welfare_records entry (join barns to get barn_number)
                 const { data: welfareRecord } = await supabase
                     .from('welfare_records')
-                    .select('id, monthly_comments, barns(barn_number)')
+                    .select('id, monthly_comments, barns(barn_name)')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -99,6 +101,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: fwRecord } = await supabase
                     .from('feed_water_records')
                     .select('*')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -118,6 +121,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 const { data: pestRecord } = await supabase
                     .from('pest_control_records')
                     .select('*')
+                    .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
 
@@ -136,7 +140,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 setForm08Comments(weeklyInspections)
                 setForm08MonthlyInspections(monthlyInspections)
                 setForm08AmmoniaData(ammoniaTests)
-                setBarnNumber(welfareRecord?.barns?.barn_number ?? '')
+                setBarnNumber(welfareRecord?.barns?.barn_name ?? '')
                 setForm09Data({ fwRecord, daily: fw09Daily, health: fw09Health, metadata: fw09Meta })
                 setForm10Data({ pestRecord, daily: pest10Daily, audit: pest10Audit })
             } catch (err) {
@@ -147,7 +151,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
         }
 
         fetchData()
-    }, [auditId])
+    }, [auditId, barnId])
 
     const formatMonth = (dateStr) => {
         const date = new Date(dateStr + 'T00:00:00')
@@ -156,37 +160,40 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
 
     if (loading) return <p style={{ textAlign: 'center', padding: '40px' }}>Loading audit data...</p>
 
-    const handleDownloadPDF = async () => {
-        try {
-            let doc
-            let filename
-
-            if (selectedForm === 'form07') {
-                doc = <ProductionReportPDF
+    const buildPDFDoc = () => {
+        if (selectedForm === 'form07') {
+            return {
+                doc: <ProductionReportPDF
                     farmName={farmName}
                     barnNumber={barnNumber}
                     monthYear={monthYear}
                     form07Data={form07Data}
-                />
-                filename = `Form07_${farmName}_${monthYear}.pdf`
-            } else if (selectedForm === 'form09') {
-                doc = <FeedWaterReportPDF
+                />,
+                filename: `Form07_${farmName}_${monthYear}.pdf`
+            }
+        } else if (selectedForm === 'form09') {
+            return {
+                doc: <FeedWaterReportPDF
                     farmName={farmName}
                     barnNumber={barnNumber}
                     monthYear={monthYear}
                     form09Data={form09Data}
-                />
-                filename = `Form09_${farmName}_${monthYear}.pdf`
-            } else if (selectedForm === 'form10') {
-                doc = <PestControlReportPDF
+                />,
+                filename: `Form09_${farmName}_${monthYear}.pdf`
+            }
+        } else if (selectedForm === 'form10') {
+            return {
+                doc: <PestControlReportPDF
                     farmName={farmName}
                     barnNumber={barnNumber}
                     monthYear={monthYear}
                     form10Data={form10Data}
-                />
-                filename = `Form10_${farmName}_${monthYear}.pdf`
-            } else {
-                doc = <AuditReportPDF
+                />,
+                filename: `Form10_${farmName}_${monthYear}.pdf`
+            }
+        } else {
+            return {
+                doc: <AuditReportPDF
                     farmName={farmName}
                     barnNumber={barnNumber}
                     monthYear={monthYear}
@@ -194,10 +201,15 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                     form08Comments={form08Comments}
                     form08MonthlyInspections={form08MonthlyInspections}
                     form08AmmoniaData={form08AmmoniaData}
-                />
-                filename = `Form08_${farmName}_${monthYear}.pdf`
+                />,
+                filename: `Form08_${farmName}_${monthYear}.pdf`
             }
+        }
+    }
 
+    const handleDownloadPDF = async () => {
+        try {
+            const { doc, filename } = buildPDFDoc()
             const asPdf = pdf(doc)
             asPdf.toBlob().then((blob) => {
                 const url = URL.createObjectURL(blob)
@@ -213,6 +225,40 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
         } catch (error) {
             console.error('Error generating PDF:', error)
             alert('Error generating PDF: ' + error.message)
+        }
+    }
+
+    const handlePrintPDF = async () => {
+        try {
+            const { doc } = buildPDFDoc()
+            const blob = await pdf(doc).toBlob()
+            const url = URL.createObjectURL(blob)
+
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+            if (isMobile) {
+                // On mobile, open in a new tab — the device's native PDF viewer
+                // provides a print/share option (works on iOS and Android)
+                window.open(url, '_blank')
+            } else {
+                // On desktop, inject a hidden iframe and trigger the print dialog
+                const iframe = document.createElement('iframe')
+                iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;'
+                iframe.src = url
+                document.body.appendChild(iframe)
+                iframe.addEventListener('load', () => {
+                    iframe.contentWindow.focus()
+                    iframe.contentWindow.print()
+                    // Clean up after the print dialog is done
+                    setTimeout(() => {
+                        document.body.removeChild(iframe)
+                        URL.revokeObjectURL(url)
+                    }, 60000)
+                })
+            }
+        } catch (error) {
+            console.error('Error printing PDF:', error)
+            alert('Error generating PDF for print: ' + error.message)
         }
     }
 
@@ -775,7 +821,7 @@ function MonthlyAuditSummary({ farmId, farmName, auditId, monthYear, onClose }) 
                 }}>
                     📥 Download as PDF
                 </button>
-                <button onClick={() => window.print()} style={{
+                <button onClick={handlePrintPDF} style={{
                     padding: '10px 30px',
                     fontSize: '14px',
                     fontWeight: 'bold',
