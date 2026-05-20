@@ -44,7 +44,7 @@ const INSPECTION_CRITERIA_FIELDS = [
 
 
 export default function Form08WelfareRecords() {
-  const { farm, selectedBarn, monthYear } = useFarmContext()
+  const { farm, selectedBarn, monthYear, setMonthYear } = useFarmContext()
   const farmId = farm?.id
   const farmName = farm?.farm_name
   const barnId = selectedBarn?.id
@@ -189,7 +189,9 @@ export default function Form08WelfareRecords() {
   const handlePreviousMonth = () => {
     const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
     if (currentIndex < allAudits.length - 1) {
-      setViewingMonth(allAudits[currentIndex + 1].month_year)
+      const newMonth = allAudits[currentIndex + 1].month_year
+      setViewingMonth(newMonth)
+      setMonthYear(newMonth)
     }
   }
 
@@ -197,7 +199,9 @@ export default function Form08WelfareRecords() {
   const handleNextMonth = () => {
     const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
     if (currentIndex > 0) {
-      setViewingMonth(allAudits[currentIndex - 1].month_year)
+      const newMonth = allAudits[currentIndex - 1].month_year
+      setViewingMonth(newMonth)
+      setMonthYear(newMonth)
     }
   }
 
