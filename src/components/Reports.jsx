@@ -83,12 +83,12 @@ function Reports() {
     const getDaysRemaining = (completed, monthYear) => {
         if (completed) return null
 
-        const auditMonth = new Date(monthYear)
+        const auditMonth = new Date(monthYear + '-01T00:00:00')
         const daysInMonth = new Date(auditMonth.getFullYear(), auditMonth.getMonth() + 1, 0).getDate()
         const today = new Date()
 
         // If audit is a past month, show 0 days remaining
-        if (new Date(monthYear).getMonth() < today.getMonth()) {
+        if (new Date(monthYear + '-01T00:00:00').getMonth() < today.getMonth()) {
             return 0
         }
 
