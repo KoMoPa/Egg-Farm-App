@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
-    const { signUp, signIn } = useAuth()
+    const { signUp, signIn, resetPassword } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isSignUp, setIsSignUp] = useState(false)
@@ -40,10 +40,7 @@ export default function Login() {
         setLoading(true)
 
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password`,
-            })
-            if (error) throw error
+            await resetPassword(email)
             setMessage('✅ Password reset email sent! Check your inbox.')
             setEmail('')
         } catch (err) {
