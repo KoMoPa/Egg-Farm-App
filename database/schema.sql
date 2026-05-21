@@ -175,15 +175,10 @@ CREATE TABLE welfare_daily_checks (
   PRIMARY KEY (welfare_id, record_date)
 );
 
--- Weekly routine inspection checklist (initial or check each of the 15 criteria)
--- Also used to record monthly alarm/generator tests
+-- Weekly routine inspection checklist (check each of the 15 criteria per day)
 CREATE TABLE welfare_weekly_inspections (
   welfare_id UUID NOT NULL REFERENCES welfare_records(id) ON DELETE CASCADE,
   inspection_date DATE NOT NULL,
-  alarm_check_date DATE,
-  alarm_check_initials VARCHAR(20),
-  generator_check_date DATE,
-  generator_check_initials VARCHAR(20),
   check_overall_appearance BOOLEAN,
   check_general_sound BOOLEAN,
   check_abnormal_behavior BOOLEAN,
@@ -206,19 +201,21 @@ CREATE TABLE welfare_weekly_inspections (
   PRIMARY KEY (welfare_id, inspection_date)
 );
 
--- Monthly ammonia tests (required October to March; no exemptions by housing type)
--- Range is circled on form: 0-5, 5-10, 10-15, 15-20, 20+
--- Test at bird height, average of at least 3 locations (front, middle, back)
-CREATE TABLE welfare_ammonia_tests (
+-- Monthly checks: ammonia test (Oct-March), alarm check, generator check
+-- One record per welfare_record (i.e. per barn per month)
+CREATE TABLE welfare_monthly_checks (
   welfare_id UUID NOT NULL REFERENCES welfare_records(id) ON DELETE CASCADE,
-  test_date DATE NOT NULL,
-  ppm_range VARCHAR(5) CHECK (ppm_range IN ('0-5', '5-10', '10-15', '15-20', '20+')),
-  distilled_water_used BOOLEAN,
-  initials VARCHAR(20),
-  notes VARCHAR(500),
+  ammonia_ppm_range VARCHAR(5) CHECK (ammonia_ppm_range IN ('0-5', '5-10', '10-15', '15-20', '20+')),
+  ammonia_distilled_water BOOLEAN,
+  ammonia_initials VARCHAR(20),
+  ammonia_notes VARCHAR(500),
+  alarm_check_date DATE,
+  alarm_check_initials VARCHAR(20),
+  generator_check_date DATE,
+  generator_check_initials VARCHAR(20),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (welfare_id, test_date)
+  PRIMARY KEY (welfare_id)
 );
 
 -- =============================================
@@ -385,7 +382,7 @@ ALTER TABLE pest_control_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pest_daily_observations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pest_monthly_audit ENABLE ROW LEVEL SECURITY;
 ALTER TABLE production_thermometer_calibration ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_ammonia_tests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_monthly_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE corrective_action_log ENABLE ROW LEVEL SECURITY;
 
 -- Farms: Users can only access their own farms
@@ -506,8 +503,8 @@ CREATE POLICY "Users can only access their barn records" ON production_thermomet
     production_id IN (SELECT id FROM production_cooler_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
   );
 
--- Ammonia tests
-CREATE POLICY "Users can only access their barn records" ON welfare_ammonia_tests
+-- Monthly checks (ammonia, alarm, generator)
+CREATE POLICY "Users can only access their barn records" ON welfare_monthly_checks
   FOR ALL USING (
     welfare_id IN (SELECT id FROM welfare_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
   );

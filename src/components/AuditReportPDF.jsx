@@ -119,9 +119,10 @@ export const AuditReportPDF = ({
     const weeklyMap = buildDayMap(form08Comments, 'inspection_date')
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
-    const alarmRec = form08Comments?.find(r => r.alarm_check_date)
-    const generatorRec = form08Comments?.find(r => r.generator_check_date)
-    const ammoniaRec = form08AmmoniaData?.[0]
+    const monthlyRec = form08AmmoniaData?.[0]
+    const alarmRec = monthlyRec?.alarm_check_date || monthlyRec?.alarm_check_initials ? monthlyRec : null
+    const generatorRec = monthlyRec?.generator_check_date || monthlyRec?.generator_check_initials ? monthlyRec : null
+    const ammoniaRec = monthlyRec?.ammonia_ppm_range ? monthlyRec : null
     const formattedMonth = formatMonth(monthYear)
 
     return (
@@ -188,9 +189,9 @@ export const AuditReportPDF = ({
                         <Text style={styles.bottomLabel}>Ammonia Test (Oct\u2013March only)</Text>
                         {ammoniaRec ? (
                             <>
-                                <Text style={styles.bottomValue}>Range recorded: {ammoniaRec.ppm_range || '\u2014'}</Text>
+                                <Text style={styles.bottomValue}>Range recorded: {ammoniaRec.ammonia_ppm_range || '\u2014'}</Text>
                                 <Text style={styles.bottomValue}>
-                                    Distilled water: {ammoniaRec.distilled_water_used ? 'Yes' : 'No'}{'\u2003'}Initials: {ammoniaRec.initials || '\u2014'}
+                                    Distilled water: {ammoniaRec.ammonia_distilled_water ? 'Yes' : 'No'}{'\u2003'}Initials: {ammoniaRec.ammonia_initials || '\u2014'}
                                 </Text>
                             </>
                         ) : (
