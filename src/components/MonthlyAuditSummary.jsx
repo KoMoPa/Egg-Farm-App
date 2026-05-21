@@ -84,17 +84,17 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                         .eq('welfare_id', welfareRecord.id)
                         .order('inspection_date')
 
-                    // Step 4: fetch ammonia tests
+                    // Step 4: fetch monthly checks (ammonia + alarm + generator)
                     const { data: ammonia } = await supabase
-                        .from('welfare_ammonia_tests')
+                        .from('welfare_monthly_checks')
                         .select('*')
                         .eq('welfare_id', welfareRecord.id)
-                        .order('test_date')
+                        .maybeSingle()
 
                     welfare = dailyChecks || []
                     weeklyInspections = weekly || []
                     monthlyInspections = welfareRecord
-                    ammoniaTests = ammonia || []
+                    ammoniaTests = ammonia ? [ammonia] : []
                 }
 
                 // Form 09 - Feed & Water
@@ -587,9 +587,10 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
 
                     {/* Monthly Checks Summary */}
                     {(() => {
-                        const alarmRec = form08Comments?.find(r => r.alarm_check_date || r.alarm_check_initials)
-                        const generatorRec = form08Comments?.find(r => r.generator_check_date || r.generator_check_initials)
-                        const ammoniaRec = form08AmmoniaData?.[0]
+                        const monthlyRec = form08AmmoniaData?.[0]
+                        const alarmRec = monthlyRec?.alarm_check_date || monthlyRec?.alarm_check_initials ? monthlyRec : null
+                        const generatorRec = monthlyRec?.generator_check_date || monthlyRec?.generator_check_initials ? monthlyRec : null
+                        const ammoniaRec = monthlyRec?.ammonia_ppm_range ? monthlyRec : null
                         const hasAny = alarmRec || generatorRec || ammoniaRec || form08MonthlyInspections?.monthly_comments?.trim()
                         if (!hasAny) return null
                         return (
@@ -601,7 +602,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                                     <div style={{ padding: '10px 12px', borderRight: '1px solid #ccc' }}>
                                         <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 'bold' }}>Ammonia Test</p>
                                         {ammoniaRec ? (
-                                            <p style={{ margin: 0, fontSize: '11px' }}>{ammoniaRec.ppm_range} ppm</p>
+                                            <p style={{ margin: 0, fontSize: '11px' }}>{ammoniaRec.ammonia_ppm_range} ppm</p>
                                         ) : (
                                             <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>Not recorded</p>
                                         )}

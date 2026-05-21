@@ -227,35 +227,23 @@ export default function Form08WelfareRecords() {
         if (cancelled) return
 
         const welfareId = welfareRecord.id
-        const monthFirstDate = monthYear.substring(0, 7) + '-01'
 
-        // Load ammonia test
-        const { data: ammoniaTest } = await supabase
-          .from('welfare_ammonia_tests')
-          .select('ppm_range, distilled_water_used, initials, notes')
+        // Load all monthly checks (ammonia, alarm, generator) in one query
+        const { data: monthlyChecks } = await supabase
+          .from('welfare_monthly_checks')
+          .select('ammonia_ppm_range, ammonia_distilled_water, ammonia_initials, ammonia_notes, alarm_check_date, alarm_check_initials, generator_check_date, generator_check_initials')
           .eq('welfare_id', welfareId)
-          .eq('test_date', monthFirstDate)
-          .maybeSingle()
-        if (!cancelled && ammoniaTest) {
-          if (ammoniaTest.ppm_range) setAmmoniaRange(ammoniaTest.ppm_range)
-          if (ammoniaTest.distilled_water_used != null) setAmmoniaDistilledWater(ammoniaTest.distilled_water_used)
-          if (ammoniaTest.initials) setAmmoniaInitials(ammoniaTest.initials)
-          if (ammoniaTest.notes) setAmmoniaNotes(ammoniaTest.notes)
-        }
-
-        // Load alarm/generator checks
-        const { data: inspection } = await supabase
-          .from('welfare_weekly_inspections')
-          .select('alarm_check_date, alarm_check_initials, generator_check_date, generator_check_initials')
-          .eq('welfare_id', welfareId)
-          .eq('inspection_date', monthFirstDate)
           .maybeSingle()
 
-        if (!cancelled && inspection) {
-          if (inspection.alarm_check_date) setAlarmCheckDate(inspection.alarm_check_date)
-          if (inspection.alarm_check_initials) setAlarmCheckInitials(inspection.alarm_check_initials)
-          if (inspection.generator_check_date) setGeneratorCheckDate(inspection.generator_check_date)
-          if (inspection.generator_check_initials) setGeneratorCheckInitials(inspection.generator_check_initials)
+        if (!cancelled && monthlyChecks) {
+          if (monthlyChecks.ammonia_ppm_range) setAmmoniaRange(monthlyChecks.ammonia_ppm_range)
+          if (monthlyChecks.ammonia_distilled_water != null) setAmmoniaDistilledWater(monthlyChecks.ammonia_distilled_water)
+          if (monthlyChecks.ammonia_initials) setAmmoniaInitials(monthlyChecks.ammonia_initials)
+          if (monthlyChecks.ammonia_notes) setAmmoniaNotes(monthlyChecks.ammonia_notes)
+          if (monthlyChecks.alarm_check_date) setAlarmCheckDate(monthlyChecks.alarm_check_date)
+          if (monthlyChecks.alarm_check_initials) setAlarmCheckInitials(monthlyChecks.alarm_check_initials)
+          if (monthlyChecks.generator_check_date) setGeneratorCheckDate(monthlyChecks.generator_check_date)
+          if (monthlyChecks.generator_check_initials) setGeneratorCheckInitials(monthlyChecks.generator_check_initials)
         }
 
         // Load monthly comments
@@ -269,7 +257,7 @@ export default function Form08WelfareRecords() {
 
         // Check if any data exists to determine lock status
         if (!cancelled) {
-          const hasData = ammoniaTest || inspection || record?.monthly_comments
+          const hasData = monthlyChecks || record?.monthly_comments
           setMonthlyLocked(!!hasData)
         }
       } catch (err) {
@@ -468,7 +456,6 @@ export default function Form08WelfareRecords() {
       const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
       const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
       const welfareId = welfareRecord.id
-      const monthFirstDate = monthYear.substring(0, 7) + '-01'
 
       // Update monthly comments
       const { error: commentError } = await supabase
@@ -477,43 +464,21 @@ export default function Form08WelfareRecords() {
         .eq('id', welfareId)
       if (commentError) throw commentError
 
-      // Save ammonia test
-      if (ammoniaRange) {
-        const { error: ammoniaError } = await supabase
-          .from('welfare_ammonia_tests')
-          .upsert([{
-            welfare_id: welfareId,
-            test_date: monthFirstDate,
-            ppm_range: ammoniaRange,
-            distilled_water_used: ammoniaDistilledWater,
-            initials: ammoniaInitials || null,
-            notes: ammoniaNotes || null,
-          }], { onConflict: 'welfare_id,test_date' })
-        if (ammoniaError) throw ammoniaError
-      }
-
-      // Save alarm/generator checks
-      if (alarmCheckDate || alarmCheckInitials || generatorCheckDate || generatorCheckInitials) {
-        const alarmGenFields = {
+      // Save all monthly checks (ammonia, alarm, generator) in one upsert
+      const { error: monthlyChecksError } = await supabase
+        .from('welfare_monthly_checks')
+        .upsert([{
+          welfare_id: welfareId,
+          ammonia_ppm_range: ammoniaRange || null,
+          ammonia_distilled_water: ammoniaDistilledWater,
+          ammonia_initials: ammoniaInitials || null,
+          ammonia_notes: ammoniaNotes || null,
           alarm_check_date: alarmCheckDate || null,
           alarm_check_initials: alarmCheckInitials || null,
           generator_check_date: generatorCheckDate || null,
           generator_check_initials: generatorCheckInitials || null,
-        }
-        const { data: existingInspection } = await supabase
-          .from('welfare_weekly_inspections').select('welfare_id')
-          .eq('welfare_id', welfareId).eq('inspection_date', monthFirstDate).maybeSingle()
-
-        if (existingInspection) {
-          const { error } = await supabase.from('welfare_weekly_inspections')
-            .update(alarmGenFields).eq('welfare_id', welfareId).eq('inspection_date', monthFirstDate)
-          if (error) throw error
-        } else {
-          const { error } = await supabase.from('welfare_weekly_inspections')
-            .insert([{ welfare_id: welfareId, inspection_date: monthFirstDate, ...alarmGenFields }])
-          if (error) throw error
-        }
-      }
+        }], { onConflict: 'welfare_id' })
+      if (monthlyChecksError) throw monthlyChecksError
 
       setMonthlySaved(true)
       setMonthlyLocked(true)
