@@ -4,6 +4,8 @@ import { getOrCreateUserFarm, getFarmBarns } from '../utils/farmBarnOps'
 
 export const FarmContext = createContext()
 
+const cacheKey = userId => `farm_cache_${userId}`
+
 export function FarmProvider({ children, user }) {
   const supabase = useSupabase()
   const [farm, setFarm] = useState(null)
@@ -19,11 +21,7 @@ export function FarmProvider({ children, user }) {
   // Initialize user's farm on user change
   useEffect(() => {
     if (user?.id) {
-      // Add small delay to ensure session is fully established
-      const timer = setTimeout(() => {
-        initializeFarm()
-      }, 500)
-      return () => clearTimeout(timer)
+      initializeFarm()
     } else {
       setFarm(null)
       setBarns([])
@@ -32,18 +30,27 @@ export function FarmProvider({ children, user }) {
     }
   }, [user?.id])
 
-  // Load barns when farm changes
-  useEffect(() => {
-    if (farm?.id) {
-      loadBarns()
-    }
-  }, [farm?.id])
+  // Load barns when farm changes — removed: initializeFarm now handles both in one pass
 
   const initializeFarm = async () => {
+    // Paint from cache instantly — no spinner if we have recent data
     try {
-      setLoading(true)
+      const cached = JSON.parse(localStorage.getItem(cacheKey(user.id)))
+      if (cached?.farm && Array.isArray(cached.barns)) {
+        setFarm(cached.farm)
+        setBarns(cached.barns)
+        setLoading(false)
+      }
+    } catch {}
+
+    // Fetch fresh farm + barns in one async chain, update cache
+    try {
+      setLoading(prev => prev) // keep loading true only if cache was empty
       const { farm: userFarm } = await getOrCreateUserFarm(user.id, 'My Farm', user.email)
+      const farmBarns = await getFarmBarns(userFarm.id)
       setFarm(userFarm)
+      setBarns(farmBarns)
+      localStorage.setItem(cacheKey(user.id), JSON.stringify({ farm: userFarm, barns: farmBarns }))
       setError(null)
     } catch (err) {
       setError('Error loading farm: ' + err.message)
@@ -58,6 +65,11 @@ export function FarmProvider({ children, user }) {
     try {
       const farmBarns = await getFarmBarns(farm.id)
       setBarns(farmBarns)
+      // Keep cache in sync
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey(user.id)) || '{}')
+        localStorage.setItem(cacheKey(user.id), JSON.stringify({ ...cached, barns: farmBarns }))
+      } catch {}
       setError(null)
     } catch (err) {
       setError('Error loading barns: ' + err.message)

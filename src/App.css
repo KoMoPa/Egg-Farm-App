@@ -833,6 +833,106 @@ html, body, #root {
   color: #0066cc;
 }
 
+/* Goal reference line in SVG */
+.line-chart-goal-line {
+  stroke: #e07b1a;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+  opacity: 0.85;
+}
+
+.line-chart-goal-text {
+  fill: #e07b1a;
+  font-size: 9px;
+  text-anchor: end;
+  dominant-baseline: auto;
+  font-weight: 600;
+}
+
+/* Goal mini stat */
+.chart-mini-stat--goal {
+  border-left: 2px solid #e07b1a;
+}
+
+.chart-mini-val--goal {
+  color: #e07b1a;
+}
+
+/* ── Chart goal editor ── */
+.chart-goal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.chart-goal-label {
+  font-size: 12px;
+  color: #555;
+  flex: 1;
+}
+
+.chart-goal-label--empty {
+  color: #bbb;
+}
+
+.chart-goal-editor {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.chart-goal-input {
+  width: 72px;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+.chart-goal-input:focus {
+  border-color: #0066cc;
+}
+
+.chart-goal-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.chart-goal-btn--edit {
+  background: transparent;
+  color: #0066cc;
+  padding: 0;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chart-goal-btn--save {
+  background: #0066cc;
+  color: white;
+}
+
+.chart-goal-btn--clear {
+  background: #e9ecef;
+  color: #555;
+}
+
+.chart-goal-btn--cancel {
+  background: transparent;
+  color: #888;
+}
+
 .line-chart-empty {
   color: #999;
   font-size: 13px;
