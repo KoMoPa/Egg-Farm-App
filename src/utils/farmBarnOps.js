@@ -5,31 +5,39 @@ import { supabase } from '../supabaseClient'
  * Since the schema has a 1:1 relationship (user_id -> farm), 
  * we create one if it doesn't exist
  */
-export async function getOrCreateUserFarm(userId, farmName = 'My Farm') {
+export async function getOrCreateUserFarm(userId, farmName = 'My Farm', ownerEmail = '') {
   try {
     // Try to get existing farm
     const { data: existingFarm, error: fetchError } = await supabase
       .from('farms')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
 
     if (existingFarm) {
+      // Backfill owner_email if it's missing
+      if (ownerEmail && !existingFarm.owner_email) {
+        const { data: updatedFarm, error: updateError } = await supabase
+          .from('farms')
+          .update({ owner_email: ownerEmail })
+          .eq('id', existingFarm.id)
+          .select()
+          .single()
+        if (!updateError) return { farm: updatedFarm, created: false }
+      }
       return { farm: existingFarm, created: false }
     }
 
     // Farm doesn't exist, create it
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      // PGRST116 = not found, which is expected
-      throw fetchError
-    }
 
     const { data: newFarm, error: createError } = await supabase
       .from('farms')
       .insert([{
         user_id: userId,
         farm_name: farmName,
-        owner_email: ''
+        owner_email: ownerEmail
       }])
       .select()
       .single()

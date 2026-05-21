@@ -42,7 +42,7 @@ export function FarmProvider({ children, user }) {
   const initializeFarm = async () => {
     try {
       setLoading(true)
-      const { farm: userFarm } = await getOrCreateUserFarm(user.id)
+      const { farm: userFarm } = await getOrCreateUserFarm(user.id, 'My Farm', user.email)
       setFarm(userFarm)
       setError(null)
     } catch (err) {

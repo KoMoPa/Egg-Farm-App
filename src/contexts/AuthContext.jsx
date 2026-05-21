@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useSupabase } from './SupabaseContext'
+import { getOrCreateUserFarm } from '../utils/farmBarnOps'
 
 const AuthContext = createContext()
 
@@ -42,6 +43,11 @@ export function AuthProvider({ children }) {
                 password
             })
             if (error) throw error
+            // If the user is immediately authenticated (email confirmation disabled),
+            // create their farm now so FarmContext can simply fetch it.
+            if (data.user && data.session) {
+                await getOrCreateUserFarm(data.user.id, 'My Farm', email)
+            }
             return data
         } catch (err) {
             setError(err.message)
