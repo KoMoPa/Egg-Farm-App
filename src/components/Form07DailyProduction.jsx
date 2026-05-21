@@ -27,6 +27,16 @@ const BLANK_FORM = {
 
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
 
+// Calculate flock age in weeks for a given record date based on barn flock arrival data
+function calcFlockAge(barn, recordDate) {
+    if (!barn?.flock_arrival_date || barn?.flock_age_at_arrival_weeks == null) return ''
+    const arrival = new Date(barn.flock_arrival_date + 'T00:00:00')
+    const record = new Date(recordDate + 'T00:00:00')
+    const weeks = Math.floor((record - arrival) / (7 * 24 * 60 * 60 * 1000))
+    if (weeks < 0) return ''
+    return String(barn.flock_age_at_arrival_weeks + weeks)
+}
+
 export default function Form07DailyProduction() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear } = useFarmContext()
@@ -238,7 +248,8 @@ export default function Form07DailyProduction() {
 
                 if (!hasAnyData || cancelled) {
                     if (!cancelled) {
-                        setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_FORM } }))
+                        const autoAge = calcFlockAge(selectedBarn, recDate)
+                        setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_FORM, age: autoAge } }))
                         setLockedDays(p => ({ ...p, [selectedDay]: false }))
                     }
                     return
@@ -248,7 +259,7 @@ export default function Form07DailyProduction() {
                 setDayData(p => ({
                     ...p,
                     [selectedDay]: {
-                        age: flockAge?.flock_age_weeks?.toString() ?? '',
+                        age: flockAge?.flock_age_weeks?.toString() ?? calcFlockAge(selectedBarn, recDate),
                         floorEggs1: floorEggs?.collection_1?.toString() ?? '',
                         floorEggs2: floorEggs?.collection_2?.toString() ?? '',
                         eggProduction1: eggOutput?.egg_production_1?.toString() ?? '',

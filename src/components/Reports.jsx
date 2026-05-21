@@ -83,12 +83,20 @@ function Reports() {
     const getDaysRemaining = (completed, monthYear) => {
         if (completed) return null
 
-        const auditMonth = new Date(monthYear)
-        const daysInMonth = new Date(auditMonth.getFullYear(), auditMonth.getMonth() + 1, 0).getDate()
-        const today = new Date()
+        // Parse year/month directly from the "YYYY-MM-DD" string to avoid UTC
+        // timezone shifting (new Date("YYYY-MM-DD") is parsed as UTC midnight,
+        // so .getMonth() returns the previous month for Ontario -4 UTC farmers)
+        const parts = monthYear.split('-')
+        const auditYear = parseInt(parts[0], 10)
+        const auditMonth = parseInt(parts[1], 10) - 1  // 0-indexed
 
-        // If audit is a past month, show 0 days remaining
-        if (new Date(monthYear).getMonth() < today.getMonth()) {
+        const daysInMonth = new Date(auditYear, auditMonth + 1, 0).getDate()
+        const today = new Date()
+        const todayYear = today.getFullYear()
+        const todayMonth = today.getMonth()
+
+        // If audit is a past year or past month, show 0 days remaining
+        if (auditYear < todayYear || (auditYear === todayYear && auditMonth < todayMonth)) {
             return 0
         }
 
