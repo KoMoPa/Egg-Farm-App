@@ -72,6 +72,11 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
+                    <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Type</label>
+                    <input type="text" maxLength={20} value={data.beddingType}
+                        onChange={(e) => onDayChange(day, 'beddingType', e.target.value)}
+                        disabled={locked}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>}
                 {hasChemicals && <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
@@ -82,6 +87,11 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
+                    <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Type</label>
+                    <input type="text" maxLength={20} value={data.chemicalsType}
+                        onChange={(e) => onDayChange(day, 'chemicalsType', e.target.value)}
+                        disabled={locked}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>}
             </div>
 

@@ -62,7 +62,6 @@ export default function Form07DayView({
                     onChange={(e) => setField('age', e.target.value)}
                     disabled={isLocked}
                     style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                    placeholder="25"
                 />
             </div>
 
@@ -80,7 +79,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('floorEggs1', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="150"
                         />
                     </div>
                     <div>
@@ -91,7 +89,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('floorEggs2', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="120"
                         />
                     </div>
                     <div>
@@ -117,7 +114,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('eggProduction1', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="6000"
                         />
                     </div>
                     {twoCollections && <div>
@@ -128,7 +124,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('eggProduction2', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="6500"
                         />
                     </div>}
                     <div>
@@ -146,7 +141,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('eggProductionPercent', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="92.5"
                         />
                     </div>
                 </div>
@@ -181,7 +175,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('coolerTempHi', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="4.5"
                         />
                     </div>
                     <div>
@@ -192,7 +185,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('coolerTempLo', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="3.8"
                         />
                     </div>
                     <div>
@@ -203,7 +195,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('coolerRhHi', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="75.0"
                         />
                     </div>
                     <div>
@@ -214,7 +205,6 @@ export default function Form07DayView({
                             onChange={(e) => setField('coolerRhLo', e.target.value)}
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                            placeholder="70.0"
                         />
                     </div>
                     <div>
@@ -246,7 +236,6 @@ export default function Form07DayView({
                     onChange={(e) => setField('dirtyTrays', e.target.value)}
                     disabled={isLocked}
                     style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                    placeholder="5"
                 />
             </div>
 
