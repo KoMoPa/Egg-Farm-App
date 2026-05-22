@@ -21,6 +21,7 @@ export default function AnalyticsChart({
   threshold = 10,
   icon = '📊',
   warningMsg = 'Value {deviation} ({pct}%)',
+  goal = null,
 }) {
   const supabase = useSupabase()
   const { selectedBarn } = useFarmContext()
@@ -144,9 +145,15 @@ export default function AnalyticsChart({
             </div>
             <div className="chart-mini-lbl">{stat2.lbl}</div>
           </div>
+          {goal != null && (
+            <div className="chart-mini-stat chart-mini-stat--goal">
+              <div className="chart-mini-val chart-mini-val--goal">{goal}</div>
+              <div className="chart-mini-lbl">Goal</div>
+            </div>
+          )}
         </div>
 
-        <LineChart data={chartValues} height={80} />
+        <LineChart data={chartValues} height={80} goal={goal} />
 
         {warn && <WarningBanner message={warnMsg} type={warnType} icon={icon} />}
       </>

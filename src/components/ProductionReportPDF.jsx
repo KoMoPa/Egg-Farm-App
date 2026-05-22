@@ -187,7 +187,7 @@ export function ProductionReportPDF({ farmName, barnNumber, monthYear, form07Dat
                             <Text style={styles.p1TL}>{c?.cooler_temp_lo_celsius ?? ''}</Text>
                             <Text style={styles.p1RH}>{c?.cooler_rh_hi_percent ?? ''}</Text>
                             <Text style={styles.p1RL}>{c?.cooler_rh_lo_percent ?? ''}</Text>
-                            <Text style={styles.p1Time}>{c?.cooler_check_time ?? ''}</Text>
+                            <Text style={styles.p1Time}>{c?.cooler_check_time?.substring(0, 5) ?? ''}</Text>
                         </View>
                     )
                 })}

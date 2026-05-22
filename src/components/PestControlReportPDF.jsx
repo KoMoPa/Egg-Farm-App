@@ -6,8 +6,10 @@ const getDaysInMonth = (monthYear) => {
 }
 
 const formatMonth = (monthYear) => {
-    const date = new Date(monthYear + '-01T00:00:00')
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    const parts = monthYear.split('-')
+    const year = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10) - 1  // 0-indexed
+    return new Date(year, month, 1).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
 }
 
 const buildDayMap = (rows, dateField) => {

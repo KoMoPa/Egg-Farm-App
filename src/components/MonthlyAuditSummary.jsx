@@ -400,7 +400,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                                                 <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_temp_lo_celsius ?? ''}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_rh_hi_percent ?? ''}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_rh_lo_percent ?? ''}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_check_time ?? ''}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px', textAlign: 'center' }}>{row.cooler?.cooler_check_time?.substring(0, 5) ?? ''}</td>
                                             </tr>
                                         )
                                     })}
