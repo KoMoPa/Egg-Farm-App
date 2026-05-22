@@ -27,6 +27,16 @@ const BLANK_FORM = {
 
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
 
+// Calculate flock age in weeks for a given record date based on barn flock arrival data
+function calcFlockAge(barn, recordDate) {
+    if (!barn?.flock_arrival_date || barn?.flock_age_at_arrival_weeks == null) return ''
+    const arrival = new Date(barn.flock_arrival_date + 'T00:00:00')
+    const record = new Date(recordDate + 'T00:00:00')
+    const weeks = Math.floor((record - arrival) / (7 * 24 * 60 * 60 * 1000))
+    if (weeks < 0) return ''
+    return String(barn.flock_age_at_arrival_weeks + weeks)
+}
+
 export default function Form07DailyProduction() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear } = useFarmContext()
@@ -115,6 +125,13 @@ export default function Form07DailyProduction() {
         setIsCurrentMonth(viewingMonth === monthYear)
     }, [viewingMonth, monthYear])
 
+    // Reset day data cache when navigation month changes
+    useEffect(() => {
+        setDayData({})
+        setLockedDays({})
+        setSelectedDay(1)
+    }, [viewingMonth])
+
     // Navigate to previous month
     const handlePreviousMonth = () => {
         const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
@@ -146,7 +163,7 @@ export default function Form07DailyProduction() {
         let cancelled = false
         const load = async () => {
             try {
-                const monthStr = monthYear.substring(0, 7)
+                const monthStr = viewingMonth.substring(0, 7)
                 const { data: audit } = await supabase.from('monthly_audits').select('id')
                     .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
                 if (!audit || cancelled) return
@@ -175,7 +192,7 @@ export default function Form07DailyProduction() {
         }
         load()
         return () => { cancelled = true }
-    }, [selectedBarn?.id, monthYear])
+    }, [selectedBarn?.id, viewingMonth])
 
     // Lazy-load selected day
     useEffect(() => {
@@ -186,7 +203,7 @@ export default function Form07DailyProduction() {
         const load = async () => {
             setLoadingDay(true)
             try {
-                const monthStr = monthYear.substring(0, 7)
+                const monthStr = viewingMonth.substring(0, 7)
                 const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
                 const auditMonthYear = `${monthStr}-01`
 
@@ -231,7 +248,8 @@ export default function Form07DailyProduction() {
 
                 if (!hasAnyData || cancelled) {
                     if (!cancelled) {
-                        setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_FORM } }))
+                        const autoAge = calcFlockAge(selectedBarn, recDate)
+                        setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_FORM, age: autoAge } }))
                         setLockedDays(p => ({ ...p, [selectedDay]: false }))
                     }
                     return
@@ -241,7 +259,7 @@ export default function Form07DailyProduction() {
                 setDayData(p => ({
                     ...p,
                     [selectedDay]: {
-                        age: flockAge?.flock_age_weeks?.toString() ?? '',
+                        age: flockAge?.flock_age_weeks?.toString() ?? calcFlockAge(selectedBarn, recDate),
                         floorEggs1: floorEggs?.collection_1?.toString() ?? '',
                         floorEggs2: floorEggs?.collection_2?.toString() ?? '',
                         eggProduction1: eggOutput?.egg_production_1?.toString() ?? '',
@@ -274,7 +292,7 @@ export default function Form07DailyProduction() {
 
         load()
         return () => { cancelled = true }
-    }, [selectedDay, selectedBarn?.id, monthYear])
+    }, [selectedDay, selectedBarn?.id, viewingMonth])
 
     const currentDayData = dayData[selectedDay] ?? { ...BLANK_FORM }
     const isLocked = lockedDays[selectedDay] === true
@@ -302,10 +320,10 @@ export default function Form07DailyProduction() {
             return isNaN(num) ? null : num
         }
         try {
-            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
             const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
             const productionId = productionRecord.id
-            const monthPrefix = monthYear.substring(0, 7)
+            const monthPrefix = viewingMonth.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
             const d = currentDayData
 
@@ -383,7 +401,7 @@ export default function Form07DailyProduction() {
     const handleMonthlySubmit = async (e) => {
         e.preventDefault()
         try {
-            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
             const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
             const productionId = productionRecord.id
 
@@ -525,7 +543,7 @@ export default function Form07DailyProduction() {
                 floorEggsTotal={floorEggsTotal}
                 eggProductionDaily={eggProductionDaily}
                 onUnlock={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
-                monthYear={monthYear}
+                monthYear={viewingMonth}
                 lockedDays={lockedDays}
                 loadingDay={loadingDay}
                 onSelectDay={setSelectedDay}
@@ -632,7 +650,7 @@ export default function Form07DailyProduction() {
                                 type="button"
                                 onClick={async () => {
                                     try {
-                                        const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+                                        const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
                                         const { error } = await supabase
                                             .from('monthly_audits')
                                             .update({ form_07_completed: true, form_07_completed_date: new Date().toISOString() })

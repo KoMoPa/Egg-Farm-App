@@ -1,6 +1,7 @@
 import BarnManager from './BarnManager'
 import Reports from './Reports'
 import Analytics from './Analytics'
+import FlockData from './FlockData'
 import { useFarmContext } from '../contexts/FarmContext'
 
 export default function Dashboard() {
@@ -16,6 +17,9 @@ export default function Dashboard() {
           <Reports key={selectedBarn?.id ?? 'no-barn'} />
         </section>
       </div>
+      <section className="dashboard-card">
+        <FlockData key={selectedBarn?.id ?? 'no-barn'} />
+      </section>
       <section className="dashboard-card">
         <Analytics />
       </section>
