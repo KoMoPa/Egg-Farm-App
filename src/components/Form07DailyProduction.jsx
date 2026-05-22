@@ -549,6 +549,8 @@ export default function Form07DailyProduction() {
                 onSelectDay={setSelectedDay}
                 hasFloorEggs={selectedBarn?.has_floor_eggs ?? true}
                 twoCollections={selectedBarn?.two_collections_per_day ?? true}
+                calculatedAge={calcFlockAge(selectedBarn, `${viewingMonth.substring(0, 7)}-${String(selectedDay).padStart(2, '0')}`)}
+                hasFlockData={!!(selectedBarn?.flock_arrival_date && selectedBarn?.flock_age_at_arrival_weeks != null)}
             />)}
 
             {/* ============ MONTHLY CHECKS TAB ============ */}

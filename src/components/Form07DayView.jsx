@@ -17,6 +17,8 @@ export default function Form07DayView({
     onSelectDay,
     hasFloorEggs = true,
     twoCollections = true,
+    calculatedAge = '',
+    hasFlockData = false,
 }) {
     return (
         <>
@@ -56,13 +58,15 @@ export default function Form07DayView({
                 <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
                     Age (weeks)
                 </label>
-                <input
-                    type="number"
-                    value={data.age}
-                    onChange={(e) => setField('age', e.target.value)}
-                    disabled={isLocked}
-                    style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                />
+                {hasFlockData ? (
+                    <div style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', backgroundColor: '#f5f5f5', color: '#333', fontWeight: 'bold' }}>
+                        {calculatedAge || '—'}
+                    </div>
+                ) : (
+                    <div style={{ fontSize: '14px', color: '#cc6600', padding: '10px', background: '#fff3cd', borderRadius: '8px', border: '1px solid #ffc107' }}>
+                        ⚠️ Set flock arrival date on the Dashboard to auto-calculate age
+                    </div>
+                )}
             </div>
 
             {/* Floor Eggs */}
