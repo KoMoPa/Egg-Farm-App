@@ -114,6 +114,7 @@ export default function Form07DayView({
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
                         <input
                             type="number"
+                            min="0" max="99999999"
                             value={data.eggProduction1}
                             onChange={(e) => setField('eggProduction1', e.target.value)}
                             disabled={isLocked}
@@ -124,6 +125,7 @@ export default function Form07DayView({
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
                         <input
                             type="number"
+                            min="0" max="99999999"
                             value={data.eggProduction2}
                             onChange={(e) => setField('eggProduction2', e.target.value)}
                             disabled={isLocked}
@@ -140,7 +142,7 @@ export default function Form07DayView({
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>% Daily</label>
                         <input
                             type="number"
-                            step="0.1"
+                            step="0.1" min="0" max="100"
                             value={data.eggProductionPercent}
                             onChange={(e) => setField('eggProductionPercent', e.target.value)}
                             disabled={isLocked}
@@ -174,7 +176,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp HI (°C)</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="-99.9" max="999.9"
                             value={data.coolerTempHi}
                             onChange={(e) => setField('coolerTempHi', e.target.value)}
                             disabled={isLocked}
@@ -184,7 +186,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp LO (°C)</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="-99.9" max="999.9"
                             value={data.coolerTempLo}
                             onChange={(e) => setField('coolerTempLo', e.target.value)}
                             disabled={isLocked}
@@ -194,7 +196,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% HI</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="0" max="100"
                             value={data.coolerRhHi}
                             onChange={(e) => setField('coolerRhHi', e.target.value)}
                             disabled={isLocked}
@@ -204,7 +206,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% LO</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="0" max="100"
                             value={data.coolerRhLo}
                             onChange={(e) => setField('coolerRhLo', e.target.value)}
                             disabled={isLocked}
@@ -236,6 +238,7 @@ export default function Form07DayView({
                 </label>
                 <input
                     type="number"
+                    min="0" max="999"
                     value={data.dirtyTrays}
                     onChange={(e) => setField('dirtyTrays', e.target.value)}
                     disabled={isLocked}
