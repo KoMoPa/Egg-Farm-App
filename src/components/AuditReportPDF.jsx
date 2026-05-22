@@ -139,7 +139,7 @@ export const AuditReportPDF = ({
                             <Text style={styles.headerValue}>{farmName || ''}</Text>
                         </View>
                         <View style={styles.headerField}>
-                            <Text style={styles.headerLabel}>Barn #:</Text>
+                            <Text style={styles.headerLabel}>Barn:</Text>
                             <Text style={styles.headerValue}>{barnNumber || ''}</Text>
                         </View>
                         <View style={styles.headerField}>
@@ -238,7 +238,7 @@ export const AuditReportPDF = ({
                             <Text style={styles.headerValue}>{farmName || ''}</Text>
                         </View>
                         <View style={styles.headerField}>
-                            <Text style={styles.headerLabel}>Barn #:</Text>
+                            <Text style={styles.headerLabel}>Barn:</Text>
                             <Text style={styles.headerValue}>{barnNumber || ''}</Text>
                         </View>
                         <View style={styles.headerField}>

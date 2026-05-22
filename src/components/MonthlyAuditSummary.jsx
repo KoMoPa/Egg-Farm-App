@@ -23,6 +23,14 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
         const fetchData = async () => {
             setLoading(true)
             try {
+                // Always fetch barn name directly
+                const { data: barnData } = await supabase
+                    .from('barns')
+                    .select('barn_name')
+                    .eq('id', barnId)
+                    .maybeSingle()
+                setBarnNumber(barnData?.barn_name ?? '')
+
                 // Form 07 - Production & Cooler
                 const { data: prodRecord } = await supabase
                     .from('production_cooler_records')
@@ -56,10 +64,10 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                 }
 
                 // Form 08 - Welfare
-                // Step 1: get welfare_records entry (join barns to get barn_number)
+                // Step 1: get welfare_records entry
                 const { data: welfareRecord } = await supabase
                     .from('welfare_records')
-                    .select('id, monthly_comments, barns(barn_name)')
+                    .select('id, monthly_comments')
                     .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
@@ -140,7 +148,6 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                 setForm08Comments(weeklyInspections)
                 setForm08MonthlyInspections(monthlyInspections)
                 setForm08AmmoniaData(ammoniaTests)
-                setBarnNumber(welfareRecord?.barns?.barn_name ?? '')
                 setForm09Data({ fwRecord, daily: fw09Daily, health: fw09Health, metadata: fw09Meta })
                 setForm10Data({ pestRecord, daily: pest10Daily, audit: pest10Audit })
             } catch (err) {

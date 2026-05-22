@@ -111,7 +111,7 @@ export function ProductionReportPDF({ farmName, barnNumber, monthYear, form07Dat
                     <Text style={styles.headerValue}>{farmName || '_________________'}</Text>
                 </View>
                 <View style={styles.headerField}>
-                    <Text style={styles.headerLabel}>Barn #:</Text>
+                    <Text style={styles.headerLabel}>Barn:</Text>
                     <Text style={styles.headerValue}>{barnNumber || '___'}</Text>
                 </View>
                 <View style={styles.headerField}>

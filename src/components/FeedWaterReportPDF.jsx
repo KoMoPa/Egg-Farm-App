@@ -78,7 +78,7 @@ export function FeedWaterReportPDF({ farmName, barnNumber, monthYear, form09Data
                     <Text style={styles.headerValue}>{farmName || '_________________'}</Text>
                 </View>
                 <View style={styles.headerField}>
-                    <Text style={styles.headerLabel}>Barn #:</Text>
+                    <Text style={styles.headerLabel}>Barn:</Text>
                     <Text style={styles.headerValue}>{barnNumber || '___'}</Text>
                 </View>
                 <View style={styles.headerField}>
