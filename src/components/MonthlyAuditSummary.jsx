@@ -210,21 +210,27 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
     const handleDownloadPDF = async () => {
         try {
             const { doc, filename } = buildPDFDoc()
-            const asPdf = pdf(doc)
-            asPdf.toBlob().then((blob) => {
+            const blob = await pdf(doc).toBlob()
+            const file = new File([blob], filename, { type: 'application/pdf' })
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: filename,
+                })
+            } else {
                 const url = URL.createObjectURL(blob)
                 const link = document.createElement('a')
                 link.href = url
                 link.download = filename
                 link.click()
                 URL.revokeObjectURL(url)
-            }).catch((err) => {
-                console.error('PDF generation failed:', err)
-                alert('Error generating PDF: ' + err.message)
-            })
+            }
         } catch (error) {
-            console.error('Error generating PDF:', error)
-            alert('Error generating PDF: ' + error.message)
+            if (error.name !== 'AbortError') {
+                console.error('Error generating PDF:', error)
+                alert('Error generating PDF: ' + error.message)
+            }
         }
     }
 
@@ -820,7 +826,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                     borderRadius: '4px',
                     cursor: 'pointer'
                 }}>
-                    📥 Download as PDF
+                    📥 {navigator.canShare ? '📤 Share / Save PDF' : 'Download as PDF'}
                 </button>
                 <button onClick={handlePrintPDF} style={{
                     padding: '10px 30px',
