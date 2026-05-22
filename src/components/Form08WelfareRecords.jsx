@@ -165,6 +165,13 @@ export default function Form08WelfareRecords() {
     setIsCurrentMonth(true)
   }, [selectedBarn?.id, monthYear])
 
+  // Reset day cache when navigating months
+  useEffect(() => {
+    setDayData({})
+    setLockedDays({})
+    setSelectedDay(1)
+  }, [viewingMonth])
+
   // Fetch all audits for month navigation
   useEffect(() => {
     const fetchAudits = async () => {
@@ -282,10 +289,10 @@ export default function Form08WelfareRecords() {
     const load = async () => {
       setLoadingDay(true)
       try {
-        const monthStr = monthYear.substring(0, 7)
+        const monthStr = viewingMonth.substring(0, 7)
         const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
 
-        const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+        const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
         const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
         if (cancelled) return
 
@@ -355,7 +362,7 @@ export default function Form08WelfareRecords() {
 
     load()
     return () => { cancelled = true }
-  }, [selectedDay, selectedBarn?.id, monthYear])
+  }, [selectedDay, selectedBarn?.id, viewingMonth])
 
   const handleDayChange = (day, field, value) => {
     setDayData(prev => ({
