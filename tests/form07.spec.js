@@ -103,37 +103,33 @@ test.describe.serial('Form 07 — day view CRUD', () => {
     await selectDay(page, TEST_DAY)
 
     // Age
-    await page.fill('input[placeholder="25"]', '28')
+    await page.locator('label:has-text("Age (weeks)") + input').fill('28')
 
     // Floor Eggs (collection 1 and 2)
-    const numberInputs = page.locator('input[placeholder="150"]')
-    await numberInputs.first().fill('180')
-    const numberInputs2 = page.locator('input[placeholder="120"]')
-    await numberInputs2.first().fill('140')
+    const floorEggsGrid = page.locator('h3:has-text("Floor Eggs") + div')
+    await floorEggsGrid.locator('input[type="number"]').nth(0).fill('180')
+    await floorEggsGrid.locator('input[type="number"]').nth(1).fill('140')
 
-    // Egg Production 1
-    await page.fill('input[placeholder="6000"]', '5800')
-    // Egg Production 2
-    await page.fill('input[placeholder="6500"]', '6200')
-    // % Daily
-    await page.fill('input[placeholder="92.5"]', '91.3')
+    // Egg Production 1, 2, % Daily
+    const eggProdGrid = page.locator('h3:has-text("Egg Production") + div')
+    await eggProdGrid.locator('input[type="number"]').nth(0).fill('5800')
+    await eggProdGrid.locator('input[type="number"]').nth(1).fill('6200')
+    await eggProdGrid.locator('input[type="number"]').nth(2).fill('91.3')
 
     // Production notes
     await page.fill('textarea[placeholder*="egg production"]', 'Test production notes day 2')
 
-    // Cooler Temp HI
-    await page.fill('input[placeholder="4.5"]', '4.2')
-    // Cooler Temp LO
-    await page.fill('input[placeholder="3.8"]', '3.5')
-    // Cooler RH HI
-    await page.fill('input[placeholder="75.0"]', '74.0')
-    // Cooler RH LO
-    await page.fill('input[placeholder="70.0"]', '68.5')
+    // Cooler Temp HI, LO, RH HI, LO
+    const coolerGrid = page.locator('h3:has-text("Cooler Temperature") + div')
+    await coolerGrid.locator('input[type="number"]').nth(0).fill('4.2')
+    await coolerGrid.locator('input[type="number"]').nth(1).fill('3.5')
+    await coolerGrid.locator('input[type="number"]').nth(2).fill('74.0')
+    await coolerGrid.locator('input[type="number"]').nth(3).fill('68.5')
     // Cooler check time
     await page.fill('input[type="time"]', '08:30')
 
     // Dirty trays
-    await page.fill('input[placeholder="5"]', '3')
+    await page.locator('label:has-text("Dirty Trays") + input').fill('3')
 
     // Sanitation checkboxes — Egg Cooler, Pack Room, Tables/Packing Equip
     const sanLabels = page.locator('label:has(input[type="checkbox"])').filter({ hasText: /Egg Cooler|Pack Room|Tables/ })
@@ -215,24 +211,27 @@ test.describe.serial('Form 07 — day view CRUD', () => {
     await page.waitForTimeout(300)
 
     // Age
-    await page.fill('input[placeholder="25"]', '29')
+    await page.locator('label:has-text("Age (weeks)") + input').fill('29')
     // Floor Eggs
-    await page.locator('input[placeholder="150"]').first().fill('200')
-    await page.locator('input[placeholder="120"]').first().fill('155')
+    const floorEggsGrid = page.locator('h3:has-text("Floor Eggs") + div')
+    await floorEggsGrid.locator('input[type="number"]').nth(0).fill('200')
+    await floorEggsGrid.locator('input[type="number"]').nth(1).fill('155')
     // Egg Production
-    await page.fill('input[placeholder="6000"]', '6100')
-    await page.fill('input[placeholder="6500"]', '6400')
-    await page.fill('input[placeholder="92.5"]', '93.0')
+    const eggProdGrid = page.locator('h3:has-text("Egg Production") + div')
+    await eggProdGrid.locator('input[type="number"]').nth(0).fill('6100')
+    await eggProdGrid.locator('input[type="number"]').nth(1).fill('6400')
+    await eggProdGrid.locator('input[type="number"]').nth(2).fill('93.0')
     // Notes
     await page.fill('textarea[placeholder*="egg production"]', 'Updated production notes day 2')
     // Cooler
-    await page.fill('input[placeholder="4.5"]', '5.0')
-    await page.fill('input[placeholder="3.8"]', '4.0')
-    await page.fill('input[placeholder="75.0"]', '76.0')
-    await page.fill('input[placeholder="70.0"]', '71.0')
+    const coolerGrid = page.locator('h3:has-text("Cooler Temperature") + div')
+    await coolerGrid.locator('input[type="number"]').nth(0).fill('5.0')
+    await coolerGrid.locator('input[type="number"]').nth(1).fill('4.0')
+    await coolerGrid.locator('input[type="number"]').nth(2).fill('76.0')
+    await coolerGrid.locator('input[type="number"]').nth(3).fill('71.0')
     await page.fill('input[type="time"]', '09:15')
     // Dirty trays
-    await page.fill('input[placeholder="5"]', '7')
+    await page.locator('label:has-text("Dirty Trays") + input').fill('7')
     // Corrective actions
     await page.fill('textarea[placeholder*="corrective actions"]', 'Updated corrective action day 2')
 
