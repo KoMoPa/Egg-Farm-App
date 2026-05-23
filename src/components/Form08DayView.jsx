@@ -22,6 +22,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                     <input type="number" step="0.1" value={data.barnTempHi}
                         onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
                         disabled={locked}
+                        placeholder=""
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
@@ -29,6 +30,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                     <input type="number" step="0.1" value={data.barnTempLo}
                         onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
                         disabled={locked}
+                        placeholder=""
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
@@ -36,6 +38,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                     <input type="number" step="0.1" value={data.exteriorTemp}
                         onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
                         disabled={locked}
+                        placeholder=""
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
             </div>

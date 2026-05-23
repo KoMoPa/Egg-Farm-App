@@ -232,7 +232,7 @@ export default function Login() {
                                     textDecoration: 'underline'
                                 }}
                             >
-                                {isSignUp ? 'Login' : 'Sign Up'}
+                                {isSignUp ? 'Login' : 'Create Account'}
                             </button>
                             {!isSignUp && (
                                 <>

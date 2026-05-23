@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { useSupabase } from './SupabaseContext'
 import { getOrCreateUserFarm } from '../utils/farmBarnOps'
 
@@ -9,6 +9,8 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [signupSuccess, setSignupSuccess] = useState(false)
+    const isSigningUpRef = useRef(false)
 
     // Check if user is already logged in
     useEffect(() => {
@@ -28,6 +30,12 @@ export function AuthProvider({ children }) {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
+                // During signup, skip the SIGNED_IN event here.
+                // signUp() will call setUser + setSignupSuccess together AFTER
+                // getOrCreateUserFarm() completes, so both land in one render.
+                if (event === 'SIGNED_IN' && isSigningUpRef.current) {
+                    return
+                }
                 setUser(session?.user || null)
             }
         )
@@ -36,6 +44,7 @@ export function AuthProvider({ children }) {
     }, [])
 
     const signUp = async (email, password) => {
+        isSigningUpRef.current = true
         try {
             setError(null)
             const { data, error } = await supabase.auth.signUp({
@@ -48,10 +57,16 @@ export function AuthProvider({ children }) {
             if (data.user && data.session) {
                 await getOrCreateUserFarm(data.user.id, 'My Farm', email)
             }
+            // Batch user + signupSuccess into one render so the interstitial
+            // appears immediately without a brief dashboard flash.
+            setSignupSuccess(true)
+            setUser(data.session?.user || null)
             return data
         } catch (err) {
             setError(err.message)
             throw err
+        } finally {
+            isSigningUpRef.current = false
         }
     }
 
@@ -99,6 +114,8 @@ export function AuthProvider({ children }) {
         user,
         loading,
         error,
+        signupSuccess,
+        clearSignupSuccess: () => setSignupSuccess(false),
         signUp,
         signIn,
         signOut,
