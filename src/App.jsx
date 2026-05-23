@@ -9,6 +9,7 @@ import Form07DailyProduction from './components/Form07DailyProduction'
 import Form08WelfareRecords from './components/Form08WelfareRecords'
 import Form09FeedWaterRecords from './components/Form09FeedWaterRecords'
 import Form10PestControlRecords from './components/Form10PestControlRecords'
+import Reports from './components/Reports'
 import './App.css'
 
 const TABS = [
@@ -17,12 +18,26 @@ const TABS = [
   { key: 'form08', label: 'Welfare', emoji: '🐔' },
   { key: 'form09', label: 'Feed/Water', emoji: '🌾' },
   { key: 'form10', label: 'Pest Control', emoji: '🐀' },
+  { key: 'reports', label: 'Reports', emoji: '📊' },
 ]
 
 function App() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, signupSuccess, clearSignupSuccess } = useAuth()
 
   if (!user) return <Login />
+
+  if (signupSuccess) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+        <div style={{ background: 'white', padding: '40px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+          <p style={{ fontSize: '18px', marginBottom: '24px' }}>✅ Signup successful! Your account has been created.</p>
+          <button onClick={clearSignupSuccess} style={{ padding: '10px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px', cursor: 'pointer' }}>
+            Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <FarmProvider user={user}>
@@ -82,6 +97,9 @@ function AppContent({ signOut, user }) {
 
           {/* Dashboard tab */}
           {activeTab === 'home' && <Dashboard />}
+
+          {/* Reports tab */}
+          {activeTab === 'reports' && <Reports />}
 
           {/* Form tabs */}
           {activeTab !== 'home' && activeTab !== 'reports' && (

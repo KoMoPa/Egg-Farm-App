@@ -51,6 +51,11 @@ export default function Form07DayView({
                 </div>
             )}
 
+            {/* Daily Tracking heading */}
+            <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
+                Daily Tracking – Day {day}
+            </h3>
+
             {/* Age */}
             <div style={{ marginBottom: '30px' }}>
                 <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>

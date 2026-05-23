@@ -532,16 +532,14 @@ export default function Form10PestControlRecords() {
                         {/* Fly Monitoring */}
                         <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
                             <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Fly Monitoring</h4>
-                            <div style={{ display: 'flex', gap: '20px' }}>
-                                {['Very Few', 'Moderate', 'Severe'].map(level => (
-                                    <label key={level} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input type="radio" name="flyMonitoring" value={level}
-                                            checked={flyMonitoring === level}
-                                            onChange={(e) => setFlyMonitoring(e.target.value)} />
-                                        {level}
-                                    </label>
-                                ))}
-                            </div>
+                            <select value={flyMonitoring}
+                                onChange={(e) => setFlyMonitoring(e.target.value)}
+                                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px', ...(monthlyLocked && inputLocked) }}>
+                                <option value="">-- Select level --</option>
+                                <option value="Very Few">Very Few</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                            </select>
                         </div>
 
                         {/* Range Management */}
@@ -549,19 +547,27 @@ export default function Form10PestControlRecords() {
                             <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 {[
-                                    ['Grass:', rangeGrass, setRangeGrass],
-                                    ['Ponding Water:', rangePondingWater, setRangePondingWater],
-                                    ['Rotation/Harrow:', rangeRotationHarrow, setRangeRotationHarrow],
-                                    ['Wild Bird Deterrents:', rangeWildBirdDeterrents, setRangeWildBirdDeterrents],
-                                    ['Gravel/Fences:', rangeGravelFences, setRangeGravelFences],
-                                    ['Other:', rangeOther, setRangeOther],
-                                ].map(([label, value, setter]) => (
+                                    ['Grass:', rangeGrass, setRangeGrass, true],
+                                    ['Ponding Water:', rangePondingWater, setRangePondingWater, true],
+                                    ['Rotation/Harrow:', rangeRotationHarrow, setRangeRotationHarrow, false],
+                                    ['Wild Bird Deterrents:', rangeWildBirdDeterrents, setRangeWildBirdDeterrents, false],
+                                    ['Gravel/Fences:', rangeGravelFences, setRangeGravelFences, false],
+                                    ['Other:', rangeOther, setRangeOther, false],
+                                ].map(([label, value, setter, useTextarea]) => (
                                     <div key={label}>
                                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>{label}</label>
-                                        <input type="text" value={value}
-                                            onChange={(e) => setter(e.target.value)}
-                                            maxLength="500"
-                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                        {useTextarea ? (
+                                            <textarea value={value}
+                                                onChange={(e) => setter(e.target.value)}
+                                                maxLength="500"
+                                                rows="2"
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
+                                        ) : (
+                                            <input type="text" value={value}
+                                                onChange={(e) => setter(e.target.value)}
+                                                maxLength="500"
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                        )}
                                     </div>
                                 ))}
                             </div>

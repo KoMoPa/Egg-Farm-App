@@ -669,29 +669,19 @@ export default function Form08WelfareRecords() {
               <p style={{ fontSize: '13px', color: '#555', marginBottom: '12px' }}>
                 Circle the PPM range at bird height (average of at least 3 locations):
               </p>
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                {['0-5', '5-10', '10-15', '15-20', '20+'].map(range => (
-                  <label key={range} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="ammoniaRange"
-                      value={range}
-                      checked={ammoniaRange === range}
-                      onChange={(e) => setAmmoniaRange(e.target.value)}
-                    />
-                    {range} ppm
-                  </label>
-                ))}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', color: '#888' }}>
-                  <input
-                    type="radio"
-                    name="ammoniaRange"
-                    value=""
-                    checked={ammoniaRange === ''}
-                    onChange={() => setAmmoniaRange('')}
-                  />
-                  N/A
-                </label>
+              <div style={{ marginBottom: '12px' }}>
+                <select
+                  value={ammoniaRange}
+                  onChange={(e) => setAmmoniaRange(e.target.value)}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
+                >
+                  <option value="">— Select range —</option>
+                  <option value="0-5">0-5 ppm</option>
+                  <option value="5-10">5-10 ppm</option>
+                  <option value="10-15">10-15 ppm</option>
+                  <option value="15-20">15-20 ppm</option>
+                  <option value="20+">20+ ppm</option>
+                </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 2fr', gap: '20px', alignItems: 'start', marginTop: '15px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', paddingTop: '28px' }}>
