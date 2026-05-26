@@ -23,6 +23,10 @@ export default function Dashboard() {
       <section className="dashboard-card">
         <Analytics />
       </section>
+      <section className="dashboard-card">
+        <h2 style={{ color: 'black' }}>This app is in development and we'd love feedback! Email us at <a href="mailto:komopadev@gmail.com">komopadev@gmail.com</a>
+        </h2>
+      </section>
     </div>
   )
 }
