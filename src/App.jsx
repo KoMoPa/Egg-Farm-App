@@ -4,6 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { useAuth } from './contexts/AuthContext'
 import { FarmProvider, useFarmContext } from './contexts/FarmContext'
 import Login from './components/Login'
+import SetNewPassword from './components/SetNewPassword'
 import Dashboard from './components/Dashboard'
 import Form07DailyProduction from './components/Form07DailyProduction'
 import Form08WelfareRecords from './components/Form08WelfareRecords'
@@ -22,7 +23,9 @@ const TABS = [
 ]
 
 function App() {
-  const { user, signOut, signupSuccess, clearSignupSuccess } = useAuth()
+  const { user, signOut, signupSuccess, clearSignupSuccess, passwordRecovery } = useAuth()
+
+  if (passwordRecovery) return <SetNewPassword />
 
   if (!user) return <Login />
 

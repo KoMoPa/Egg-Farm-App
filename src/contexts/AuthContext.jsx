@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [signupSuccess, setSignupSuccess] = useState(false)
+    const [passwordRecovery, setPasswordRecovery] = useState(false)
     const isSigningUpRef = useRef(false)
 
     // Check if user is already logged in
@@ -36,6 +37,11 @@ export function AuthProvider({ children }) {
                 if (event === 'SIGNED_IN' && isSigningUpRef.current) {
                     return
                 }
+                if (event === 'PASSWORD_RECOVERY') {
+                    setPasswordRecovery(true)
+                    setUser(session?.user || null)
+                    return
+                }
                 setUser(session?.user || null)
             }
         )
@@ -56,10 +62,11 @@ export function AuthProvider({ children }) {
             // create their farm now so FarmContext can simply fetch it.
             if (data.user && data.session) {
                 await getOrCreateUserFarm(data.user.id, 'My Farm', email)
+                // Only show the success interstitial when the user is immediately
+                // authenticated (email verification disabled). When verification is
+                // required, data.session is null and Login.jsx handles messaging.
+                setSignupSuccess(true)
             }
-            // Batch user + signupSuccess into one render so the interstitial
-            // appears immediately without a brief dashboard flash.
-            setSignupSuccess(true)
             setUser(data.session?.user || null)
             return data
         } catch (err) {
@@ -79,6 +86,18 @@ export function AuthProvider({ children }) {
             })
             if (error) throw error
             return data
+        } catch (err) {
+            setError(err.message)
+            throw err
+        }
+    }
+
+    const updatePassword = async (newPassword) => {
+        try {
+            setError(null)
+            const { error } = await supabase.auth.updateUser({ password: newPassword })
+            if (error) throw error
+            setPasswordRecovery(false)
         } catch (err) {
             setError(err.message)
             throw err
@@ -116,10 +135,13 @@ export function AuthProvider({ children }) {
         error,
         signupSuccess,
         clearSignupSuccess: () => setSignupSuccess(false),
+        passwordRecovery,
+        clearPasswordRecovery: () => setPasswordRecovery(false),
         signUp,
         signIn,
         signOut,
-        resetPassword
+        resetPassword,
+        updatePassword
     }
 
     return (
