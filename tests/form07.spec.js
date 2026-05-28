@@ -5,7 +5,7 @@
  * Full CRUD test for every field, both day view and monthly checks view.
  *
  * Fields tested (day view):
- *   age, floorEggs1, floorEggs2, eggProduction1, eggProduction2,
+ *   (age is read-only), floorEggs1, floorEggs2, eggProduction1, eggProduction2,
  *   eggProductionPercent, notes, coolerTempHi, coolerTempLo,
  *   coolerRhHi, coolerRhLo, coolerCheckTime, dirtyTrays,
  *   eggCoolerCleaned, packRoomCleaned, tablesPackingEquipCleaned,
@@ -87,6 +87,15 @@ async function getProductionRecord(admin, barnId, day) {
   }
 }
 
+function expectedFlockAgeForDay(barn, day) {
+  if (!barn?.flock_arrival_date || barn?.flock_age_at_arrival_weeks == null) return null
+  const arrival = new Date(`${barn.flock_arrival_date}T00:00:00`)
+  const record = new Date(`${recordDate(day)}T00:00:00`)
+  const weeks = Math.floor((record - arrival) / (7 * 24 * 60 * 60 * 1000))
+  if (weeks < 0) return null
+  return barn.flock_age_at_arrival_weeks + weeks
+}
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 test.describe.serial('Form 07 — day view CRUD', () => {
@@ -102,8 +111,8 @@ test.describe.serial('Form 07 — day view CRUD', () => {
     await goToForm07(page)
     await selectDay(page, TEST_DAY)
 
-    // Age
-    await page.locator('label:has-text("Age (weeks)") + input').fill('28')
+    // Age is read-only in Form 07 and must not be editable here.
+    await expect(page.locator('label:has-text("Age (weeks)") + input')).toHaveCount(0)
 
     // Floor Eggs (collection 1 and 2)
     const floorEggsGrid = page.locator('h3:has-text("Floor Eggs") + div')
@@ -155,10 +164,11 @@ test.describe.serial('Form 07 — day view CRUD', () => {
     const { farm } = await getTestFarm(admin)
     const barn = await getTestBarn(admin, farm.id)
     const rec = await getProductionRecord(admin, barn.id, TEST_DAY)
+    const expectedAge = expectedFlockAgeForDay(barn, TEST_DAY)
 
     expect(rec).not.toBeNull()
-    // flock_age_weeks
-    expect(rec.flockAge?.flock_age_weeks).toBe(28)
+    // flock_age_weeks is derived from Dashboard flock data
+    expect(rec.flockAge?.flock_age_weeks ?? null).toBe(expectedAge)
     // floor eggs
     expect(rec.floorEggs?.collection_1).toBe(180)
     expect(rec.floorEggs?.collection_2).toBe(140)
@@ -203,15 +213,15 @@ test.describe.serial('Form 07 — day view CRUD', () => {
     await expect(page.locator(`button[type="submit"]:has-text("Save Day ${TEST_DAY}")`)).toBeVisible()
   })
 
-  test('UPDATE — modifies every field and re-saves day 2', async ({ page }) => {
+  test('UPDATE — modifies every editable field and re-saves day 2', async ({ page }) => {
     page.on('dialog', d => d.accept())
     await goToForm07(page)
     await selectDay(page, TEST_DAY)
     await page.click('button:has-text("Re-enter data")')
     await page.waitForTimeout(300)
 
-    // Age
-    await page.locator('label:has-text("Age (weeks)") + input').fill('29')
+    // Age is read-only in Form 07 and must not be editable here.
+    await expect(page.locator('label:has-text("Age (weeks)") + input')).toHaveCount(0)
     // Floor Eggs
     const floorEggsGrid = page.locator('h3:has-text("Floor Eggs") + div')
     await floorEggsGrid.locator('input[type="number"]').nth(0).fill('200')
@@ -245,8 +255,9 @@ test.describe.serial('Form 07 — day view CRUD', () => {
     const { farm } = await getTestFarm(admin)
     const barn = await getTestBarn(admin, farm.id)
     const rec = await getProductionRecord(admin, barn.id, TEST_DAY)
+    const expectedAge = expectedFlockAgeForDay(barn, TEST_DAY)
 
-    expect(rec.flockAge?.flock_age_weeks).toBe(29)
+    expect(rec.flockAge?.flock_age_weeks ?? null).toBe(expectedAge)
     expect(rec.floorEggs?.collection_1).toBe(200)
     expect(rec.floorEggs?.collection_2).toBe(155)
     expect(rec.floorEggs?.floor_eggs_total).toBe(355)
