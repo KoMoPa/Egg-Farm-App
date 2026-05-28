@@ -43,7 +43,7 @@ export default function Form07DayView({
                         type="button"
                         onClick={onUnlock}
                         style={{
-                            backgroundColor: '#0066cc', color: 'white', border: 'none',
+                            backgroundColor: '#2D855B', color: 'white', border: 'none',
                             borderRadius: '6px', padding: '7px 14px',
                             fontWeight: '700', fontSize: '13px', cursor: 'pointer'
                         }}
@@ -253,7 +253,7 @@ export default function Form07DayView({
 
             {/* Sanitation */}
             <div style={{ background: '#e7f3ff', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0066cc', paddingBottom: '8px' }}>
+                <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #2D855B', paddingBottom: '8px' }}>
                     Sanitation - As Completed
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>

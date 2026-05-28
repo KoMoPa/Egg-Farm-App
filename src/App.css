@@ -1,7 +1,9 @@
 /* ── App shell layout ── */
 /* Fix: 100vh on iOS Safari includes the browser chrome, cutting off the bottom tab bar.
    100dvh (dynamic viewport height) shrinks when the address bar is visible. */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   overflow: hidden;
   margin: 0;
@@ -11,8 +13,10 @@ html, body, #root {
 .app-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;        /* fallback */
-  height: 100dvh;       /* iOS Safari 15.4+, Chrome 108+ */
+  height: 100vh;
+  /* fallback */
+  height: 100dvh;
+  /* iOS Safari 15.4+, Chrome 108+ */
   background: #f5f5f5;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow: hidden;
@@ -22,7 +26,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0066cc;
+  background: #2D855B;
   color: white;
   padding: 0 20px;
   height: 60px;
@@ -37,8 +41,19 @@ html, body, #root {
 }
 
 .app-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
+}
+
+.app-header-icon {
+  width: 23px;
+  height: 23px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
 }
 
 .app-header-farm {
@@ -58,7 +73,7 @@ html, body, #root {
 }
 
 .app-logout-btn {
-  background: #dc3545;
+  background: #0b1f3b;
   color: white;
   border: none;
   border-radius: 6px;
@@ -138,7 +153,19 @@ html, body, #root {
 }
 
 .app-tab-item.active {
-  border-top-color: #0066cc;
+  border-top-color: #2D855B;
+}
+
+.app-tab-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+.app-tab-icon--dashboard {
+  width: 25px;
+  height: 25px;
 }
 
 .app-tab-emoji {
@@ -154,7 +181,7 @@ html, body, #root {
 }
 
 .app-tab-item.active .app-tab-label {
-  color: #0066cc;
+  color: #2D855B;
   font-weight: 700;
 }
 
@@ -235,8 +262,11 @@ html, body, #root {
   }
 
   /* Inputs and selects full width */
-  input, select, textarea {
-    font-size: 16px !important; /* prevents iOS zoom on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    /* prevents iOS zoom on focus */
     box-sizing: border-box;
   }
 }
@@ -346,10 +376,20 @@ html, body, #root {
 
 /* ── Analytics ── */
 .analytics-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
-  color: #0066cc;
+  color: #2D855B;
   margin: 0 0 16px 0;
+}
+
+.analytics-title-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .analytics-info {
@@ -374,6 +414,7 @@ html, body, #root {
   border-top: none;
   padding-top: 0;
   background: white;
+  border: 1px solid #73C48E;
   border-radius: 8px;
   padding: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -438,12 +479,22 @@ html, body, #root {
 }
 
 .analytics-segment-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 700;
   color: #444;
   margin: 0 0 14px 0;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.analytics-segment-title-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 /* Stat row */
@@ -468,9 +519,17 @@ html, body, #root {
   line-height: 1;
 }
 
-.analytics-auger-val.over  { color: #dc3545; }
-.analytics-auger-val.under { color: #fd7e14; }
-.analytics-auger-val.normal { color: #28a745; }
+.analytics-auger-val.over {
+  color: #dc3545;
+}
+
+.analytics-auger-val.under {
+  color: #fd7e14;
+}
+
+.analytics-auger-val.normal {
+  color: #28a745;
+}
 
 .analytics-auger-lbl {
   font-size: 11px;
@@ -539,7 +598,7 @@ html, body, #root {
 
 .analytics-auger-history-bar-fill {
   height: 100%;
-  background: #0066cc;
+  background: #2D855B;
   border-radius: 99px;
   transition: width 0.3s ease;
 }
@@ -556,7 +615,7 @@ html, body, #root {
 .analytics-auger-today-badge {
   font-size: 10px;
   font-weight: 700;
-  background: #0066cc;
+  background: #2D855B;
   color: white;
   padding: 1px 6px;
   border-radius: 99px;
@@ -578,6 +637,7 @@ html, body, #root {
   &:hover {
     border-color: var(--accent-border);
   }
+
   &:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -609,8 +669,7 @@ html, body, #root {
     z-index: 1;
     top: 34px;
     height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg) scale(1.4);
   }
 
   .vite {
@@ -618,8 +677,7 @@ html, body, #root {
     top: 107px;
     height: 26px;
     width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg) scale(0.8);
   }
 }
 
@@ -642,9 +700,10 @@ html, body, #root {
   border-top: 1px solid var(--border);
   text-align: left;
 
-  & > div {
+  &>div {
     flex: 1 1 0;
     padding: 32px;
+
     @media (max-width: 1024px) {
       padding: 24px 20px;
     }
@@ -697,6 +756,7 @@ html, body, #root {
     &:hover {
       box-shadow: var(--shadow);
     }
+
     .button-icon {
       height: 18px;
       width: 18px;
@@ -723,6 +783,7 @@ html, body, #root {
 #spacer {
   height: 88px;
   border-top: 1px solid var(--border);
+
   @media (max-width: 1024px) {
     height: 48px;
   }
@@ -744,6 +805,7 @@ html, body, #root {
     left: 0;
     border-left-color: var(--border);
   }
+
   &::after {
     right: 0;
     border-right-color: var(--border);
@@ -778,7 +840,7 @@ html, body, #root {
 }
 
 .line-chart-path {
-  stroke: #0066cc;
+  stroke: #2D855B;
   stroke-width: 2;
   fill: none;
   stroke-linecap: round;
@@ -787,7 +849,7 @@ html, body, #root {
 }
 
 .line-chart-point {
-  fill: #0066cc;
+  fill: #2D855B;
   animation: fadeInPoint 0.4s ease-out forwards;
 }
 
@@ -801,6 +863,7 @@ html, body, #root {
     stroke-dashoffset: 1000;
     opacity: 0;
   }
+
   to {
     stroke-dasharray: 1000;
     stroke-dashoffset: 0;
@@ -813,6 +876,7 @@ html, body, #root {
     opacity: 0;
     r: 0;
   }
+
   to {
     opacity: 1;
     r: 2.5;
@@ -830,7 +894,7 @@ html, body, #root {
 
 .line-chart-current {
   font-weight: 700;
-  color: #0066cc;
+  color: #2D855B;
 }
 
 /* Goal reference line in SVG */
@@ -897,7 +961,7 @@ html, body, #root {
 }
 
 .chart-goal-input:focus {
-  border-color: #0066cc;
+  border-color: #2D855B;
 }
 
 .chart-goal-btn {
@@ -911,7 +975,7 @@ html, body, #root {
 
 .chart-goal-btn--edit {
   background: transparent;
-  color: #0066cc;
+  color: #73C48E;
   padding: 0;
   font-size: 12px;
   text-decoration: underline;
@@ -919,7 +983,7 @@ html, body, #root {
 }
 
 .chart-goal-btn--save {
-  background: #0066cc;
+  background: #73C48E;
   color: white;
 }
 
@@ -1010,6 +1074,13 @@ html, body, #root {
   margin-top: 1px;
 }
 
+.warning-banner-icon-image {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
 .warning-banner-message {
   flex: 1;
 }
@@ -1020,20 +1091,20 @@ html, body, #root {
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 30px;
-  border: 2px solid #ddd;
+  border: 2px solid #73C48E;
   box-sizing: border-box;
 }
 
 .barn-manager-header {
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 2px solid #0066cc;
+  border-bottom: 2px solid #73C48E;
 }
 
 .barn-manager-title {
   font-size: 22px;
   margin: 0 0 5px 0;
-  color: #0066cc;
+  color: #2D855B;
 }
 
 .barn-manager-subtitle {
@@ -1080,7 +1151,7 @@ html, body, #root {
 }
 
 .barn-selector-card:hover {
-  border-color: #0066cc;
+  border-color: #2D855B;
 }
 
 .barn-selector-card--selected {
@@ -1106,7 +1177,7 @@ html, body, #root {
   padding: 12px;
   font-size: 16px;
   font-weight: bold;
-  background: #0066cc;
+  background: #2D855B;
   color: white;
   border: none;
   border-radius: 4px;
@@ -1115,14 +1186,14 @@ html, body, #root {
 }
 
 .barn-manager-add-btn:hover {
-  background: #0052a3;
+  background: #256d4a;
 }
 
 .barn-manager-form {
   background: #f0f8ff;
   padding: 15px;
   border-radius: 8px;
-  border: 1px solid #0066cc;
+  border: 1px solid #2D855B;
 }
 
 .barn-manager-form-inputs {
@@ -1280,7 +1351,7 @@ html, body, #root {
 .monthly-reports-title {
   font-size: 20px;
   font-weight: 700;
-  color: #0066cc;
+  color: #2D855B;
   margin: 0;
 }
 
@@ -1378,4 +1449,3 @@ html, body, #root {
     gap: 4px;
   }
 }
-

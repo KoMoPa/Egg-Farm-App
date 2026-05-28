@@ -66,7 +66,7 @@ export default function FlockData() {
   if (!selectedBarn) {
     return (
       <>
-        <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#0066cc', marginTop: 0, marginBottom: '12px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#2D855B', marginTop: 0, marginBottom: '12px' }}>
           Flock Data
         </h2>
         <p style={{ color: '#999', fontSize: '14px', margin: 0 }}>Select a barn to manage flock data.</p>
@@ -76,14 +76,14 @@ export default function FlockData() {
 
   return (
     <>
-      <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#0066cc', marginTop: 0, marginBottom: '16px' }}>
+      <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#2D855B', marginTop: 0, marginBottom: '16px' }}>
         Flock Data — {selectedBarn.barn_name}
       </h2>
 
       {currentAge !== null && (
         <div style={{
           backgroundColor: '#e8f4fd',
-          border: '1px solid #0066cc',
+          border: '1px solid #2D855B',
           borderRadius: '8px',
           padding: '12px 16px',
           marginBottom: '20px',
@@ -92,7 +92,7 @@ export default function FlockData() {
           gap: '10px',
         }}>
           <span style={{ fontSize: '14px', color: '#444' }}>Current flock age today:</span>
-          <strong style={{ fontSize: '22px', color: '#0066cc' }}>{currentAge} weeks</strong>
+          <strong style={{ fontSize: '22px', color: '#2D855B' }}>{currentAge} weeks</strong>
         </div>
       )}
 
@@ -143,7 +143,7 @@ export default function FlockData() {
             type="submit"
             disabled={saving || !arrivalDate || ageAtArrival === ''}
             style={{
-              backgroundColor: saving || !arrivalDate || ageAtArrival === '' ? '#ccc' : '#0066cc',
+              backgroundColor: saving || !arrivalDate || ageAtArrival === '' ? '#ccc' : '#2D855B',
               color: 'white',
               border: 'none',
               borderRadius: '8px',

@@ -409,7 +409,7 @@ export default function Form10PestControlRecords() {
                         disabled={!canGoPrevious}
                         style={{
                             padding: '8px 12px',
-                            backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                            backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -421,7 +421,7 @@ export default function Form10PestControlRecords() {
                     </button>
 
                     <div style={{ textAlign: 'center', flex: 1 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#2D855B' : '#666' }}>
                             {formatMonth(viewingMonth)}
                         </div>
                         {!isCurrentMonth && (
@@ -437,7 +437,7 @@ export default function Form10PestControlRecords() {
                         disabled={!canGoNext}
                         style={{
                             padding: '8px 12px',
-                            backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                            backgroundColor: canGoNext ? '#2D855B' : '#ccc',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -471,7 +471,7 @@ export default function Form10PestControlRecords() {
                                 padding: '8px 16px',
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                backgroundColor: viewMode === mode ? '#0066cc' : '#ddd',
+                                backgroundColor: viewMode === mode ? '#2D855B' : '#ddd',
                                 color: viewMode === mode ? 'white' : '#333',
                                 border: 'none',
                                 borderRadius: '4px',

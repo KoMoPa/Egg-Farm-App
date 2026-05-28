@@ -128,7 +128,7 @@ export default function Form10DayView({
                         type="button"
                         onClick={onUnlock}
                         style={{
-                            backgroundColor: '#0066cc', color: 'white', border: 'none',
+                            backgroundColor: '#2D855B', color: 'white', border: 'none',
                             borderRadius: '6px', padding: '7px 14px',
                             fontWeight: '700', fontSize: '13px', cursor: 'pointer'
                         }}

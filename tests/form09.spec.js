@@ -73,6 +73,14 @@ test.describe.serial('Form 09 — day view CRUD', () => {
     await goToForm09(page)
     await selectDay(page, TEST_DAY)
 
+    // Day can already be locked from a prior run; unlock before editing.
+    const firstNumberInput = page.locator('input[type="number"]').first()
+    if (await firstNumberInput.isDisabled().catch(() => false)) {
+      const reenterBtn = page.locator('button:has-text("Re-enter data")')
+      await reenterBtn.click()
+      await expect(firstNumberInput).toBeEnabled({ timeout: 10_000 })
+    }
+
     // Feed Daily Target
     const numberInputs = page.locator('input[type="number"]')
     await numberInputs.nth(0).fill('1200')  // feed daily
@@ -100,14 +108,14 @@ test.describe.serial('Form 09 — day view CRUD', () => {
 
     // Mortality reason select
     const mortalityReasonSelect = page.locator('select:near(:text("Reason")), select').nth(3)
-    await mortalityReasonSelect.selectOption('natural').catch(() => {})
+    await mortalityReasonSelect.selectOption('natural').catch(() => { })
 
     // Hospital pen monitoring
     const hospitalSelect = page.locator('select:near(:text("Hospital")), select').nth(4)
-    await hospitalSelect.selectOption('improved').catch(() => {})
+    await hospitalSelect.selectOption('improved').catch(() => { })
 
     // Inventory
-    await numberInputs.last().fill('9800').catch(() => {})
+    await numberInputs.last().fill('9800').catch(() => { })
 
     // Save
     await page.click(`button[type="submit"]:has-text("Save Day ${TEST_DAY} Record")`)
@@ -151,7 +159,8 @@ test.describe.serial('Form 09 — day view CRUD', () => {
     await goToForm09(page)
     await selectDay(page, TEST_DAY)
     await page.click('button:has-text("Re-enter data")')
-    await page.waitForTimeout(300)
+    const firstNumberInput = page.locator('input[type="number"]').first()
+    await expect(firstNumberInput).toBeEnabled({ timeout: 10_000 })
 
     const numberInputs = page.locator('input[type="number"]')
     await numberInputs.nth(0).fill('1300')
@@ -200,6 +209,13 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
     page.on('dialog', d => d.accept())
     await goToMonthlyTab(page)
 
+    // Monthly section can already be locked from a prior run; unlock before editing.
+    const editBtn = page.locator('button:has-text("Edit Monthly Checks")')
+    if (await editBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await editBtn.click()
+      await page.waitForTimeout(300)
+    }
+
     // Starting inventory
     const numberInputs = page.locator('input[type="number"]')
     await numberInputs.first().fill('10000')
@@ -213,8 +229,8 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
     // Water residual monthly
     const allInputs = page.locator('input')
     // Try to find feed target and water residual by nearby text
-    await page.fill('input:near(:text("Feed Target"))', '1200 g/bird/day').catch(() => {})
-    await page.fill('input:near(:text("Water Residual"))', 'Residual test notes').catch(() => {})
+    await page.fill('input:near(:text("Feed Target"))', '1200 g/bird/day').catch(() => { })
+    await page.fill('input:near(:text("Water Residual"))', 'Residual test notes').catch(() => { })
 
     // Comments
     const textareas = page.locator('textarea')

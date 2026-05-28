@@ -149,8 +149,9 @@ function Reports() {
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-            <h2 style={{ margin: '0 0 30px 0', fontSize: '24px', fontWeight: 700, color: '#0066cc' }}>
-                📊 Monthly Compliance Reports
+            <h2 style={{ margin: '0 0 30px 0', fontSize: '24px', fontWeight: 700, color: '#2D855B', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src="/reports-icon.png" alt="Reports" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
+                <span>Monthly Compliance Reports</span>
             </h2>
 
             {loading && <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>Loading reports...</p>}
@@ -179,7 +180,7 @@ function Reports() {
                             disabled={!canGoPrevious}
                             style={{
                                 padding: '8px 16px',
-                                backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                                backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -191,7 +192,7 @@ function Reports() {
                         </button>
 
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0066cc', marginBottom: '4px' }}>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2D855B', marginBottom: '4px' }}>
                                 {formatMonth(selectedMonth)}
                             </div>
                             <div style={{ fontSize: '12px', color: '#666' }}>
@@ -204,7 +205,7 @@ function Reports() {
                             disabled={!canGoNext}
                             style={{
                                 padding: '8px 16px',
-                                backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                                backgroundColor: canGoNext ? '#2D855B' : '#ccc',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -269,16 +270,16 @@ function Reports() {
                                 padding: '16px 40px',
                                 fontSize: '16px',
                                 fontWeight: 'bold',
-                                backgroundColor: '#0066cc',
+                                backgroundColor: '#2D855B',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
                                 cursor: 'pointer',
-                                boxShadow: '0 2px 8px rgba(0, 102, 204, 0.3)',
+                                boxShadow: '0 2px 8px rgba(45, 133, 91, 0.3)',
                                 transition: 'background-color 0.2s'
                             }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#0052a3'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = '#0066cc'}>
+                            onMouseOver={(e) => e.target.style.backgroundColor = '#256d4a'}
+                            onMouseOut={(e) => e.target.style.backgroundColor = '#2D855B'}>
                             🖨 Print Monthly Report
                         </button>
                     </div>

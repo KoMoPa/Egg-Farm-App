@@ -554,7 +554,7 @@ export default function Form08WelfareRecords() {
             disabled={!canGoPrevious}
             style={{
               padding: '8px 12px',
-              backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+              backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -566,7 +566,7 @@ export default function Form08WelfareRecords() {
           </button>
 
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#2D855B' : '#666' }}>
               {formatMonth(viewingMonth)}
             </div>
             {!isCurrentMonth && (
@@ -582,7 +582,7 @@ export default function Form08WelfareRecords() {
             disabled={!canGoNext}
             style={{
               padding: '8px 12px',
-              backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+              backgroundColor: canGoNext ? '#2D855B' : '#ccc',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -614,7 +614,7 @@ export default function Form08WelfareRecords() {
               padding: '8px 16px',
               fontSize: '14px',
               fontWeight: 'bold',
-              backgroundColor: viewMode === 'day' ? '#0066cc' : '#ddd',
+              backgroundColor: viewMode === 'day' ? '#2D855B' : '#ddd',
               color: viewMode === 'day' ? 'white' : '#333',
               border: 'none',
               borderRadius: '4px',
@@ -629,7 +629,7 @@ export default function Form08WelfareRecords() {
               padding: '8px 16px',
               fontSize: '14px',
               fontWeight: 'bold',
-              backgroundColor: viewMode === 'monthly' ? '#0066cc' : '#ddd',
+              backgroundColor: viewMode === 'monthly' ? '#2D855B' : '#ddd',
               color: viewMode === 'monthly' ? 'white' : '#333',
               border: 'none',
               borderRadius: '4px',
@@ -791,7 +791,7 @@ export default function Form08WelfareRecords() {
                     padding: '12px 40px',
                     fontSize: '16px',
                     fontWeight: 'bold',
-                    backgroundColor: '#0066cc',
+                    backgroundColor: '#2D855B',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
