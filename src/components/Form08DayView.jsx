@@ -120,7 +120,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>Weekly Welfare Inspection (Check as applicable)</h4>
                 <button type="button" onClick={() => onSelectAllCriteria(day)}
                     disabled={locked}
-                    style={{ fontSize: '12px', padding: '4px 10px', background: locked ? '#ccc' : '#0066cc', color: locked ? '#666' : 'white', border: 'none', borderRadius: '4px', cursor: locked ? 'default' : 'pointer' }}>
+                    style={{ fontSize: '12px', padding: '4px 10px', background: locked ? '#ccc' : '#2D855B', color: locked ? '#666' : 'white', border: 'none', borderRadius: '4px', cursor: locked ? 'default' : 'pointer' }}>
                     Select All
                 </button>
             </div>
@@ -253,7 +253,7 @@ export default function Form08DayView({
                         type="button"
                         onClick={onUnlock}
                         style={{
-                            backgroundColor: '#0066cc', color: 'white', border: 'none',
+                            backgroundColor: '#2D855B', color: 'white', border: 'none',
                             borderRadius: '6px', padding: '7px 14px',
                             fontWeight: '700', fontSize: '13px', cursor: 'pointer'
                         }}

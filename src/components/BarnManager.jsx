@@ -119,7 +119,7 @@ export default function BarnManager() {
             <div style={{ fontSize: '12px', color: '#666', fontWeight: '600' }}>
               CURRENT BARN
             </div>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0066cc' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#2D855B' }}>
               {selectedBarn.barn_name}
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function BarnManager() {
               padding: '8px 12px',
               fontSize: '12px',
               fontWeight: 'bold',
-              backgroundColor: '#0066cc',
+              backgroundColor: '#2D855B',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -259,7 +259,7 @@ export default function BarnManager() {
               padding: '10px',
               fontSize: '14px',
               fontWeight: 'bold',
-              backgroundColor: '#6c757d',
+              backgroundColor: '#73C48E',
               color: 'white',
               border: 'none',
               borderRadius: '4px',

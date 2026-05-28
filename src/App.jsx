@@ -13,13 +13,67 @@ import Reports from './components/Reports'
 import './App.css'
 
 const TABS = [
-  { key: 'home', label: 'Dashboard', emoji: '🏠' },
-  { key: 'form07', label: 'Production', emoji: '🥚' },
-  { key: 'form08', label: 'Welfare', emoji: '🐔' },
-  { key: 'form09', label: 'Feed/Water', emoji: '🌾' },
-  { key: 'form10', label: 'Pest Control', emoji: '🐀' },
-  { key: 'reports', label: 'Reports', emoji: '📊' },
+  {
+    key: 'home',
+    label: 'Dashboard',
+    emoji: '🏠',
+    iconInactive: '/home2-icon.png',
+    iconActive: '/home-icon.png',
+    headerIcon: '/home-icon-rev.png',
+  },
+  {
+    key: 'form07',
+    label: 'Production',
+    emoji: '🥚',
+    iconInactive: '/production2-icon.png',
+    iconActive: '/production-icon.png',
+  },
+  {
+    key: 'form08',
+    label: 'Welfare',
+    emoji: '🐔',
+    iconInactive: '/welfare2-icon.png',
+    iconActive: '/welfare-icon.png',
+  },
+  {
+    key: 'form09',
+    label: 'Feed/Water',
+    emoji: '🌾',
+    iconInactive: '/feed2-icon.png',
+    iconActive: '/feed-icon.png',
+  },
+  {
+    key: 'form10',
+    label: 'Pest Control',
+    emoji: '🐀',
+    iconInactive: '/pest2-icon.png',
+    iconActive: '/pest-icon.png',
+  },
+  {
+    key: 'reports',
+    label: 'Reports',
+    emoji: '📊',
+    iconInactive: '/reports2-icon.png',
+    iconActive: '/reports-icon.png',
+  },
 ]
+
+function AppIcon({ src, alt, className, fallback }) {
+  const [hasError, setHasError] = useState(false)
+
+  if (!src || hasError) {
+    return <span className={className}>{fallback}</span>
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={() => setHasError(true)}
+    />
+  )
+}
 
 function App() {
   const { user, signOut, signupSuccess, clearSignupSuccess } = useAuth()
@@ -80,7 +134,15 @@ function AppContent({ signOut, user }) {
       {/* ── Top header bar ── */}
       <header className="app-header">
         <div className="app-header-left">
-          <span className="app-header-title">{activeTabDef.emoji} {activeTabDef.label}</span>
+          <span className="app-header-title">
+            <AppIcon
+              src={activeTabDef.headerIcon || activeTabDef.iconActive}
+              alt={`${activeTabDef.label} icon`}
+              className="app-header-icon"
+              fallback={activeTabDef.emoji}
+            />
+            <span>{activeTabDef.label}</span>
+          </span>
           {farm?.farm_name && (
             <span className="app-header-farm">{farm.farm_name}</span>
           )}
@@ -133,7 +195,12 @@ function AppContent({ signOut, user }) {
               onClick={() => setActiveTab(tab.key)}
               className={`app-tab-item${active ? ' active' : ''}`}
             >
-              <span className="app-tab-emoji">{tab.emoji}</span>
+              <AppIcon
+                src={active ? tab.iconActive : tab.iconInactive}
+                alt={`${tab.label} icon`}
+                className={`app-tab-icon${tab.key === 'home' ? ' app-tab-icon--dashboard' : ''}`}
+                fallback={tab.emoji}
+              />
               <span className="app-tab-label">{tab.label}</span>
             </button>
           )
