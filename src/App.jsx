@@ -196,7 +196,7 @@ function AppContent({ signOut, user }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`app-tab-item${active ? ' active' : ''}`}
+              className={`app-tab-item app-tab-item--${tab.key}${active ? ' active' : ''}`}
             >
               <AppIcon
                 src={active ? tab.iconActive : tab.iconInactive}

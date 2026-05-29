@@ -185,6 +185,22 @@ body,
   font-weight: 700;
 }
 
+@media (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+  .app-tab-item--reports {
+    display: none;
+  }
+
+  .app-tab-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .app-tab-icon--dashboard {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 /* ── Phone (max 767px) ── */
 @media (max-width: 767px) {
   .app-header {
