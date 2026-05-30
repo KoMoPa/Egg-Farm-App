@@ -72,6 +72,17 @@ body,
   opacity: 0.85;
 }
 
+.app-profile-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .app-logout-btn {
   background: #0b1f3b;
   color: white;
