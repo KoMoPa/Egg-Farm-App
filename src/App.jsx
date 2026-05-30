@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
 import { useAuth } from './contexts/AuthContext'
 import { FarmProvider, useFarmContext } from './contexts/FarmContext'
 import Login from './components/Login'
@@ -105,7 +103,7 @@ function App() {
 
 function AppContent({ signOut, user }) {
   const [activeTab, setActiveTab] = useState('home')
-  const { farm, monthYear, setMonthYear, selectedBarn } = useFarmContext()
+  const { farm, selectedBarn } = useFarmContext()
   const contentRef = useRef(null)
 
   // Scroll to top when changing tabs
@@ -116,21 +114,6 @@ function AppContent({ signOut, user }) {
   }, [activeTab])
 
   const activeTabDef = TABS.find(t => t.key === activeTab)
-
-  // Month/year helpers
-  const [year, month] = monthYear.split('-')
-  const selectedDate = new Date(parseInt(year), parseInt(month) - 1)
-  const handleDateChange = (date) => {
-    if (date) {
-      const y = date.getFullYear()
-      const m = String(date.getMonth() + 1).padStart(2, '0')
-      setMonthYear(`${y}-${m}-01`)
-    }
-  }
-  const renderMonthContent = (month, shortMonth, longMonth, day) => {
-    const fullYear = new Date(day).getFullYear()
-    return <span title={`${longMonth} ${fullYear}`}>{shortMonth}</span>
-  }
 
   return (
     <div className="app-shell">

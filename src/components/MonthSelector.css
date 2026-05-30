@@ -1,0 +1,168 @@
+/* MonthSelector — reusable month/year navigation component */
+
+.month-selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Navigation arrows ─────────────────────────────────────────── */
+
+.month-selector-nav-btn {
+  padding: 12px 18px;
+  background: #2D855B;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.month-selector-nav-btn:hover:not(:disabled) {
+  background: #236647;
+}
+
+.month-selector-nav-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ── Month + Year display buttons ──────────────────────────────── */
+
+.month-selector-display {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.month-selector-month-btn,
+.month-selector-year-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2D855B;
+  padding: 8px 12px;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.month-selector-month-btn:hover,
+.month-selector-year-btn:hover,
+.month-selector-month-btn.active,
+.month-selector-year-btn.active {
+  background: #e8f4ee;
+  border-color: #2D855B;
+}
+
+.month-selector-caret {
+  font-size: 12px;
+  color: #5a9e7a;
+  line-height: 1;
+}
+
+/* ── Popup container (shared) ──────────────────────────────────── */
+
+.month-selector-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  padding: 8px;
+}
+
+/* ── Month grid (4 columns × 3 rows) ───────────────────────────── */
+
+.month-selector-month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 280px;
+}
+
+.month-selector-month-option {
+  padding: 11px 4px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.month-selector-month-option:hover {
+  background: #e8f4ee;
+  border-color: #2D855B;
+  color: #2D855B;
+}
+
+.month-selector-month-option.selected {
+  background: #2D855B;
+  color: white;
+  border-color: #2D855B;
+  font-weight: bold;
+}
+
+/* ── Year list (scrollable) ────────────────────────────────────── */
+
+.month-selector-year-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+  width: 110px;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #b3d9c6 transparent;
+}
+
+.month-selector-year-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.month-selector-year-list::-webkit-scrollbar-thumb {
+  background: #b3d9c6;
+  border-radius: 2px;
+}
+
+.month-selector-year-option {
+  padding: 10px 12px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #333;
+  text-align: center;
+  transition: background 0.1s, color 0.1s;
+  width: 100%;
+}
+
+.month-selector-year-option:hover {
+  background: #e8f4ee;
+  color: #2D855B;
+}
+
+.month-selector-year-option.selected {
+  background: #2D855B;
+  color: white;
+  font-weight: bold;
+}

@@ -4,6 +4,7 @@ import { getOrCreateMonthlyAudit, getOrCreateProductionRecord } from '../utils/f
 import { useFarmContext } from '../contexts/FarmContext'
 import DaySelector from './DaySelector'
 import Form07DayView from './Form07DayView'
+import MonthSelector from './MonthSelector'
 
 const BLANK_FORM = {
     age: '',
@@ -39,13 +40,12 @@ function calcFlockAge(barn, recordDate) {
 
 export default function Form07DailyProduction() {
     const supabase = useSupabase()
-    const { farm, selectedBarn, monthYear } = useFarmContext()
+    const { farm, selectedBarn, monthYear, setMonthYear } = useFarmContext()
     const [viewMode, setViewMode] = useState('day')
 
-    // Month navigation state
-    const [allAudits, setAllAudits] = useState([])
-    const [viewingMonth, setViewingMonth] = useState(monthYear)
-    const [isCurrentMonth, setIsCurrentMonth] = useState(true)
+    // isCurrentMonth: true when the selected month is the current real-world month
+    const today = new Date()
+    const isCurrentMonth = monthYear === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
 
     // Monthly Checks state
     const [thermCalDate, setThermCalDate] = useState('')
@@ -79,7 +79,7 @@ export default function Form07DailyProduction() {
     useEffect(() => {
         const contentEl = document.querySelector('.app-content')
         if (contentEl) contentEl.scrollTop = 0
-    }, [viewMode, viewingMonth])
+    }, [viewMode, monthYear])
 
     // Reset on barn/month change
     useEffect(() => {
@@ -97,65 +97,7 @@ export default function Form07DailyProduction() {
         setMonthlyComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
-        setViewingMonth(monthYear)
-        setIsCurrentMonth(true)
     }, [selectedBarn?.id, monthYear])
-
-    // Fetch all audits for month navigation
-    useEffect(() => {
-        const fetchAudits = async () => {
-            if (!farm?.id) return
-            try {
-                const { data, error } = await supabase
-                    .from('monthly_audits')
-                    .select('*')
-                    .eq('farm_id', farm.id)
-                    .order('month_year', { ascending: false })
-                if (error) throw error
-                setAllAudits(data || [])
-            } catch (err) {
-                console.error('Error fetching audits:', err)
-            }
-        }
-        fetchAudits()
-    }, [farm?.id])
-
-    // Check if viewing current month
-    useEffect(() => {
-        setIsCurrentMonth(viewingMonth === monthYear)
-    }, [viewingMonth, monthYear])
-
-    // Reset day data cache when navigation month changes
-    useEffect(() => {
-        setDayData({})
-        setLockedDays({})
-        setSelectedDay(1)
-    }, [viewingMonth])
-
-    // Navigate to previous month
-    const handlePreviousMonth = () => {
-        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
-        if (currentIndex < allAudits.length - 1) {
-            setViewingMonth(allAudits[currentIndex + 1].month_year)
-        }
-    }
-
-    // Navigate to next month
-    const handleNextMonth = () => {
-        const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
-        if (currentIndex > 0) {
-            setViewingMonth(allAudits[currentIndex - 1].month_year)
-        }
-    }
-
-    const formatMonth = (dateStr) => {
-        const date = new Date(dateStr + 'T00:00:00')
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-    }
-
-    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
-    const canGoPrevious = currentIndex < allAudits.length - 1
-    const canGoNext = currentIndex > 0
 
     // Load monthly checks data from DB
     useEffect(() => {
@@ -163,7 +105,7 @@ export default function Form07DailyProduction() {
         let cancelled = false
         const load = async () => {
             try {
-                const monthStr = viewingMonth.substring(0, 7)
+                const monthStr = monthYear.substring(0, 7)
                 const { data: audit } = await supabase.from('monthly_audits').select('id')
                     .eq('farm_id', farm.id).eq('month_year', monthStr + '-01').maybeSingle()
                 if (!audit || cancelled) return
@@ -192,7 +134,7 @@ export default function Form07DailyProduction() {
         }
         load()
         return () => { cancelled = true }
-    }, [selectedBarn?.id, viewingMonth])
+    }, [selectedBarn?.id, monthYear])
 
     // Lazy-load selected day
     useEffect(() => {
@@ -203,7 +145,7 @@ export default function Form07DailyProduction() {
         const load = async () => {
             setLoadingDay(true)
             try {
-                const monthStr = viewingMonth.substring(0, 7)
+                const monthStr = monthYear.substring(0, 7)
                 const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
                 const auditMonthYear = `${monthStr}-01`
 
@@ -292,7 +234,7 @@ export default function Form07DailyProduction() {
 
         load()
         return () => { cancelled = true }
-    }, [selectedDay, selectedBarn?.id, viewingMonth])
+    }, [selectedDay, selectedBarn?.id, monthYear])
 
     const currentDayData = dayData[selectedDay] ?? { ...BLANK_FORM }
     const isLocked = lockedDays[selectedDay] === true
@@ -320,10 +262,10 @@ export default function Form07DailyProduction() {
             return isNaN(num) ? null : num
         }
         try {
-            const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
             const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
             const productionId = productionRecord.id
-            const monthPrefix = viewingMonth.substring(0, 7)
+            const monthPrefix = monthYear.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
             const d = currentDayData
 
@@ -401,7 +343,7 @@ export default function Form07DailyProduction() {
     const handleMonthlySubmit = async (e) => {
         e.preventDefault()
         try {
-            const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
+            const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
             const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
             const productionId = productionRecord.id
 
@@ -440,65 +382,6 @@ export default function Form07DailyProduction() {
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
-            {/* MONTH NAVIGATION */}
-            {allAudits.length > 0 && (
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '20px',
-                    padding: '12px 16px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd'
-                }}>
-                    <button
-                        type="button"
-                        onClick={handlePreviousMonth}
-                        disabled={!canGoPrevious}
-                        style={{
-                            padding: '8px 12px',
-                            backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: canGoPrevious ? 'pointer' : 'not-allowed',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
-                        }}>
-                        ← Previous
-                    </button>
-
-                    <div style={{ textAlign: 'center', flex: 1 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#2D855B' : '#666' }}>
-                            {formatMonth(viewingMonth)}
-                        </div>
-                        {!isCurrentMonth && (
-                            <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
-                                (View Only)
-                            </div>
-                        )}
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={handleNextMonth}
-                        disabled={!canGoNext}
-                        style={{
-                            padding: '8px 12px',
-                            backgroundColor: canGoNext ? '#2D855B' : '#ccc',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: canGoNext ? 'pointer' : 'not-allowed',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
-                        }}>
-                        Next →
-                    </button>
-                </div>
-            )}
-
             {/* FORM HEADER */}
             <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
@@ -508,29 +391,36 @@ export default function Form07DailyProduction() {
                     <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
                     <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
                 </div>
+            </div>
 
+            {/* TAB TOGGLE */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+                {['day', 'monthly'].map(mode => (
+                    <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setViewMode(mode)}
+                        style={{
+                            padding: '8px 16px',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            backgroundColor: viewMode === mode ? '#2D855B' : '#ddd',
+                            color: viewMode === mode ? 'white' : '#333',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}>
+                        {mode === 'day' ? 'Day View' : 'Monthly Checks'}
+                    </button>
+                ))}
+            </div>
 
-                {/* TAB TOGGLE */}
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
-                    {['day', 'monthly'].map(mode => (
-                        <button
-                            key={mode}
-                            type="button"
-                            onClick={() => setViewMode(mode)}
-                            style={{
-                                padding: '8px 16px',
-                                fontSize: '14px',
-                                fontWeight: 'bold',
-                                backgroundColor: viewMode === mode ? '#2D855B' : '#ddd',
-                                color: viewMode === mode ? 'white' : '#333',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                            }}>
-                            {mode === 'day' ? 'Day View' : 'Monthly Checks'}
-                        </button>
-                    ))}
-                </div>
+            {/* MONTH SELECTOR */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '4px' }}>
+                <MonthSelector value={monthYear} onChange={setMonthYear} />
+                {!isCurrentMonth && (
+                    <span style={{ fontSize: '11px', color: '#999' }}>Viewing past month</span>
+                )}
             </div>
 
             {/* ============ DAY VIEW ============ */}
@@ -543,13 +433,13 @@ export default function Form07DailyProduction() {
                 floorEggsTotal={floorEggsTotal}
                 eggProductionDaily={eggProductionDaily}
                 onUnlock={() => setLockedDays(p => ({ ...p, [selectedDay]: false }))}
-                monthYear={viewingMonth}
+                monthYear={monthYear}
                 lockedDays={lockedDays}
                 loadingDay={loadingDay}
                 onSelectDay={setSelectedDay}
                 hasFloorEggs={selectedBarn?.has_floor_eggs ?? true}
                 twoCollections={selectedBarn?.two_collections_per_day ?? true}
-                calculatedAge={calcFlockAge(selectedBarn, `${viewingMonth.substring(0, 7)}-${String(selectedDay).padStart(2, '0')}`)}
+                calculatedAge={calcFlockAge(selectedBarn, `${monthYear.substring(0, 7)}-${String(selectedDay).padStart(2, '0')}`)}
                 hasFlockData={!!(selectedBarn?.flock_arrival_date && selectedBarn?.flock_age_at_arrival_weeks != null)}
             />)}
 
