@@ -458,7 +458,7 @@ export default function Form07DailyProduction() {
                         disabled={!canGoPrevious}
                         style={{
                             padding: '8px 12px',
-                            backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                            backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -470,7 +470,7 @@ export default function Form07DailyProduction() {
                     </button>
 
                     <div style={{ textAlign: 'center', flex: 1 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#2D855B' : '#666' }}>
                             {formatMonth(viewingMonth)}
                         </div>
                         {!isCurrentMonth && (
@@ -486,7 +486,7 @@ export default function Form07DailyProduction() {
                         disabled={!canGoNext}
                         style={{
                             padding: '8px 12px',
-                            backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                            backgroundColor: canGoNext ? '#2D855B' : '#ccc',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -521,7 +521,7 @@ export default function Form07DailyProduction() {
                                 padding: '8px 16px',
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                backgroundColor: viewMode === mode ? '#0066cc' : '#ddd',
+                                backgroundColor: viewMode === mode ? '#2D855B' : '#ddd',
                                 color: viewMode === mode ? 'white' : '#333',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -549,6 +549,8 @@ export default function Form07DailyProduction() {
                 onSelectDay={setSelectedDay}
                 hasFloorEggs={selectedBarn?.has_floor_eggs ?? true}
                 twoCollections={selectedBarn?.two_collections_per_day ?? true}
+                calculatedAge={calcFlockAge(selectedBarn, `${viewingMonth.substring(0, 7)}-${String(selectedDay).padStart(2, '0')}`)}
+                hasFlockData={!!(selectedBarn?.flock_arrival_date && selectedBarn?.flock_age_at_arrival_weeks != null)}
             />)}
 
             {/* ============ MONTHLY CHECKS TAB ============ */}

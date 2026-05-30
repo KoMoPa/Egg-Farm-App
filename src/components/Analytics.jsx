@@ -4,31 +4,31 @@ import AnalyticsChart from './analytics/AnalyticsChart'
 const CHARTS = [
   {
     key: 'auger_run_time_minutes',
-    title: '⚙️ Auger Run Time',
+    title: 'Auger Run Time',
     table: 'feed_water_daily',
     dataColumn: 'auger_run_time_minutes',
     threshold: 3,
-    icon: '⚙️',
+    iconSrc: '/auger-icon.png',
     warningMsg: '{deviation} min ({pct}%) vs average',
   },
   {
     key: 'feed_actual',
-    title: '🌾 Feed',
+    title: 'Feed',
     table: 'feed_water_daily',
     dataColumn: 'feed_actual',
     targetColumn: 'feed_daily',
     threshold: 10,
-    icon: '🌾',
+    iconSrc: '/feed-icon.png',
     warningMsg: '{pct}% {deviation} target',
   },
   {
     key: 'water_actual',
-    title: '💧 Water',
+    title: 'Water',
     table: 'feed_water_daily',
     dataColumn: 'water_actual',
     targetColumn: 'water_daily',
     threshold: 10,
-    icon: '💧',
+    iconSrc: '/water-icon.png',
     warningMsg: '{pct}% {deviation} target',
   },
 ]
@@ -111,18 +111,24 @@ export default function Analytics() {
 
   return (
     <div className="analytics">
-      <h2 className="analytics-title">📈 Analytics</h2>
+      <h2 className="analytics-title">
+        <img src="/analysis-icon.png" alt="Analytics" className="analytics-title-icon" />
+        <span>Analytics</span>
+      </h2>
 
       <div className="analytics-charts-grid">
         {CHARTS.map(chart => (
           <section key={chart.key} className="analytics-segment analytics-segment--chart">
-            <h3 className="analytics-segment-title">{chart.title}</h3>
+            <h3 className="analytics-segment-title">
+              <img src={chart.iconSrc} alt="" className="analytics-segment-title-icon" />
+              <span>{chart.title}</span>
+            </h3>
             <AnalyticsChart
               table={chart.table}
               dataColumn={chart.dataColumn}
               targetColumn={chart.targetColumn}
               threshold={chart.threshold}
-              icon={chart.icon}
+              icon={<img src={chart.iconSrc} alt="" className="warning-banner-icon-image" />}
               warningMsg={chart.warningMsg}
               goal={goals[chart.key] ?? null}
             />

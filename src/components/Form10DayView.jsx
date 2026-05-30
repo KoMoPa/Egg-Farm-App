@@ -12,14 +12,14 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Mice Caught</label>
-                    <input type="number" value={data.micesCaught}
+                    <input type="number" min="0" max="9999999" value={data.micesCaught}
                         onChange={(e) => onDayChange(day, 'micesCaught', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Traps Checked</label>
-                    <input type="number" value={data.trapsChecked}
+                    <input type="number" min="0" max="999" value={data.trapsChecked}
                         onChange={(e) => onDayChange(day, 'trapsChecked', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
@@ -37,14 +37,14 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Findings</label>
-                    <input type="text" value={data.liveTrapsFindings}
+                    <input type="text" maxLength={30} value={data.liveTrapsFindings}
                         onChange={(e) => onDayChange(day, 'liveTrapsFindings', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Location</label>
-                    <input type="text" value={data.liveTrapsLocation}
+                    <input type="text" maxLength={30} value={data.liveTrapsLocation}
                         onChange={(e) => onDayChange(day, 'liveTrapsLocation', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
@@ -54,14 +54,14 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Product</label>
-                    <input type="text" value={data.baitProduct}
+                    <input type="text" maxLength={30} value={data.baitProduct}
                         onChange={(e) => onDayChange(day, 'baitProduct', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Location</label>
-                    <input type="text" value={data.baitLocation}
+                    <input type="text" maxLength={30} value={data.baitLocation}
                         onChange={(e) => onDayChange(day, 'baitLocation', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
@@ -83,7 +83,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Corrective Actions</label>
-                    <input type="text" value={data.correctiveActions}
+                    <input type="text" maxLength={60} value={data.correctiveActions}
                         onChange={(e) => onDayChange(day, 'correctiveActions', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
@@ -128,7 +128,7 @@ export default function Form10DayView({
                         type="button"
                         onClick={onUnlock}
                         style={{
-                            backgroundColor: '#0066cc', color: 'white', border: 'none',
+                            backgroundColor: '#2D855B', color: 'white', border: 'none',
                             borderRadius: '6px', padding: '7px 14px',
                             fontWeight: '700', fontSize: '13px', cursor: 'pointer'
                         }}

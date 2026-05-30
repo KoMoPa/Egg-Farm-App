@@ -170,7 +170,7 @@ export default function Login() {
                         style={{
                             width: '100%',
                             padding: '12px',
-                            backgroundColor: '#0066cc',
+                            backgroundColor: '#2D855B',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -204,7 +204,7 @@ export default function Login() {
                                 style={{
                                     background: 'none',
                                     border: 'none',
-                                    color: '#0066cc',
+                                    color: '#2D855B',
                                     cursor: 'pointer',
                                     fontWeight: 'bold',
                                     textDecoration: 'underline'
@@ -226,7 +226,7 @@ export default function Login() {
                                 style={{
                                     background: 'none',
                                     border: 'none',
-                                    color: '#0066cc',
+                                    color: '#2D855B',
                                     cursor: 'pointer',
                                     fontWeight: 'bold',
                                     textDecoration: 'underline'
@@ -247,7 +247,7 @@ export default function Login() {
                                         style={{
                                             background: 'none',
                                             border: 'none',
-                                            color: '#0066cc',
+                                            color: '#2D855B',
                                             cursor: 'pointer',
                                             fontWeight: 'bold',
                                             textDecoration: 'underline',

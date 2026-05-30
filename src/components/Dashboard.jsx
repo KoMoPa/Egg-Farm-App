@@ -21,7 +21,7 @@ export default function Dashboard() {
         <FlockData key={selectedBarn?.id ?? 'no-barn'} />
       </section>
       <section className="dashboard-card">
-        <Analytics />
+        <Analytics key={selectedBarn?.id ?? 'no-barn'} />
       </section>
       <section className="dashboard-card">
         <h2 style={{ color: 'black' }}>This app is in development and we'd love feedback! Email us at <a href="mailto:komopadev@gmail.com">komopadev@gmail.com</a>

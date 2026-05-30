@@ -30,6 +30,15 @@ export function FarmProvider({ children, user }) {
     }
   }, [user?.id])
 
+  // Keep selected barn in sync with latest barn objects after reloads/edits.
+  useEffect(() => {
+    setSelectedBarn(prevSelected => {
+      if (!prevSelected?.id) return prevSelected
+      const updatedSelected = barns.find(barn => barn.id === prevSelected.id)
+      return updatedSelected || null
+    })
+  }, [barns])
+
   // Load barns when farm changes — removed: initializeFarm now handles both in one pass
 
   const initializeFarm = async () => {
@@ -41,7 +50,7 @@ export function FarmProvider({ children, user }) {
         setBarns(cached.barns)
         setLoading(false)
       }
-    } catch {}
+    } catch { }
 
     // Fetch fresh farm + barns in one async chain, update cache
     try {
@@ -69,7 +78,7 @@ export function FarmProvider({ children, user }) {
       try {
         const cached = JSON.parse(localStorage.getItem(cacheKey(user.id)) || '{}')
         localStorage.setItem(cacheKey(user.id), JSON.stringify({ ...cached, barns: farmBarns }))
-      } catch {}
+      } catch { }
       setError(null)
     } catch (err) {
       setError('Error loading barns: ' + err.message)

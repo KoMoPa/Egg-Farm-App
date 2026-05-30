@@ -17,6 +17,8 @@ export default function Form07DayView({
     onSelectDay,
     hasFloorEggs = true,
     twoCollections = true,
+    calculatedAge = '',
+    hasFlockData = false,
 }) {
     return (
         <>
@@ -41,7 +43,7 @@ export default function Form07DayView({
                         type="button"
                         onClick={onUnlock}
                         style={{
-                            backgroundColor: '#0066cc', color: 'white', border: 'none',
+                            backgroundColor: '#2D855B', color: 'white', border: 'none',
                             borderRadius: '6px', padding: '7px 14px',
                             fontWeight: '700', fontSize: '13px', cursor: 'pointer'
                         }}
@@ -61,13 +63,15 @@ export default function Form07DayView({
                 <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
                     Age (weeks)
                 </label>
-                <input
-                    type="number"
-                    value={data.age}
-                    onChange={(e) => setField('age', e.target.value)}
-                    disabled={isLocked}
-                    style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
-                />
+                {hasFlockData ? (
+                    <div style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', backgroundColor: '#f5f5f5', color: '#333', fontWeight: 'bold' }}>
+                        {calculatedAge || '—'}
+                    </div>
+                ) : (
+                    <div style={{ fontSize: '14px', color: '#cc6600', padding: '10px', background: '#fff3cd', borderRadius: '8px', border: '1px solid #ffc107' }}>
+                        ⚠️ Set flock arrival date on the Dashboard to auto-calculate age
+                    </div>
+                )}
             </div>
 
             {/* Floor Eggs */}
@@ -115,6 +119,7 @@ export default function Form07DayView({
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
                         <input
                             type="number"
+                            min="0" max="99999999"
                             value={data.eggProduction1}
                             onChange={(e) => setField('eggProduction1', e.target.value)}
                             disabled={isLocked}
@@ -125,6 +130,7 @@ export default function Form07DayView({
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
                         <input
                             type="number"
+                            min="0" max="99999999"
                             value={data.eggProduction2}
                             onChange={(e) => setField('eggProduction2', e.target.value)}
                             disabled={isLocked}
@@ -141,7 +147,7 @@ export default function Form07DayView({
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>% Daily</label>
                         <input
                             type="number"
-                            step="0.1"
+                            step="0.1" min="0" max="100"
                             value={data.eggProductionPercent}
                             onChange={(e) => setField('eggProductionPercent', e.target.value)}
                             disabled={isLocked}
@@ -175,7 +181,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp HI (°C)</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="-99.9" max="999.9"
                             value={data.coolerTempHi}
                             onChange={(e) => setField('coolerTempHi', e.target.value)}
                             disabled={isLocked}
@@ -185,7 +191,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp LO (°C)</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="-99.9" max="999.9"
                             value={data.coolerTempLo}
                             onChange={(e) => setField('coolerTempLo', e.target.value)}
                             disabled={isLocked}
@@ -195,7 +201,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% HI</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="0" max="100"
                             value={data.coolerRhHi}
                             onChange={(e) => setField('coolerRhHi', e.target.value)}
                             disabled={isLocked}
@@ -205,7 +211,7 @@ export default function Form07DayView({
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% LO</label>
                         <input
-                            type="number" step="0.1"
+                            type="number" step="0.1" min="0" max="100"
                             value={data.coolerRhLo}
                             onChange={(e) => setField('coolerRhLo', e.target.value)}
                             disabled={isLocked}
@@ -237,6 +243,7 @@ export default function Form07DayView({
                 </label>
                 <input
                     type="number"
+                    min="0" max="999"
                     value={data.dirtyTrays}
                     onChange={(e) => setField('dirtyTrays', e.target.value)}
                     disabled={isLocked}
@@ -246,7 +253,7 @@ export default function Form07DayView({
 
             {/* Sanitation */}
             <div style={{ background: '#e7f3ff', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #0066cc', paddingBottom: '8px' }}>
+                <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #2D855B', paddingBottom: '8px' }}>
                     Sanitation - As Completed
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>

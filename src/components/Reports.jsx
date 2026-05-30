@@ -11,13 +11,13 @@ function Reports() {
     const [selectedMonth, setSelectedMonth] = useState(null)
     const [selectedAuditId, setSelectedAuditId] = useState(null)
     const [showPrintModal, setShowPrintModal] = useState(false)
-    const [barnFormStatus, setBarnFormStatus] = useState({ f07: false, f08: false, f09: false, f10: false })
+    const [barnFormStatus, setBarnFormStatus] = useState({ f07: 0, f08: 0, f09: 0, f10: 0 })
 
-    // Fetch barn-level record existence for the selected barn + audit
+    // Fetch day counts for each form for the selected barn + audit
     useEffect(() => {
         const checkBarnForms = async () => {
             if (!selectedBarn?.id || !selectedAuditId) {
-                setBarnFormStatus({ f07: false, f08: false, f09: false, f10: false })
+                setBarnFormStatus({ f07: 0, f08: 0, f09: 0, f10: 0 })
                 return
             }
             const [r07, r08, r09, r10] = await Promise.all([
@@ -26,11 +26,17 @@ function Reports() {
                 supabase.from('feed_water_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
                 supabase.from('pest_control_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
             ])
+            const [c07, c08, c09, c10] = await Promise.all([
+                r07.data ? supabase.from('production_egg_output').select('record_date', { count: 'exact', head: true }).eq('production_id', r07.data.id) : Promise.resolve({ count: 0 }),
+                r08.data ? supabase.from('welfare_daily_checks').select('record_date', { count: 'exact', head: true }).eq('welfare_id', r08.data.id) : Promise.resolve({ count: 0 }),
+                r09.data ? supabase.from('feed_water_daily').select('record_date', { count: 'exact', head: true }).eq('fw_id', r09.data.id) : Promise.resolve({ count: 0 }),
+                r10.data ? supabase.from('pest_daily_observations').select('record_date', { count: 'exact', head: true }).eq('pest_id', r10.data.id) : Promise.resolve({ count: 0 }),
+            ])
             setBarnFormStatus({
-                f07: !!r07.data,
-                f08: !!r08.data,
-                f09: !!r09.data,
-                f10: !!r10.data,
+                f07: c07.count ?? 0,
+                f08: c08.count ?? 0,
+                f09: c09.count ?? 0,
+                f10: c10.count ?? 0,
             })
         }
         checkBarnForms()
@@ -79,67 +85,36 @@ function Reports() {
     // Get current audit
     const currentAudit = audits.find(a => a.month_year === selectedMonth)
 
-    // Calculate days remaining for incomplete form
-    const getDaysRemaining = (completed, monthYear) => {
-        if (completed) return null
-
-
-        // Parse year/month directly from the "YYYY-MM-DD" string to avoid UTC
-        // timezone shifting (new Date("YYYY-MM-DD") is parsed as UTC midnight,
-        // so .getMonth() returns the previous month for Ontario -4 UTC farmers)
-        const parts = monthYear.split('-')
-        const auditYear = parseInt(parts[0], 10)
-        const auditMonth = parseInt(parts[1], 10) - 1  // 0-indexed
-
-        const daysInMonth = new Date(auditYear, auditMonth + 1, 0).getDate()
-
-        const today = new Date()
-        const todayYear = today.getFullYear()
-        const todayMonth = today.getMonth()
-
-
-        // If audit is a past year or past month, show 0 days remaining
-        if (auditYear < todayYear || (auditYear === todayYear && auditMonth < todayMonth)) {
-
-            return 0
-        }
-
-        // Current month - calculate remaining days
-        return Math.max(0, daysInMonth - today.getDate())
-    }
-
-    // Form status box component
-    const FormStatusBox = ({ completed, monthYear, formNumber, formName }) => {
-        const daysRemaining = getDaysRemaining(completed, monthYear)
-
-        if (completed) {
+    // Form status box component — shows X/Y days recorded
+    const FormStatusBox = ({ daysRecorded, daysInMonth }) => {
+        const complete = daysRecorded >= daysInMonth
+        if (complete) {
             return (
                 <div style={{
                     padding: '8px 12px',
                     backgroundColor: '#28a745',
                     color: 'white',
                     borderRadius: '4px',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     fontWeight: 'bold',
                     textAlign: 'center'
                 }}>
-                    ✓ Complete
+                    ✓ {daysRecorded}/{daysInMonth} days
                 </div>
             )
         }
-
-        const isUrgent = daysRemaining !== null && daysRemaining <= 3
         return (
             <div style={{
                 padding: '8px 12px',
-                backgroundColor: isUrgent ? '#dc3545' : '#ffc107',
-                color: isUrgent ? 'white' : '#333',
+                backgroundColor: daysRecorded === 0 ? '#f8f9fa' : '#ffc107',
+                color: daysRecorded === 0 ? '#999' : '#333',
+                border: daysRecorded === 0 ? '1px solid #ddd' : 'none',
                 borderRadius: '4px',
-                fontSize: '12px',
+                fontSize: '13px',
                 fontWeight: 'bold',
                 textAlign: 'center'
             }}>
-                {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left
+                {daysRecorded}/{daysInMonth} days
             </div>
         )
     }
@@ -174,8 +149,9 @@ function Reports() {
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-            <h2 style={{ margin: '0 0 30px 0', fontSize: '24px', fontWeight: 700, color: '#0066cc' }}>
-                📊 Monthly Compliance Reports
+            <h2 style={{ margin: '0 0 30px 0', fontSize: '24px', fontWeight: 700, color: '#2D855B', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src="/reports-icon.png" alt="Reports" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
+                <span>Monthly Compliance Reports</span>
             </h2>
 
             {loading && <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>Loading reports...</p>}
@@ -204,7 +180,7 @@ function Reports() {
                             disabled={!canGoPrevious}
                             style={{
                                 padding: '8px 16px',
-                                backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                                backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -216,7 +192,7 @@ function Reports() {
                         </button>
 
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0066cc', marginBottom: '4px' }}>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2D855B', marginBottom: '4px' }}>
                                 {formatMonth(selectedMonth)}
                             </div>
                             <div style={{ fontSize: '12px', color: '#666' }}>
@@ -229,7 +205,7 @@ function Reports() {
                             disabled={!canGoNext}
                             style={{
                                 padding: '8px 16px',
-                                backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                                backgroundColor: canGoNext ? '#2D855B' : '#ccc',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -239,44 +215,6 @@ function Reports() {
                             }}>
                             Next →
                         </button>
-                    </div>
-
-                    {/* Month Summary */}
-                    <div style={{
-                        marginBottom: '30px',
-                        padding: '20px',
-                        backgroundColor: '#f0f7ff',
-                        borderRadius: '8px',
-                        border: '1px solid #d0e8ff'
-                    }}>
-                        {(() => {
-                            const completed = [
-                                barnFormStatus.f07,
-                                barnFormStatus.f08,
-                                barnFormStatus.f09,
-                                barnFormStatus.f10,
-                            ].filter(Boolean).length
-                            const total = 4
-                            const allComplete = completed === total
-
-                            return (
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{
-                                        fontSize: '32px',
-                                        fontWeight: 'bold',
-                                        color: allComplete ? '#28a745' : '#ffc107',
-                                        marginBottom: '8px'
-                                    }}>
-                                        {completed}/{total} Forms Complete
-                                    </div>
-                                    <div style={{ fontSize: '14px', color: '#666' }}>
-                                        {allComplete
-                                            ? '✓ All compliance records submitted for this month'
-                                            : `${total - completed} form${total - completed !== 1 ? 's' : ''} remaining`}
-                                    </div>
-                                </div>
-                            )
-                        })()}
                     </div>
 
                     {/* Form Status Boxes */}
@@ -291,10 +229,8 @@ function Reports() {
                                 Form 07
                             </div>
                             <FormStatusBox
-                                completed={barnFormStatus.f07}
-                                monthYear={selectedMonth}
-                                formNumber="07"
-                                formName="Daily Production"
+                                daysRecorded={barnFormStatus.f07}
+                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
                             />
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -302,10 +238,8 @@ function Reports() {
                                 Form 08
                             </div>
                             <FormStatusBox
-                                completed={barnFormStatus.f08}
-                                monthYear={selectedMonth}
-                                formNumber="08"
-                                formName="Welfare Records"
+                                daysRecorded={barnFormStatus.f08}
+                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
                             />
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -313,10 +247,8 @@ function Reports() {
                                 Form 09
                             </div>
                             <FormStatusBox
-                                completed={barnFormStatus.f09}
-                                monthYear={selectedMonth}
-                                formNumber="09"
-                                formName="Feed & Water"
+                                daysRecorded={barnFormStatus.f09}
+                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
                             />
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -324,10 +256,8 @@ function Reports() {
                                 Form 10
                             </div>
                             <FormStatusBox
-                                completed={barnFormStatus.f10}
-                                monthYear={selectedMonth}
-                                formNumber="10"
-                                formName="Pest Control"
+                                daysRecorded={barnFormStatus.f10}
+                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
                             />
                         </div>
                     </div>
@@ -340,16 +270,16 @@ function Reports() {
                                 padding: '16px 40px',
                                 fontSize: '16px',
                                 fontWeight: 'bold',
-                                backgroundColor: '#0066cc',
+                                backgroundColor: '#2D855B',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
                                 cursor: 'pointer',
-                                boxShadow: '0 2px 8px rgba(0, 102, 204, 0.3)',
+                                boxShadow: '0 2px 8px rgba(45, 133, 91, 0.3)',
                                 transition: 'background-color 0.2s'
                             }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#0052a3'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = '#0066cc'}>
+                            onMouseOver={(e) => e.target.style.backgroundColor = '#256d4a'}
+                            onMouseOut={(e) => e.target.style.backgroundColor = '#2D855B'}>
                             🖨 Print Monthly Report
                         </button>
                     </div>

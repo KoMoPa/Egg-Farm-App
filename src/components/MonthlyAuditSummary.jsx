@@ -23,6 +23,14 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
         const fetchData = async () => {
             setLoading(true)
             try {
+                // Always fetch barn name directly
+                const { data: barnData } = await supabase
+                    .from('barns')
+                    .select('barn_name')
+                    .eq('id', barnId)
+                    .maybeSingle()
+                setBarnNumber(barnData?.barn_name ?? '')
+
                 // Form 07 - Production & Cooler
                 const { data: prodRecord } = await supabase
                     .from('production_cooler_records')
@@ -56,10 +64,10 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                 }
 
                 // Form 08 - Welfare
-                // Step 1: get welfare_records entry (join barns to get barn_number)
+                // Step 1: get welfare_records entry
                 const { data: welfareRecord } = await supabase
                     .from('welfare_records')
-                    .select('id, monthly_comments, barns(barn_name)')
+                    .select('id, monthly_comments')
                     .eq('barn_id', barnId)
                     .eq('audit_id', auditId)
                     .maybeSingle()
@@ -140,7 +148,6 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                 setForm08Comments(weeklyInspections)
                 setForm08MonthlyInspections(monthlyInspections)
                 setForm08AmmoniaData(ammoniaTests)
-                setBarnNumber(welfareRecord?.barns?.barn_name ?? '')
                 setForm09Data({ fwRecord, daily: fw09Daily, health: fw09Health, metadata: fw09Meta })
                 setForm10Data({ pestRecord, daily: pest10Daily, audit: pest10Audit })
             } catch (err) {
@@ -210,21 +217,27 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
     const handleDownloadPDF = async () => {
         try {
             const { doc, filename } = buildPDFDoc()
-            const asPdf = pdf(doc)
-            asPdf.toBlob().then((blob) => {
+            const blob = await pdf(doc).toBlob()
+            const file = new File([blob], filename, { type: 'application/pdf' })
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: filename,
+                })
+            } else {
                 const url = URL.createObjectURL(blob)
                 const link = document.createElement('a')
                 link.href = url
                 link.download = filename
                 link.click()
                 URL.revokeObjectURL(url)
-            }).catch((err) => {
-                console.error('PDF generation failed:', err)
-                alert('Error generating PDF: ' + err.message)
-            })
+            }
         } catch (error) {
-            console.error('Error generating PDF:', error)
-            alert('Error generating PDF: ' + error.message)
+            if (error.name !== 'AbortError') {
+                console.error('Error generating PDF:', error)
+                alert('Error generating PDF: ' + error.message)
+            }
         }
     }
 
@@ -288,7 +301,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                         padding: '10px 20px',
                         fontSize: '14px',
                         fontWeight: 'bold',
-                        backgroundColor: selectedForm === 'form07' ? '#0066cc' : '#ddd',
+                        backgroundColor: selectedForm === 'form07' ? '#2D855B' : '#ddd',
                         color: selectedForm === 'form07' ? 'white' : '#333',
                         border: 'none',
                         borderRadius: '4px',
@@ -302,7 +315,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                         padding: '10px 20px',
                         fontSize: '14px',
                         fontWeight: 'bold',
-                        backgroundColor: selectedForm === 'form08' ? '#0066cc' : '#ddd',
+                        backgroundColor: selectedForm === 'form08' ? '#2D855B' : '#ddd',
                         color: selectedForm === 'form08' ? 'white' : '#333',
                         border: 'none',
                         borderRadius: '4px',
@@ -316,7 +329,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                         padding: '10px 20px',
                         fontSize: '14px',
                         fontWeight: 'bold',
-                        backgroundColor: selectedForm === 'form09' ? '#0066cc' : '#ddd',
+                        backgroundColor: selectedForm === 'form09' ? '#2D855B' : '#ddd',
                         color: selectedForm === 'form09' ? 'white' : '#333',
                         border: 'none',
                         borderRadius: '4px',
@@ -330,7 +343,7 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                         padding: '10px 20px',
                         fontSize: '14px',
                         fontWeight: 'bold',
-                        backgroundColor: selectedForm === 'form10' ? '#0066cc' : '#ddd',
+                        backgroundColor: selectedForm === 'form10' ? '#2D855B' : '#ddd',
                         color: selectedForm === 'form10' ? 'white' : '#333',
                         border: 'none',
                         borderRadius: '4px',
@@ -820,13 +833,13 @@ function MonthlyAuditSummary({ farmId, farmName, barnId, auditId, monthYear, onC
                     borderRadius: '4px',
                     cursor: 'pointer'
                 }}>
-                    📥 Download as PDF
+                    📥 {navigator.canShare ? '📤 Share / Save PDF' : 'Download as PDF'}
                 </button>
                 <button onClick={handlePrintPDF} style={{
                     padding: '10px 30px',
                     fontSize: '14px',
                     fontWeight: 'bold',
-                    backgroundColor: '#0066cc',
+                    backgroundColor: '#2D855B',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',

@@ -1,16 +1,28 @@
-# React + Vite
+# Egg Farm App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Run locally
 
-Currently, two official plugins are available:
+1. Install deps: `npm install`
+2. Start dev server: `npm run dev`
+3. Build production bundle: `npm run build`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Railway lockfile note (important)
 
-## React Compiler
+Railway deploys this service with Node 20 / npm 10 behavior.
+When dependencies change, regenerate lockfile with npm 10 before committing:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. `npm run lockfile:railway`
+2. `npm run lockfile:check`
+3. Commit `package-lock.json` (and `package.json` if it changed)
 
-## Expanding the ESLint configuration
+This avoids recurring `npm ci` failures for missing transitive deps in Railway builds.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Install on phone (PWA)
+
+The web app can be installed to home screen and will use the app icon.
+
+1. Open the Railway URL on phone browser.
+2. iPhone (Safari): Share -> Add to Home Screen.
+3. Android (Chrome): menu -> Add to Home Screen (or Install App).
+
+Sharing the app link by text sends the URL; users install from that link.

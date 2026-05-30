@@ -81,6 +81,13 @@ export default function Form09FeedWaterRecords() {
         setIsCurrentMonth(true)
     }, [selectedBarn?.id, monthYear])
 
+    // Reset day cache when navigating months
+    useEffect(() => {
+        setDayData({})
+        setLockedDays({})
+        setSelectedDay(1)
+    }, [viewingMonth])
+
     // Fetch all audits for month navigation
     useEffect(() => {
         const fetchAudits = async () => {
@@ -191,10 +198,10 @@ export default function Form09FeedWaterRecords() {
         const load = async () => {
             setLoadingDay(true)
             try {
-                const monthStr = monthYear.substring(0, 7)
+                const monthStr = viewingMonth.substring(0, 7)
                 const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
 
-                const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
+                const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
                 if (!audit || cancelled) {
                     if (!cancelled) {
                         setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
@@ -261,7 +268,7 @@ export default function Form09FeedWaterRecords() {
 
         load()
         return () => { cancelled = true }
-    }, [selectedDay, selectedBarn?.id, monthYear])
+    }, [selectedDay, selectedBarn?.id, viewingMonth])
 
     const currentDayData = dayData[selectedDay] ?? { ...BLANK_DAY }
     const isLocked = lockedDays[selectedDay] === true
@@ -389,7 +396,7 @@ export default function Form09FeedWaterRecords() {
                         disabled={!canGoPrevious}
                         style={{
                             padding: '8px 12px',
-                            backgroundColor: canGoPrevious ? '#0066cc' : '#ccc',
+                            backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -401,7 +408,7 @@ export default function Form09FeedWaterRecords() {
                     </button>
 
                     <div style={{ textAlign: 'center', flex: 1 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#0066cc' : '#666' }}>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#2D855B' : '#666' }}>
                             {formatMonth(viewingMonth)}
                         </div>
                         {!isCurrentMonth && (
@@ -417,7 +424,7 @@ export default function Form09FeedWaterRecords() {
                         disabled={!canGoNext}
                         style={{
                             padding: '8px 12px',
-                            backgroundColor: canGoNext ? '#0066cc' : '#ccc',
+                            backgroundColor: canGoNext ? '#2D855B' : '#ccc',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -451,7 +458,7 @@ export default function Form09FeedWaterRecords() {
                                 padding: '8px 16px',
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                backgroundColor: viewMode === mode ? '#0066cc' : '#ddd',
+                                backgroundColor: viewMode === mode ? '#2D855B' : '#ddd',
                                 color: viewMode === mode ? 'white' : '#333',
                                 border: 'none',
                                 borderRadius: '4px',
