@@ -79,7 +79,7 @@ export default function Form07DayView({
                 <h3 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
                     Floor Eggs
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: twoCollections ? '1fr 1fr 1fr' : '1fr 1fr', gap: '15px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
                         <input
@@ -90,7 +90,7 @@ export default function Form07DayView({
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
-                    <div>
+                    {twoCollections && <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
                         <input
                             type="number"
@@ -99,9 +99,8 @@ export default function Form07DayView({
                             disabled={isLocked}
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
-                    </div>
+                    </div>}
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Total</label>
                         <div style={{ padding: '12px', fontSize: '20px', fontWeight: 'bold', background: '#ffc107', borderRadius: '8px', textAlign: 'center' }}>
                             {floorEggsTotal}
                         </div>

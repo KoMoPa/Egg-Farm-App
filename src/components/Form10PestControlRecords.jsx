@@ -42,7 +42,6 @@ export default function Form10PestControlRecords() {
     const [rangeOther, setRangeOther] = useState('')
     const [interiorInspectionDate, setInteriorInspectionDate] = useState('')
     const [interiorInspectionObservation, setInteriorInspectionObservation] = useState('')
-    const [rodentIndex, setRodentIndex] = useState('')
     const [miceTotal, setMiceTotal] = useState('')
     const [trapsTotal, setTrapsTotal] = useState('')
     const [daysMonitored, setDaysMonitored] = useState('')
@@ -94,7 +93,6 @@ export default function Form10PestControlRecords() {
         setRangeOther('')
         setInteriorInspectionDate('')
         setInteriorInspectionObservation('')
-        setRodentIndex('')
         setMiceTotal('')
         setTrapsTotal('')
         setDaysMonitored('')
@@ -134,7 +132,6 @@ export default function Form10PestControlRecords() {
                     setRangeOther(ma.range_other ?? '')
                     setInteriorInspectionDate(ma.interior_inspection_date ?? '')
                     setInteriorInspectionObservation(ma.interior_inspection_observation ?? '')
-                    setRodentIndex(ma.rodent_index?.toString() ?? '')
                     setMiceTotal(ma.mice_total?.toString() ?? '')
                     setTrapsTotal(ma.traps_total?.toString() ?? '')
                     setDaysMonitored(ma.days_monitored?.toString() ?? '')
@@ -314,7 +311,7 @@ export default function Form10PestControlRecords() {
                     mice_total: miceTotal ? parseInt(miceTotal) : null,
                     traps_total: trapsTotal ? parseInt(trapsTotal) : null,
                     days_monitored: daysMonitored ? parseInt(daysMonitored) : null,
-                    rodent_index: rodentIndex ? parseFloat(rodentIndex) : null,
+                    rodent_index: (() => { const m = parseFloat(miceTotal), t = parseFloat(trapsTotal), d = parseFloat(daysMonitored); return (!isNaN(m) && !isNaN(t) && !isNaN(d) && t !== 0 && d !== 0) ? (m / t / d) * 12 * 7 : null })(),
                     comments: comments || null,
                     signature: signature || null,
                     signature_date: signatureDate || null,
@@ -518,10 +515,10 @@ export default function Form10PestControlRecords() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
-                                    <input type="number" step="0.0001" value={rodentIndex}
-                                        onChange={(e) => setRodentIndex(e.target.value)}
-                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                                    <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
+                                    <div style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5', fontSize: '16px', fontWeight: 'bold', color: '#333', minHeight: '36px' }}>
+                                        {(() => { const m = parseFloat(miceTotal), t = parseFloat(trapsTotal), d = parseFloat(daysMonitored); return (!isNaN(m) && !isNaN(t) && !isNaN(d) && t !== 0 && d !== 0) ? ((m / t / d) * 12 * 7).toFixed(4) : '—' })()} 
+                                    </div>
+                                    <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
                                 </div>
                             </div>
                             <div style={{ marginBottom: '20px' }}>

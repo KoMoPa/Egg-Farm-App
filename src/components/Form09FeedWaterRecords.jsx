@@ -8,7 +8,6 @@ import MonthSelector from './MonthSelector'
 const BLANK_DAY = {
     feedDaily: '', feedActual: '',
     waterDaily: '', waterActual: '',
-    augerRunTimeMinutes: '',
     flush: false, medsVit: false, treatment: false,
     notes: '',
     mortalityDaily: '', mortalityReason: '',
@@ -185,7 +184,7 @@ export default function Form09FeedWaterRecords() {
                         feedActual: fwd.feed_actual?.toString() ?? '',
                         waterDaily: fwd.water_daily?.toString() ?? '',
                         waterActual: fwd.water_actual?.toString() ?? '',
-                        augerRunTimeMinutes: fwd.auger_run_time_minutes?.toString() ?? '',
+
                         flush: !!fwd.flush_notes,
                         medsVit: !!fwd.meds_vit_notes,
                         treatment: !!fwd.treatment_notes,
@@ -240,7 +239,7 @@ export default function Form09FeedWaterRecords() {
                 feed_actual: d.feedActual ? parseFloat(d.feedActual) : null,
                 water_daily: d.waterDaily ? parseFloat(d.waterDaily) : null,
                 water_actual: d.waterActual ? parseFloat(d.waterActual) : null,
-                auger_run_time_minutes: d.augerRunTimeMinutes ? parseInt(d.augerRunTimeMinutes) : null,
+
                 flush_notes: d.flush ? 'Yes' : null,
                 meds_vit_notes: d.medsVit ? 'Yes' : null,
                 treatment_notes: d.treatment ? 'Yes' : null,
