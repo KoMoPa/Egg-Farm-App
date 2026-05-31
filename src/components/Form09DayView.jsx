@@ -12,45 +12,35 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Feed Daily Target</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'normal', fontSize: '12px', color: '#A07800' }}>Feed Daily Target</label>
                     <input type="number" step="0.1" value={data.feedDaily}
                         onChange={(e) => onDayChange(day, 'feedDaily', e.target.value)}
                         disabled={locked}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '13px', color: locked ? undefined : '#A07800', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Feed Actual</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '15px', color: '#2D855B' }}>Feed Actual</label>
                     <input type="number" step="0.1" value={data.feedActual}
                         onChange={(e) => onDayChange(day, 'feedActual', e.target.value)}
                         disabled={locked}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '15px', fontWeight: 'bold', color: locked ? undefined : '#2D855B', ...(locked && inputLocked) }} />
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Water Daily Target</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'normal', fontSize: '12px', color: '#A07800' }}>Water Daily Target</label>
                     <input type="number" min="0" max="9999999999" value={data.waterDaily}
                         onChange={(e) => onDayChange(day, 'waterDaily', e.target.value)}
                         disabled={locked}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '13px', color: locked ? undefined : '#A07800', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Water Actual</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '15px', color: '#2D855B' }}>Water Actual</label>
                     <input type="number" min="0" max="9999999999" value={data.waterActual}
                         onChange={(e) => onDayChange(day, 'waterActual', e.target.value)}
                         disabled={locked}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
-                </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '30px' }}>
-                <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Auger Run Time (minutes)</label>
-                    <input type="number" min="0" max="99" value={data.augerRunTimeMinutes}
-                        onChange={(e) => onDayChange(day, 'augerRunTimeMinutes', e.target.value)}
-                        disabled={locked}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '15px', fontWeight: 'bold', color: locked ? undefined : '#2D855B', ...(locked && inputLocked) }} />
                 </div>
             </div>
 
@@ -116,6 +106,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                         <option value="">Select...</option>
                         <option value="natural">Natural</option>
                         <option value="euthanized">Euthanized</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
             </div>

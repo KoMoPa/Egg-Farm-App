@@ -1,0 +1,232 @@
+import { useState } from 'react'
+import { useSupabase } from '../contexts/SupabaseContext'
+import { useFarmContext } from '../contexts/FarmContext'
+
+export default function ProfilePage({ user, onClose }) {
+    const supabase = useSupabase()
+    const { farm, barns, reloadFarm } = useFarmContext()
+
+    // Farm name edit
+    const [farmName, setFarmName] = useState(farm?.farm_name ?? '')
+    const [farmSaving, setFarmSaving] = useState(false)
+    const [farmMsg, setFarmMsg] = useState(null) // { type: 'success'|'error', text }
+
+    // Password change
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [pwSaving, setPwSaving] = useState(false)
+    const [pwMsg, setPwMsg] = useState(null)
+    const [showPwForm, setShowPwForm] = useState(false)
+
+    const handleSaveFarmName = async () => {
+        const trimmed = farmName.trim()
+        if (!trimmed) return
+        if (trimmed === farm?.farm_name) {
+            setFarmMsg({ type: 'error', text: 'No changes to save.' })
+            return
+        }
+        setFarmSaving(true)
+        setFarmMsg(null)
+        try {
+            const { error } = await supabase
+                .from('farms')
+                .update({ farm_name: trimmed })
+                .eq('id', farm.id)
+            if (error) throw error
+            await reloadFarm()
+            setFarmMsg({ type: 'success', text: 'Farm name updated.' })
+        } catch (err) {
+            setFarmMsg({ type: 'error', text: err.message })
+        } finally {
+            setFarmSaving(false)
+        }
+    }
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault()
+        if (newPassword !== confirmPassword) {
+            setPwMsg({ type: 'error', text: 'Passwords do not match.' })
+            return
+        }
+        if (newPassword.length < 6) {
+            setPwMsg({ type: 'error', text: 'Password must be at least 6 characters.' })
+            return
+        }
+        setPwSaving(true)
+        setPwMsg(null)
+        try {
+            const { error } = await supabase.auth.updateUser({ password: newPassword })
+            if (error) throw error
+            setPwMsg({ type: 'success', text: 'Password updated successfully.' })
+            setNewPassword('')
+            setConfirmPassword('')
+            setShowPwForm(false)
+        } catch (err) {
+            setPwMsg({ type: 'error', text: err.message })
+        } finally {
+            setPwSaving(false)
+        }
+    }
+
+    const inputStyle = {
+        width: '100%',
+        padding: '10px 12px',
+        border: '1px solid #ccc',
+        borderRadius: '6px',
+        fontSize: '15px',
+        boxSizing: 'border-box',
+    }
+
+    const btnPrimary = {
+        padding: '9px 20px',
+        background: '#2D855B',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: 'pointer',
+    }
+
+    const btnSecondary = {
+        padding: '9px 20px',
+        background: '#ddd',
+        color: '#333',
+        border: 'none',
+        borderRadius: '6px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: 'pointer',
+    }
+
+    return (
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {/* Header row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+                <h2 style={{ margin: 0, fontSize: '22px', color: '#111' }}>My Profile</h2>
+                <button onClick={onClose} style={{ ...btnSecondary, padding: '7px 16px' }}>← Back</button>
+            </div>
+
+            {/* ── Account section ── */}
+            <section style={{ background: 'white', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: '700', color: '#333', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>Account</h3>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email Address</label>
+                    <div style={{ ...inputStyle, background: '#f5f5f5', color: '#666', cursor: 'default' }}>{user.email}</div>
+                </div>
+
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <label style={{ fontSize: '13px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</label>
+                        {!showPwForm && (
+                            <button
+                                type="button"
+                                onClick={() => { setShowPwForm(true); setPwMsg(null) }}
+                                style={{ ...btnSecondary, padding: '6px 14px', fontSize: '13px' }}>
+                                Change Password
+                            </button>
+                        )}
+                    </div>
+
+                    {showPwForm && (
+                        <form onSubmit={handleChangePassword}>
+                            <div style={{ marginBottom: '12px' }}>
+                                <input
+                                    type="password"
+                                    placeholder="New password"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    required
+                                    style={inputStyle}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '14px' }}>
+                                <input
+                                    type="password"
+                                    placeholder="Confirm new password"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    required
+                                    style={inputStyle}
+                                />
+                            </div>
+                            {pwMsg && (
+                                <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: pwMsg.type === 'success' ? '#2D855B' : '#c00', fontWeight: '600' }}>
+                                    {pwMsg.text}
+                                </p>
+                            )}
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button type="submit" disabled={pwSaving} style={btnPrimary}>
+                                    {pwSaving ? 'Saving…' : 'Update Password'}
+                                </button>
+                                <button type="button" onClick={() => { setShowPwForm(false); setNewPassword(''); setConfirmPassword(''); setPwMsg(null) }} style={btnSecondary}>
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {!showPwForm && pwMsg?.type === 'success' && (
+                        <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#2D855B', fontWeight: '600' }}>{pwMsg.text}</p>
+                    )}
+                </div>
+            </section>
+
+            {/* ── Farm section ── */}
+            <section style={{ background: 'white', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: '700', color: '#333', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>Farm</h3>
+
+                <div style={{ marginBottom: '6px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Farm Name</label>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <input
+                            type="text"
+                            value={farmName}
+                            onChange={e => { setFarmName(e.target.value); setFarmMsg(null) }}
+                            maxLength={100}
+                            style={{ ...inputStyle, flex: 1 }}
+                        />
+                        <button
+                            type="button"
+                            onClick={handleSaveFarmName}
+                            disabled={farmSaving || !farmName.trim()}
+                            style={{ ...btnPrimary, flexShrink: 0 }}>
+                            {farmSaving ? 'Saving…' : 'Save'}
+                        </button>
+                    </div>
+                    {farmMsg && (
+                        <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: farmMsg.type === 'success' ? '#2D855B' : '#c00', fontWeight: '600' }}>
+                            {farmMsg.text}
+                        </p>
+                    )}
+                </div>
+            </section>
+
+            {/* ── Barns section ── */}
+            <section style={{ background: 'white', borderRadius: '10px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: '700', color: '#333', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
+                    Barns ({barns.length})
+                </h3>
+
+                {barns.length === 0 ? (
+                    <p style={{ color: '#888', margin: 0, fontSize: '14px' }}>No barns yet. Add one from the Dashboard.</p>
+                ) : (
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {barns.map(barn => (
+                            <li key={barn.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #eee' }}>
+                                <span style={{ fontSize: '18px' }}>🏚️</span>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: '600', fontSize: '15px', color: '#111' }}>{barn.barn_name}</div>
+                                    {barn.flock_size != null && (
+                                        <div style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>Flock size: {barn.flock_size.toLocaleString()}</div>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
+        </div>
+    )
+}

@@ -3,6 +3,7 @@ import { useSupabase } from '../contexts/SupabaseContext'
 import { getOrCreateMonthlyAudit, getOrCreateWelfareRecord } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
 import Form08DayView from './Form08DayView'
+import MonthSelector from './MonthSelector'
 
 const BLANK_DAY = {
   barnTempHi: '',
@@ -98,10 +99,9 @@ export default function Form08WelfareRecords() {
 
   const supabase = useSupabase()
 
-  // Month navigation state
-  const [allAudits, setAllAudits] = useState([])
-  const [viewingMonth, setViewingMonth] = useState(monthYear)
-  const [isCurrentMonth, setIsCurrentMonth] = useState(true)
+  // isCurrentMonth: true when the selected month is the current real-world month
+  const today = new Date()
+  const isCurrentMonth = monthYear === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
 
   const [dayData, setDayData] = useState({})
   const [lockedDays, setLockedDays] = useState({})
@@ -139,7 +139,7 @@ export default function Form08WelfareRecords() {
   useEffect(() => {
     const contentEl = document.querySelector('.app-content')
     if (contentEl) contentEl.scrollTop = 0
-  }, [viewMode, viewingMonth])
+  }, [viewMode, monthYear])
 
   // Reset on barn/month change
   useEffect(() => {
@@ -161,69 +161,7 @@ export default function Form08WelfareRecords() {
     setMonthlyLocked(false)
     setLoadingDay(false)
     setSaving(false)
-    setViewingMonth(monthYear)
-    setIsCurrentMonth(true)
   }, [selectedBarn?.id, monthYear])
-
-  // Reset day cache when navigating months
-  useEffect(() => {
-    setDayData({})
-    setLockedDays({})
-    setSelectedDay(1)
-  }, [viewingMonth])
-
-  // Fetch all audits for month navigation
-  useEffect(() => {
-    const fetchAudits = async () => {
-      if (!farmId) return
-      try {
-        const { data, error } = await supabase
-          .from('monthly_audits')
-          .select('*')
-          .eq('farm_id', farmId)
-          .order('month_year', { ascending: false })
-        if (error) throw error
-        setAllAudits(data || [])
-      } catch (err) {
-        console.error('Error fetching audits:', err)
-      }
-    }
-    fetchAudits()
-  }, [farmId])
-
-  // Check if viewing current month
-  useEffect(() => {
-    setIsCurrentMonth(viewingMonth === monthYear)
-  }, [viewingMonth, monthYear])
-
-  // Navigate to previous month
-  const handlePreviousMonth = () => {
-    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
-    if (currentIndex < allAudits.length - 1) {
-      const newMonth = allAudits[currentIndex + 1].month_year
-      setViewingMonth(newMonth)
-      setMonthYear(newMonth)
-    }
-  }
-
-  // Navigate to next month
-  const handleNextMonth = () => {
-    const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
-    if (currentIndex > 0) {
-      const newMonth = allAudits[currentIndex - 1].month_year
-      setViewingMonth(newMonth)
-      setMonthYear(newMonth)
-    }
-  }
-
-  const formatMonth = (dateStr) => {
-    const date = new Date(dateStr + 'T00:00:00')
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-  }
-
-  const currentIndex = allAudits.findIndex(a => a.month_year === viewingMonth)
-  const canGoPrevious = currentIndex < allAudits.length - 1
-  const canGoNext = currentIndex > 0
 
   // Load monthly checks data from DB
   useEffect(() => {
@@ -289,10 +227,10 @@ export default function Form08WelfareRecords() {
     const load = async () => {
       setLoadingDay(true)
       try {
-        const monthStr = viewingMonth.substring(0, 7)
+        const monthStr = monthYear.substring(0, 7)
         const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
 
-        const { audit } = await getOrCreateMonthlyAudit(farm.id, viewingMonth)
+        const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
         const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
         if (cancelled) return
 
@@ -362,7 +300,7 @@ export default function Form08WelfareRecords() {
 
     load()
     return () => { cancelled = true }
-  }, [selectedDay, selectedBarn?.id, viewingMonth])
+  }, [selectedDay, selectedBarn?.id, monthYear])
 
   const handleDayChange = (day, field, value) => {
     setDayData(prev => ({
@@ -536,108 +474,57 @@ export default function Form08WelfareRecords() {
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
 
-      {/* MONTH NAVIGATION */}
-      {allAudits.length > 0 && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '20px',
-          padding: '12px 16px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #ddd'
-        }}>
-          <button
-            type="button"
-            onClick={handlePreviousMonth}
-            disabled={!canGoPrevious}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: canGoPrevious ? 'pointer' : 'not-allowed',
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-            ← Previous
-          </button>
-
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: isCurrentMonth ? '#2D855B' : '#666' }}>
-              {formatMonth(viewingMonth)}
-            </div>
-            {!isCurrentMonth && (
-              <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
-                (View Only)
-              </div>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            disabled={!canGoNext}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: canGoNext ? '#2D855B' : '#ccc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: canGoNext ? 'pointer' : 'not-allowed',
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-            Next →
-          </button>
-        </div>
-      )}
-
       {/* FORM HEADER */}
-      <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
+      <div style={{ borderBottom: '3px solid #333', paddingBottom: '15px', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '24px', margin: '0 0 15px 0', textAlign: 'center', color: '#000' }}>
           Form 08 - Welfare Records
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px' }}>
           <div><strong>Farm Name:</strong> {farmName}</div>
           <div><strong>Barn:</strong> {barnName}</div>
         </div>
+      </div>
 
-        {/* VIEW TOGGLE */}
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button
-            type="button"
-            onClick={() => setViewMode('day')}
-            style={{
-              padding: '8px 16px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              backgroundColor: viewMode === 'day' ? '#2D855B' : '#ddd',
-              color: viewMode === 'day' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-            Day View
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('monthly')}
-            style={{
-              padding: '8px 16px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              backgroundColor: viewMode === 'monthly' ? '#2D855B' : '#ddd',
-              color: viewMode === 'monthly' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-            Monthly Checks
-          </button>
-        </div>
+      {/* VIEW TOGGLE */}
+      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+        <button
+          type="button"
+          onClick={() => setViewMode('day')}
+          style={{
+            padding: '8px 16px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            backgroundColor: viewMode === 'day' ? '#2D855B' : '#ddd',
+            color: viewMode === 'day' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+          Day View
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('monthly')}
+          style={{
+            padding: '8px 16px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            backgroundColor: viewMode === 'monthly' ? '#2D855B' : '#ddd',
+            color: viewMode === 'monthly' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+          Monthly Checks
+        </button>
+      </div>
+
+      {/* MONTH SELECTOR */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '4px' }}>
+        <MonthSelector value={monthYear} onChange={setMonthYear} />
+        {!isCurrentMonth && (
+          <span style={{ fontSize: '11px', color: '#999' }}>Viewing past month</span>
+        )}
       </div>
 
       {/* DAY VIEW */}

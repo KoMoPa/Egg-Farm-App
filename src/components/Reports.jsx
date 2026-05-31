@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { useFarmContext } from '../contexts/FarmContext'
 import MonthlyAuditSummary from './MonthlyAuditSummary'
+import MonthSelector from './MonthSelector'
 
 function Reports() {
     const supabase = useSupabase()
-    const { farm, selectedBarn } = useFarmContext()
+    const { farm, selectedBarn, monthYear, setMonthYear } = useFarmContext()
     const [audits, setAudits] = useState([])
     const [loading, setLoading] = useState(true)
-    const [selectedMonth, setSelectedMonth] = useState(null)
-    const [selectedAuditId, setSelectedAuditId] = useState(null)
+    const currentAudit = audits.find(a => a.month_year === monthYear) ?? null
+    const selectedAuditId = currentAudit?.id ?? null
     const [showPrintModal, setShowPrintModal] = useState(false)
     const [barnFormStatus, setBarnFormStatus] = useState({ f07: 0, f08: 0, f09: 0, f10: 0 })
 
@@ -57,15 +58,6 @@ function Reports() {
 
                 if (error) throw error
                 setAudits(data || [])
-
-                // Set initial selected month to most recent
-                if (data && data.length > 0) {
-                    setSelectedMonth(data[0].month_year)
-                    setSelectedAuditId(data[0].id)
-                } else {
-                    setSelectedMonth(null)
-                    setSelectedAuditId(null)
-                }
             } catch (err) {
                 console.error('Error fetching audits:', err)
             } finally {
@@ -75,15 +67,6 @@ function Reports() {
 
         fetchAudits()
     }, [farm?.id, selectedBarn?.id])
-
-    // Format date for display
-    const formatMonth = (dateStr) => {
-        const date = new Date(dateStr + 'T00:00:00')
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-    }
-
-    // Get current audit
-    const currentAudit = audits.find(a => a.month_year === selectedMonth)
 
     // Form status box component — shows X/Y days recorded
     const FormStatusBox = ({ daysRecorded, daysInMonth }) => {
@@ -119,34 +102,6 @@ function Reports() {
         )
     }
 
-    // Navigate to previous month
-    const handlePreviousMonth = () => {
-        const contentEl = document.querySelector('.app-content')
-        if (contentEl) contentEl.scrollTop = 0
-        const currentIndex = audits.findIndex(a => a.month_year === selectedMonth)
-        if (currentIndex < audits.length - 1) {
-            const prevAudit = audits[currentIndex + 1]
-            setSelectedMonth(prevAudit.month_year)
-            setSelectedAuditId(prevAudit.id)
-        }
-    }
-
-    // Navigate to next month
-    const handleNextMonth = () => {
-        const contentEl = document.querySelector('.app-content')
-        if (contentEl) contentEl.scrollTop = 0
-        const currentIndex = audits.findIndex(a => a.month_year === selectedMonth)
-        if (currentIndex > 0) {
-            const nextAudit = audits[currentIndex - 1]
-            setSelectedMonth(nextAudit.month_year)
-            setSelectedAuditId(nextAudit.id)
-        }
-    }
-
-    const currentIndex = audits.findIndex(a => a.month_year === selectedMonth)
-    const canGoPrevious = currentIndex < audits.length - 1
-    const canGoNext = currentIndex > 0
-
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
             <h2 style={{ margin: '0 0 30px 0', fontSize: '24px', fontWeight: 700, color: '#2D855B', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -162,60 +117,14 @@ function Reports() {
                 </p>
             )}
 
-            {!loading && audits.length > 0 && currentAudit && (
+            {!loading && audits.length > 0 && (
                 <>
-                    {/* Month Selector Navigation */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '30px',
-                        padding: '16px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        border: '1px solid #ddd'
-                    }}>
-                        <button
-                            onClick={handlePreviousMonth}
-                            disabled={!canGoPrevious}
-                            style={{
-                                padding: '8px 16px',
-                                backgroundColor: canGoPrevious ? '#2D855B' : '#ccc',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: canGoPrevious ? 'pointer' : 'not-allowed',
-                                fontSize: '14px',
-                                fontWeight: 'bold'
-                            }}>
-                            ← Previous
-                        </button>
-
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2D855B', marginBottom: '4px' }}>
-                                {formatMonth(selectedMonth)}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#666' }}>
-                                {audits.findIndex(a => a.month_year === selectedMonth) + 1} of {audits.length}
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleNextMonth}
-                            disabled={!canGoNext}
-                            style={{
-                                padding: '8px 16px',
-                                backgroundColor: canGoNext ? '#2D855B' : '#ccc',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: canGoNext ? 'pointer' : 'not-allowed',
-                                fontSize: '14px',
-                                fontWeight: 'bold'
-                            }}>
-                            Next →
-                        </button>
+                    {/* MONTH SELECTOR */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', gap: '4px' }}>
+                        <MonthSelector value={monthYear} onChange={setMonthYear} />
                     </div>
+
+                    {currentAudit && <>
 
                     {/* Form Status Boxes */}
                     <div style={{
@@ -230,7 +139,7 @@ function Reports() {
                             </div>
                             <FormStatusBox
                                 daysRecorded={barnFormStatus.f07}
-                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
+                                daysInMonth={new Date(parseInt(monthYear.split('-')[0]), parseInt(monthYear.split('-')[1]), 0).getDate()}
                             />
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -239,7 +148,7 @@ function Reports() {
                             </div>
                             <FormStatusBox
                                 daysRecorded={barnFormStatus.f08}
-                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
+                                daysInMonth={new Date(parseInt(monthYear.split('-')[0]), parseInt(monthYear.split('-')[1]), 0).getDate()}
                             />
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -248,7 +157,7 @@ function Reports() {
                             </div>
                             <FormStatusBox
                                 daysRecorded={barnFormStatus.f09}
-                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
+                                daysInMonth={new Date(parseInt(monthYear.split('-')[0]), parseInt(monthYear.split('-')[1]), 0).getDate()}
                             />
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -257,7 +166,7 @@ function Reports() {
                             </div>
                             <FormStatusBox
                                 daysRecorded={barnFormStatus.f10}
-                                daysInMonth={new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate()}
+                                daysInMonth={new Date(parseInt(monthYear.split('-')[0]), parseInt(monthYear.split('-')[1]), 0).getDate()}
                             />
                         </div>
                     </div>
@@ -283,6 +192,7 @@ function Reports() {
                             🖨 Print Monthly Report
                         </button>
                     </div>
+                    </>}
                 </>
             )}
 
@@ -315,7 +225,7 @@ function Reports() {
                             farmName={farm?.farm_name}
                             barnId={selectedBarn?.id}
                             auditId={selectedAuditId}
-                            monthYear={selectedMonth}
+                            monthYear={monthYear}
                             onClose={() => setShowPrintModal(false)}
                         />
                     </div>

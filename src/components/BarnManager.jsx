@@ -185,7 +185,7 @@ export default function BarnManager() {
                     onClick={(e) => handleEditBarn(barn, e)}
                     style={{ position: 'absolute', top: '8px', right: '8px', fontSize: '11px', padding: '3px 8px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                   >
-                    Rename
+                    Edit Barn
                   </button>
                 </div>
               ))}

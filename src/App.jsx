@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
 import { useAuth } from './contexts/AuthContext'
 import { FarmProvider, useFarmContext } from './contexts/FarmContext'
 import Login from './components/Login'
@@ -11,6 +9,7 @@ import Form08WelfareRecords from './components/Form08WelfareRecords'
 import Form09FeedWaterRecords from './components/Form09FeedWaterRecords'
 import Form10PestControlRecords from './components/Form10PestControlRecords'
 import Reports from './components/Reports'
+import ProfilePage from './components/ProfilePage'
 import './App.css'
 
 const TABS = [
@@ -105,7 +104,8 @@ function App() {
 
 function AppContent({ signOut, user }) {
   const [activeTab, setActiveTab] = useState('home')
-  const { farm, monthYear, setMonthYear, selectedBarn } = useFarmContext()
+  const [showProfile, setShowProfile] = useState(false)
+  const { farm, selectedBarn } = useFarmContext()
   const contentRef = useRef(null)
 
   // Scroll to top when changing tabs
@@ -116,21 +116,6 @@ function AppContent({ signOut, user }) {
   }, [activeTab])
 
   const activeTabDef = TABS.find(t => t.key === activeTab)
-
-  // Month/year helpers
-  const [year, month] = monthYear.split('-')
-  const selectedDate = new Date(parseInt(year), parseInt(month) - 1)
-  const handleDateChange = (date) => {
-    if (date) {
-      const y = date.getFullYear()
-      const m = String(date.getMonth() + 1).padStart(2, '0')
-      setMonthYear(`${y}-${m}-01`)
-    }
-  }
-  const renderMonthContent = (month, shortMonth, longMonth, day) => {
-    const fullYear = new Date(day).getFullYear()
-    return <span title={`${longMonth} ${fullYear}`}>{shortMonth}</span>
-  }
 
   return (
     <div className="app-shell">
@@ -152,6 +137,7 @@ function AppContent({ signOut, user }) {
         </div>
         <div className="app-header-right">
           <span className="app-header-email">{user.email}</span>
+          <button onClick={() => setShowProfile(p => !p)} className="app-profile-btn">Profile</button>
           <button onClick={signOut} className="app-logout-btn">Logout</button>
         </div>
       </header>
@@ -160,14 +146,17 @@ function AppContent({ signOut, user }) {
       <main className="app-content" ref={contentRef}>
         <div className="app-content-inner">
 
+          {/* Profile page (overlays tab content) */}
+          {showProfile && <ProfilePage user={user} onClose={() => setShowProfile(false)} />}
+
           {/* Dashboard tab */}
-          {activeTab === 'home' && <Dashboard />}
+          {!showProfile && activeTab === 'home' && <Dashboard />}
 
           {/* Reports tab */}
-          {activeTab === 'reports' && <Reports />}
+          {!showProfile && activeTab === 'reports' && <Reports />}
 
           {/* Form tabs */}
-          {activeTab !== 'home' && activeTab !== 'reports' && (
+          {!showProfile && activeTab !== 'home' && activeTab !== 'reports' && (
             <>
               {!selectedBarn ? (
                 <div className="app-no-barn-card">
@@ -195,7 +184,7 @@ function AppContent({ signOut, user }) {
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => { setActiveTab(tab.key); setShowProfile(false) }}
               className={`app-tab-item app-tab-item--${tab.key}${active ? ' active' : ''}`}
             >
               <AppIcon

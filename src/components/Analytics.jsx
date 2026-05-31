@@ -1,16 +1,8 @@
 import { useState } from 'react'
 import AnalyticsChart from './analytics/AnalyticsChart'
+import CumulativeEggChart from './analytics/CumulativeEggChart'
 
 const CHARTS = [
-  {
-    key: 'auger_run_time_minutes',
-    title: 'Auger Run Time',
-    table: 'feed_water_daily',
-    dataColumn: 'auger_run_time_minutes',
-    threshold: 3,
-    iconSrc: '/auger-icon.png',
-    warningMsg: '{deviation} min ({pct}%) vs average',
-  },
   {
     key: 'feed_actual',
     title: 'Feed',
@@ -117,6 +109,14 @@ export default function Analytics() {
       </h2>
 
       <div className="analytics-charts-grid">
+        <section className="analytics-segment analytics-segment--chart analytics-segment--full-width">
+          <h3 className="analytics-segment-title">
+            <img src="/egg-icon.png" alt="" className="analytics-segment-title-icon" />
+            <span>Monthly Egg Production</span>
+          </h3>
+          <CumulativeEggChart />
+        </section>
+
         {CHARTS.map(chart => (
           <section key={chart.key} className="analytics-segment analytics-segment--chart">
             <h3 className="analytics-segment-title">

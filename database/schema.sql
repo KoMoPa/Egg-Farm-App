@@ -33,7 +33,7 @@ CREATE TABLE barns (
 
 -- Monthly Audit Tracking
 CREATE TABLE monthly_audits (
-  id BIGSERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
   month_year DATE NOT NULL,
   form_07_completed BOOLEAN DEFAULT FALSE,
@@ -56,8 +56,10 @@ CREATE TABLE monthly_audits (
 CREATE TABLE production_cooler_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   barn_id UUID NOT NULL REFERENCES barns(id) ON DELETE CASCADE,
-  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  audit_id UUID NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  monthly_corrective_actions TEXT,
+  monthly_comments TEXT,
   UNIQUE(barn_id, audit_id)
 );
 
@@ -148,7 +150,7 @@ CREATE TABLE production_thermometer_calibration (
 CREATE TABLE welfare_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   barn_id UUID NOT NULL REFERENCES barns(id) ON DELETE CASCADE,
-  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  audit_id UUID NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
   monthly_comments TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(barn_id, audit_id)
@@ -194,7 +196,6 @@ CREATE TABLE welfare_weekly_inspections (
   check_equipment_operating BOOLEAN,
   check_amenities_condition BOOLEAN,
   check_lay_facility BOOLEAN,
-  weekly_initials VARCHAR(20),
   comments TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +227,7 @@ CREATE TABLE welfare_monthly_checks (
 CREATE TABLE feed_water_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   barn_id UUID NOT NULL REFERENCES barns(id) ON DELETE CASCADE,
-  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  audit_id UUID NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(barn_id, audit_id)
 );
@@ -239,7 +240,7 @@ CREATE TABLE feed_water_daily (
   feed_actual NUMERIC,
   water_daily NUMERIC,
   water_actual NUMERIC,
-  auger_run_time_minutes INTEGER,
+  auger_run_time_minutes SMALLINT,
   flush_notes VARCHAR(200),
   meds_vit_notes VARCHAR(200),
   treatment_notes VARCHAR(200),
@@ -286,7 +287,7 @@ CREATE TABLE feed_water_monthly_metadata (
 CREATE TABLE pest_control_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   barn_id UUID NOT NULL REFERENCES barns(id) ON DELETE CASCADE,
-  audit_id BIGINT NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  audit_id UUID NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(barn_id, audit_id)
 );
@@ -347,7 +348,7 @@ CREATE TABLE pest_monthly_audit (
 CREATE TABLE corrective_action_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   barn_id UUID NOT NULL REFERENCES barns(id) ON DELETE CASCADE,
-  audit_id BIGINT REFERENCES monthly_audits(id) ON DELETE SET NULL,
+  audit_id UUID REFERENCES monthly_audits(id) ON DELETE SET NULL,
   form_number VARCHAR(2) CHECK (form_number IN ('07', '08', '09', '10')),
   deviation_date DATE NOT NULL,
   deviation_description TEXT NOT NULL,
@@ -362,6 +363,35 @@ CREATE TABLE corrective_action_log (
 );
 
 -- =============================================
+-- BARN FORM PREFERENCES
+-- =============================================
+
+-- Per-barn visibility settings for individual form fields
+CREATE TABLE barn_form_preferences (
+  barn_id UUID NOT NULL REFERENCES barns(id) ON DELETE CASCADE,
+  form_name VARCHAR NOT NULL,
+  field_name VARCHAR NOT NULL,
+  is_visible BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (barn_id, form_name, field_name)
+);
+
+-- =============================================
+-- ARCHIVED AUDIT REPORTS
+-- =============================================
+
+-- Stores references to generated PDF audit reports
+CREATE TABLE archived_audit_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  audit_id UUID NOT NULL REFERENCES monthly_audits(id) ON DELETE CASCADE,
+  farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  month_year DATE NOT NULL,
+  file_name VARCHAR NOT NULL,
+  file_path VARCHAR NOT NULL,
+  file_size INTEGER,
+  archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- =============================================
 
@@ -370,10 +400,16 @@ ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE barns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_audits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE production_cooler_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sanitation_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_daily_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_equipment_inspection ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_form_metadata ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production_floor_eggs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production_egg_output ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production_cooler_temps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production_sanitation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production_flock_age ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production_thermometer_calibration ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_daily_checks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_weekly_inspections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE welfare_monthly_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_daily ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_water_health ENABLE ROW LEVEL SECURITY;
@@ -381,9 +417,9 @@ ALTER TABLE feed_water_monthly_metadata ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pest_control_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pest_daily_observations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pest_monthly_audit ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_thermometer_calibration ENABLE ROW LEVEL SECURITY;
-ALTER TABLE welfare_monthly_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE corrective_action_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE barn_form_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE archived_audit_reports ENABLE ROW LEVEL SECURITY;
 
 -- Farms: Users can only access their own farms
 CREATE POLICY "Users can only access their own farms" ON farms
@@ -437,22 +473,22 @@ CREATE POLICY "Users can only access their barn records" ON production_flock_age
     production_id IN (SELECT id FROM production_cooler_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
   );
 
--- Welfare daily records
-CREATE POLICY "Users can only access their farm records" ON welfare_daily_records
+-- Welfare records
+CREATE POLICY "Users can only access their barn records" ON welfare_records
   FOR ALL USING (
-    (SELECT user_id FROM farms WHERE id = welfare_daily_records.farm_id) = auth.uid()
+    barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid()))
   );
 
--- Welfare equipment inspection
-CREATE POLICY "Users can only access their farm records" ON welfare_equipment_inspection
+-- Welfare daily checks
+CREATE POLICY "Users can only access their barn records" ON welfare_daily_checks
   FOR ALL USING (
-    (SELECT user_id FROM farms WHERE id = welfare_equipment_inspection.farm_id) = auth.uid()
+    welfare_id IN (SELECT id FROM welfare_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
   );
 
--- Welfare form metadata
-CREATE POLICY "Users can only access their farm records" ON welfare_form_metadata
+-- Welfare weekly inspections
+CREATE POLICY "Users can only access their barn records" ON welfare_weekly_inspections
   FOR ALL USING (
-    (SELECT user_id FROM farms WHERE id = welfare_form_metadata.farm_id) = auth.uid()
+    welfare_id IN (SELECT id FROM welfare_records WHERE barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())))
   );
 
 -- Feed water records
@@ -515,33 +551,35 @@ CREATE POLICY "Users can only access their barn records" ON corrective_action_lo
     barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid()))
   );
 
+-- Barn form preferences
+CREATE POLICY "Users can only access their barn records" ON barn_form_preferences
+  FOR ALL USING (
+    barn_id IN (SELECT id FROM barns WHERE farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid()))
+  );
+
+-- Archived audit reports
+CREATE POLICY "Users can only access their farm records" ON archived_audit_reports
+  FOR ALL USING (
+    farm_id IN (SELECT id FROM farms WHERE user_id = auth.uid())
+  );
+
 -- =============================================
 -- INDEXES FOR PERFORMANCE
 -- =============================================
 
--- Core indexes
 CREATE INDEX idx_farms_user_id ON farms(user_id);
 CREATE INDEX idx_barns_farm_id ON barns(farm_id);
 CREATE INDEX idx_monthly_audits_farm_id ON monthly_audits(farm_id);
 CREATE INDEX idx_monthly_audits_month_year ON monthly_audits(month_year);
-CREATE INDEX idx_production_cooler_farm_id ON production_cooler_records(farm_id);
+CREATE INDEX idx_monthly_audits_farm_month ON monthly_audits(farm_id, month_year);
+CREATE INDEX idx_production_cooler_barn_id ON production_cooler_records(barn_id);
 CREATE INDEX idx_production_cooler_audit_id ON production_cooler_records(audit_id);
-CREATE INDEX idx_sanitation_farm_id ON sanitation_records(farm_id);
-CREATE INDEX idx_welfare_daily_farm_id ON welfare_daily_records(farm_id);
-CREATE INDEX idx_welfare_daily_audit_id ON welfare_daily_records(audit_id);
-CREATE INDEX idx_feed_water_farm_id ON feed_water_records(farm_id);
+CREATE INDEX idx_welfare_records_barn_id ON welfare_records(barn_id);
+CREATE INDEX idx_welfare_records_audit_id ON welfare_records(audit_id);
+CREATE INDEX idx_feed_water_barn_id ON feed_water_records(barn_id);
 CREATE INDEX idx_feed_water_audit_id ON feed_water_records(audit_id);
-CREATE INDEX idx_pest_control_farm_id ON pest_control_records(farm_id);
+CREATE INDEX idx_pest_control_barn_id ON pest_control_records(barn_id);
 CREATE INDEX idx_pest_control_audit_id ON pest_control_records(audit_id);
-
--- Index for monthly audits lookup by farm and month
-CREATE INDEX idx_monthly_audits_farm_month 
-ON monthly_audits(farm_id, month_year);
-
--- Index for analyzing auger runtime by audit
-CREATE INDEX idx_feed_water_auger_runtime 
-ON feed_water_records(audit_id, auger_run_time_minutes);
-
--- Combined index for efficiency analysis (farm + audit + auger runtime)
-CREATE INDEX idx_feed_water_farm_auger 
-ON feed_water_records(farm_id, audit_id, auger_run_time_minutes);
+CREATE INDEX idx_archived_reports_farm_id ON archived_audit_reports(farm_id);
+CREATE INDEX idx_archived_reports_audit_id ON archived_audit_reports(audit_id);
+CREATE INDEX idx_barn_form_prefs_barn_id ON barn_form_preferences(barn_id);
