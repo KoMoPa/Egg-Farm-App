@@ -17,6 +17,7 @@ import WarningBanner from './WarningBanner'
 export default function AnalyticsChart({
   table = 'feed_water_daily',
   dataColumn,
+  mode = 'default',
   targetColumn = null,
   threshold = 10,
   icon = '📊',
@@ -36,17 +37,19 @@ export default function AnalyticsChart({
 
     const fetch = async () => {
       setLoading(true)
-      
+
+      const isRolling7Baseline = mode === 'rolling7Baseline'
+
       // Build select columns
       let selectCols = `record_date, ${dataColumn}`
-      if (targetColumn) {
+      if (!isRolling7Baseline && targetColumn) {
         selectCols += `, ${targetColumn}`
       }
-      
+
       // Most tables have a parent reference to a records table
       const joinTable = table === 'feed_water_daily' ? 'feed_water_records!inner' : null
       const joinTableName = table === 'feed_water_daily' ? 'feed_water_records' : null
-      
+
       if (joinTable) {
         selectCols += `, ${joinTable}(barn_id)`
       }
@@ -56,7 +59,7 @@ export default function AnalyticsChart({
         .select(selectCols)
         .not(dataColumn, 'is', null)
         .order('record_date', { ascending: false })
-        .limit(4)
+        .limit(isRolling7Baseline ? 14 : 4)
 
       if (joinTableName) {
         query = query.eq(`${joinTableName}.barn_id`, selectedBarn.id)
@@ -69,7 +72,7 @@ export default function AnalyticsChart({
       setLoading(false)
     }
     fetch()
-  }, [selectedBarn?.id, table, dataColumn, targetColumn])
+  }, [selectedBarn?.id, table, dataColumn, targetColumn, mode])
 
   let content
 
@@ -77,14 +80,76 @@ export default function AnalyticsChart({
     content = <p className="analytics-info">Select a barn</p>
   } else if (loading) {
     content = <p className="analytics-info">Loading…</p>
-  } else if (!rows || rows.length < 4) {
+  } else if (mode === 'rolling7Baseline' && (!rows || rows.length < 14)) {
+    content = <p className="analytics-info">Need 14 consecutive days</p>
+  } else if (mode !== 'rolling7Baseline' && (!rows || rows.length < 4)) {
     content = <p className="analytics-info">Need 4+ days</p>
   } else {
-    const today = rows[0]
-    const prior = rows.slice(1, 4)
-    
+    const isRolling7Baseline = mode === 'rolling7Baseline'
+    const descRows = [...rows]
+    const chartValues = descRows.slice().reverse().map(r => r[dataColumn] || 0)
+
+    if (isRolling7Baseline) {
+      const newestDate = new Date(descRows[0].record_date)
+      const oldestDate = new Date(descRows[13].record_date)
+      const daySpan = Math.round((newestDate - oldestDate) / 86400000)
+
+      if (daySpan !== 13) {
+        content = <p className="analytics-info">Need 14 consecutive days</p>
+        return content
+      }
+
+      const currentWindow = descRows.slice(0, 7)
+      const previousWindow = descRows.slice(7, 14)
+
+      const currentAvg = currentWindow.reduce((sum, r) => sum + (Number(r[dataColumn]) || 0), 0) / 7
+      const previousAvg = previousWindow.reduce((sum, r) => sum + (Number(r[dataColumn]) || 0), 0) / 7
+
+      if (!previousAvg) {
+        content = <p className="analytics-info">Insufficient baseline</p>
+        return content
+      }
+
+      const deviation = currentAvg - previousAvg
+      const deviationPct = Math.abs((deviation / previousAvg) * 100)
+      const warn = deviationPct >= threshold
+      const warnType = deviation > 0 ? 'over' : 'under'
+      const warnMsg = warningMsg
+        .replace('{deviation}', deviationPct.toFixed(1))
+        .replace('{pct}', deviationPct.toFixed(1))
+
+      content = (
+        <>
+          <div className="chart-mini-stats">
+            <div className="chart-mini-stat">
+              <div className="chart-mini-val">{previousAvg.toFixed(1)}</div>
+              <div className="chart-mini-lbl">Prev 7-day avg</div>
+            </div>
+            <div className="chart-mini-stat">
+              <div className={`chart-mini-val ${warn ? warnType : ''}`}>{currentAvg.toFixed(1)}</div>
+              <div className="chart-mini-lbl">Current 7-day avg</div>
+            </div>
+            {goal != null && (
+              <div className="chart-mini-stat chart-mini-stat--goal">
+                <div className="chart-mini-val chart-mini-val--goal">{goal}</div>
+                <div className="chart-mini-lbl">Goal</div>
+              </div>
+            )}
+          </div>
+
+          <LineChart data={chartValues} height={80} goal={goal} />
+
+          {warn && <WarningBanner message={warnMsg} type={warnType} icon={icon} />}
+        </>
+      )
+
+      return content
+    }
+
+    const today = descRows[0]
+    const prior = descRows.slice(1, 4)
+
     const todayValue = today[dataColumn]
-    const chartValues = rows.reverse().map(r => r[dataColumn] || 0)
 
     let stat1 = { val: 0, lbl: '' }
     let stat2 = { val: todayValue, lbl: 'Today' }
