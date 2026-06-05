@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import MonthSelector from './MonthSelector'
+import { useFarmContext } from '../contexts/FarmContext'
 import AnalyticsChart from './analytics/AnalyticsChart'
 import CumulativeEggChart from './analytics/CumulativeEggChart'
 
@@ -80,6 +82,7 @@ function GoalEditor({ chartKey, goal, onSave }) {
 }
 
 export default function Analytics() {
+  const { monthYear, setMonthYear } = useFarmContext()
   const [goals, setGoals] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('analytics_goals') || '{}')
@@ -107,6 +110,8 @@ export default function Analytics() {
         <img src="/analysis-icon.png" alt="Analytics" className="analytics-title-icon" />
         <span>Analytics</span>
       </h2>
+
+      <MonthSelector value={monthYear} onChange={setMonthYear} />
 
       <div className="analytics-charts-grid">
         <section className="analytics-segment analytics-segment--chart analytics-segment--full-width">

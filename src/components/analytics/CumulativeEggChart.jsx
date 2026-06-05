@@ -4,26 +4,39 @@ import { useFarmContext } from '../../contexts/FarmContext'
 import BarChart from './BarChart'
 
 /**
- * Shows daily egg production for the current month up to today as a bar chart,
+ * Shows daily egg production for the selected month as a bar chart,
  * using production_egg_output joined through production_cooler_records.
  */
 export default function CumulativeEggChart() {
   const supabase = useSupabase()
-  const { selectedBarn } = useFarmContext()
+  const { selectedBarn, monthYear } = useFarmContext()
   const [rows, setRows] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!selectedBarn?.id) {
+    if (!selectedBarn?.id || !monthYear) {
       setRows(null)
       return
     }
 
+    // Parse monthYear (format: "YYYY-MM-01")
+    const [year, month] = monthYear.split('-').map(Number)
+    const firstOfMonth = `${year}-${String(month).padStart(2, '0')}-01`
+    
+    // Determine end of month: either last day of the month or today, whichever is earlier
     const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const firstOfMonth = `${year}-${month}-01`
-    const todayStr = today.toISOString().split('T')[0]
+    const currentYear = today.getFullYear()
+    const currentMonth = today.getMonth() + 1
+    
+    let endOfMonth
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+      // Past month: show entire month
+      const lastDay = new Date(year, month, 0).getDate()
+      endOfMonth = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    } else {
+      // Current or future month: show up to today
+      endOfMonth = today.toISOString().split('T')[0]
+    }
 
     const load = async () => {
       setLoading(true)
@@ -32,7 +45,7 @@ export default function CumulativeEggChart() {
         .select('record_date, egg_production_daily, production_cooler_records!inner(barn_id)')
         .eq('production_cooler_records.barn_id', selectedBarn.id)
         .gte('record_date', firstOfMonth)
-        .lte('record_date', todayStr)
+        .lte('record_date', endOfMonth)
         .not('egg_production_daily', 'is', null)
         .order('record_date', { ascending: true })
 
@@ -42,7 +55,7 @@ export default function CumulativeEggChart() {
     }
 
     load()
-  }, [selectedBarn?.id])
+  }, [selectedBarn?.id, monthYear])
 
   if (!selectedBarn) {
     return <p className="analytics-info">Select a barn</p>

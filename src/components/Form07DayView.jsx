@@ -81,22 +81,28 @@ export default function Form07DayView({
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: twoCollections ? '1fr 1fr 1fr' : '1fr 1fr', gap: '15px' }}>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number"
                             value={data.floorEggs1}
                             onChange={(e) => setField('floorEggs1', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
                     {twoCollections && <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number"
                             value={data.floorEggs2}
                             onChange={(e) => setField('floorEggs2', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>}
@@ -115,24 +121,30 @@ export default function Form07DayView({
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: twoCollections ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: '15px' }}>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number"
                             min="0" max="99999999"
                             value={data.eggProduction1}
                             onChange={(e) => setField('eggProduction1', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
                     {twoCollections && <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number"
                             min="0" max="99999999"
                             value={data.eggProduction2}
                             onChange={(e) => setField('eggProduction2', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>}
@@ -143,13 +155,16 @@ export default function Form07DayView({
                         </div>
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>% Daily</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>% Daily
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number"
                             step="0.1" min="0" max="100"
                             value={data.eggProductionPercent}
                             onChange={(e) => setField('eggProductionPercent', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
@@ -178,52 +193,67 @@ export default function Form07DayView({
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '15px' }}>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp HI (°C)</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp HI (°C)
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number" step="0.1" min="-99.9" max="999.9"
                             value={data.coolerTempHi}
                             onChange={(e) => setField('coolerTempHi', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp LO (°C)</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp LO (°C)
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number" step="0.1" min="-99.9" max="999.9"
                             value={data.coolerTempLo}
                             onChange={(e) => setField('coolerTempLo', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% HI</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% HI
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number" step="0.1" min="0" max="100"
                             value={data.coolerRhHi}
                             onChange={(e) => setField('coolerRhHi', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% LO</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% LO
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="number" step="0.1" min="0" max="100"
                             value={data.coolerRhLo}
                             onChange={(e) => setField('coolerRhLo', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Time</label>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Time
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
                         <input
                             type="time"
                             value={data.coolerCheckTime}
                             onChange={(e) => setField('coolerCheckTime', e.target.value)}
                             disabled={isLocked}
+                            required
                             style={{ width: '100%', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                         />
                     </div>
@@ -239,6 +269,7 @@ export default function Form07DayView({
             <div style={{ marginBottom: '30px' }}>
                 <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
                     Dirty Trays (Daily count)
+                    <span style={{color: 'red', fontSize: '30px'}}>*</span>
                 </label>
                 <input
                     type="number"
@@ -246,6 +277,7 @@ export default function Form07DayView({
                     value={data.dirtyTrays}
                     onChange={(e) => setField('dirtyTrays', e.target.value)}
                     disabled={isLocked}
+                    required
                     style={{ width: '200px', padding: '12px', fontSize: '18px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked) }}
                 />
             </div>
@@ -256,36 +288,57 @@ export default function Form07DayView({
                     Sanitation - As Completed
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={data.eggCoolerCleaned}
-                            onChange={(e) => setField('eggCoolerCleaned', e.target.checked)}
+                    <div>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Egg Cooler
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
+                        <select
+                            value={data.eggCoolerSanitationCode || ''}
+                            onChange={(e) => setField('eggCoolerSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                        />
-                        <span style={{ fontSize: '18px' }}>Egg Cooler</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={data.packRoomCleaned}
-                            onChange={(e) => setField('packRoomCleaned', e.target.checked)}
+                            required
+                            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
+                        >
+                            <option value="">-- Not done --</option>
+                            <option value="B">Blow</option>
+                            <option value="S">Sweep</option>
+                            <option value="W">Wash</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Pack Room
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
+                        <select
+                            value={data.packRoomSanitationCode || ''}
+                            onChange={(e) => setField('packRoomSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                        />
-                        <span style={{ fontSize: '18px' }}>Pack Room</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={data.tablesPackingEquipCleaned}
-                            onChange={(e) => setField('tablesPackingEquipCleaned', e.target.checked)}
+                            required
+                            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
+                        >
+                            <option value="">-- Not done --</option>
+                            <option value="B">Blow</option>
+                            <option value="S">Sweep</option>
+                            <option value="W">Wash</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Tables/Packing Equip
+                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        </label>
+                        <select
+                            value={data.equipSanitationCode || ''}
+                            onChange={(e) => setField('equipSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                        />
-                        <span style={{ fontSize: '18px' }}>Tables/Packing Equip</span>
-                    </label>
+                            required
+                            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
+                        >
+                            <option value="">-- Not done --</option>
+                            <option value="B">Blow</option>
+                            <option value="S">Sweep</option>
+                            <option value="W">Wash</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
