@@ -18,26 +18,35 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="number" step="0.1" value={data.barnTempHi}
                         onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
                         disabled={locked}
+                        required
                         placeholder=""
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="number" step="0.1" value={data.barnTempLo}
                         onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
                         disabled={locked}
+                        required
                         placeholder=""
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="number" step="0.1" value={data.exteriorTemp}
                         onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
                         disabled={locked}
+                        required
                         placeholder=""
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
@@ -67,33 +76,45 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
 
             <div style={{ display: 'grid', gridTemplateColumns: (hasBedding && hasChemicals) ? '1fr 1fr' : '1fr', gap: '20px', marginBottom: '30px' }}>
                 {hasBedding && <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <select value={data.beddingUsed ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value === 'true')}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
-                    <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Type</label>
+                    <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Type
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="text" maxLength={20} value={data.beddingType}
                         onChange={(e) => onDayChange(day, 'beddingType', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>}
                 {hasChemicals && <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <select value={data.chemicalsUsed ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value === 'true')}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
-                    <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Type</label>
+                    <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Type
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="text" maxLength={20} value={data.chemicalsType}
                         onChange={(e) => onDayChange(day, 'chemicalsType', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>}
             </div>
@@ -103,13 +124,16 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 ═══ PAGE 2: WEEKLY INSPECTIONS ═══
             </div>
 
-            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Hen Inspection</h4>
+            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Hen Inspection
+                <span style={{color: 'red', fontSize: '30px'}}>*</span>
+            </h4>
             <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginBottom: '50px' }}>
                 <div style={{ textAlign: 'center' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '12px' }}>AM Initial</label>
                     <input type="text" maxLength={6} value={data.routineHenEquipAmInitial}
                         onChange={(e) => onDayChange(day, 'routineHenEquipAmInitial', e.target.value.replace(/[^a-zA-Z]/g, ''))}
                         disabled={locked}
+                        required
                         style={{ width: '70px', padding: '8px', border: '1px solid #ccc', textAlign: 'center', ...(locked && inputLocked) }} />
                 </div>
                 <div style={{ textAlign: 'center' }}>
@@ -117,6 +141,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                     <input type="text" maxLength={6} value={data.routineHenEquipPmInitial}
                         onChange={(e) => onDayChange(day, 'routineHenEquipPmInitial', e.target.value.replace(/[^a-zA-Z]/g, ''))}
                         disabled={locked}
+                        required
                         style={{ width: '70px', padding: '8px', border: '1px solid #ccc', textAlign: 'center', ...(locked && inputLocked) }} />
                 </div>
             </div>

@@ -11,17 +11,23 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Mice Caught</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Mice Caught
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="number" min="0" max="9999999" value={data.micesCaught}
                         onChange={(e) => onDayChange(day, 'micesCaught', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Traps Checked</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Traps Checked
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="number" min="0" max="999" value={data.trapsChecked}
                         onChange={(e) => onDayChange(day, 'trapsChecked', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', paddingTop: '24px' }}>
@@ -36,44 +42,69 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Findings</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Findings
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="text" maxLength={30} value={data.liveTrapsFindings}
                         onChange={(e) => onDayChange(day, 'liveTrapsFindings', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Location</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Location
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="text" maxLength={30} value={data.liveTrapsLocation}
                         onChange={(e) => onDayChange(day, 'liveTrapsLocation', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Product</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Product
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="text" maxLength={30} value={data.baitProduct}
                         onChange={(e) => onDayChange(day, 'baitProduct', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Location</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Location
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <input type="text" maxLength={30} value={data.baitLocation}
                         onChange={(e) => onDayChange(day, 'baitLocation', e.target.value)}
                         disabled={locked}
+                        required
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
+                </div>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Quantity
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
+                    <input type="number" min="0" max="9999999"  value={data.baitQuantity}
+                        onChange={(e) => onDayChange(day, 'baitQuantity', e.target.value)}
+                        disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Birds on Range?</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Birds on Range?
+                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    </label>
                     <select value={data.birdsOnRange}
                         onChange={(e) => onDayChange(day, 'birdsOnRange', e.target.value)}
                         disabled={locked}
+                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
                         <option value="">Select...</option>
                         <option value="yes">Yes</option>
