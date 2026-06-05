@@ -20,9 +20,9 @@ const BLANK_FORM = {
     coolerRhLo: '',
     coolerCheckTime: '',
     dirtyTrays: '',
-    eggCoolerCleaned: false,
-    packRoomCleaned: false,
-    tablesPackingEquipCleaned: false,
+    eggCoolerSanitationCode: '',
+    packRoomSanitationCode: '',
+    equipSanitationCode: '',
     correctiveActions: '',
 }
 
@@ -214,9 +214,9 @@ export default function Form07DailyProduction() {
                         coolerRhLo: coolerTemps?.cooler_rh_lo_percent?.toString() ?? '',
                         coolerCheckTime: coolerTemps?.cooler_check_time ?? '',
                         dirtyTrays: sanitation?.dirty_trays_count?.toString() ?? '',
-                        eggCoolerCleaned: !!sanitation?.egg_cooler_sanitation_code,
-                        packRoomCleaned: !!sanitation?.pack_room_sanitation_code,
-                        tablesPackingEquipCleaned: !!sanitation?.equip_sanitation_code,
+                        eggCoolerSanitationCode: sanitation?.egg_cooler_sanitation_code ?? '',
+                        packRoomSanitationCode: sanitation?.pack_room_sanitation_code ?? '',
+                        equipSanitationCode: sanitation?.equip_sanitation_code ?? '',
                         correctiveActions: sanitation?.corrective_actions ?? '',
                     },
                 }))
@@ -312,9 +312,9 @@ export default function Form07DailyProduction() {
                     production_id: productionId,
                     record_date: recDate,
                     dirty_trays_count: parseInt(d.dirtyTrays) || 0,
-                    egg_cooler_sanitation_code: d.eggCoolerCleaned ? 'B' : null,
-                    pack_room_sanitation_code: d.packRoomCleaned ? 'W' : null,
-                    equip_sanitation_code: d.tablesPackingEquipCleaned ? 'S' : null,
+                    egg_cooler_sanitation_code: d.eggCoolerSanitationCode || null,
+                    pack_room_sanitation_code: d.packRoomSanitationCode || null,
+                    equip_sanitation_code: d.equipSanitationCode || null,
                     corrective_actions: d.correctiveActions || null
                 }], { onConflict: 'production_id,record_date' })
             if (sanitationError) throw sanitationError

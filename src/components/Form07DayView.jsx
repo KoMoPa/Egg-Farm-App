@@ -256,36 +256,48 @@ export default function Form07DayView({
                     Sanitation - As Completed
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={data.eggCoolerCleaned}
-                            onChange={(e) => setField('eggCoolerCleaned', e.target.checked)}
+                    <div>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Egg Cooler</label>
+                        <select
+                            value={data.eggCoolerSanitationCode || ''}
+                            onChange={(e) => setField('eggCoolerSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                        />
-                        <span style={{ fontSize: '18px' }}>Egg Cooler</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={data.packRoomCleaned}
-                            onChange={(e) => setField('packRoomCleaned', e.target.checked)}
+                            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
+                        >
+                            <option value="">-- Not done --</option>
+                            <option value="B">Blow</option>
+                            <option value="S">Sweep</option>
+                            <option value="W">Wash</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Pack Room</label>
+                        <select
+                            value={data.packRoomSanitationCode || ''}
+                            onChange={(e) => setField('packRoomSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                        />
-                        <span style={{ fontSize: '18px' }}>Pack Room</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', padding: '15px', background: 'white', borderRadius: '8px', border: '2px solid #ddd', cursor: isLocked ? 'default' : 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={data.tablesPackingEquipCleaned}
-                            onChange={(e) => setField('tablesPackingEquipCleaned', e.target.checked)}
+                            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
+                        >
+                            <option value="">-- Not done --</option>
+                            <option value="B">Blow</option>
+                            <option value="S">Sweep</option>
+                            <option value="W">Wash</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Tables/Packing Equip</label>
+                        <select
+                            value={data.equipSanitationCode || ''}
+                            onChange={(e) => setField('equipSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            style={{ width: '24px', height: '24px', marginRight: '12px' }}
-                        />
-                        <span style={{ fontSize: '18px' }}>Tables/Packing Equip</span>
-                    </label>
+                            style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
+                        >
+                            <option value="">-- Not done --</option>
+                            <option value="B">Blow</option>
+                            <option value="S">Sweep</option>
+                            <option value="W">Wash</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
