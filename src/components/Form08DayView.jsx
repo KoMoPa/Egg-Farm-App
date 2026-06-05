@@ -98,6 +98,11 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 </div>}
             </div>
 
+            {/* Page Break */}
+            <div style={{ borderTop: '4px dashed #999', margin: '40px 0', padding: '20px 0', textAlign: 'center', color: '#666', fontSize: '18px', fontWeight: 'bold' }}>
+                ═══ PAGE 2: WEEKLY INSPECTIONS ═══
+            </div>
+
             <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Hen Inspection</h4>
             <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginBottom: '50px' }}>
                 <div style={{ textAlign: 'center' }}>
