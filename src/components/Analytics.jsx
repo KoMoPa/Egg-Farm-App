@@ -10,20 +10,20 @@ const CHARTS = [
     title: 'Feed',
     table: 'feed_water_daily',
     dataColumn: 'feed_actual',
-    targetColumn: 'feed_daily',
-    threshold: 10,
+    mode: 'rolling7Baseline',
+    threshold: 25,
     iconSrc: '/feed-icon.png',
-    warningMsg: '{pct}% {deviation} target',
+    warningMsg: '{pct}% off previous 7-day avg',
   },
   {
     key: 'water_actual',
     title: 'Water',
     table: 'feed_water_daily',
     dataColumn: 'water_actual',
-    targetColumn: 'water_daily',
-    threshold: 10,
+    mode: 'rolling7Baseline',
+    threshold: 25,
     iconSrc: '/water-icon.png',
-    warningMsg: '{pct}% {deviation} target',
+    warningMsg: '{pct}% off previous 7-day avg',
   },
 ]
 
@@ -131,7 +131,7 @@ export default function Analytics() {
             <AnalyticsChart
               table={chart.table}
               dataColumn={chart.dataColumn}
-              targetColumn={chart.targetColumn}
+              mode={chart.mode}
               threshold={chart.threshold}
               icon={<img src={chart.iconSrc} alt="" className="warning-banner-icon-image" />}
               warningMsg={chart.warningMsg}
