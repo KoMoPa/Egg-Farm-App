@@ -6,8 +6,13 @@
  * @param {string} props.icon - Optional emoji icon (default: '⚠️')
  */
 export default function WarningBanner({ message, type = 'info', icon = '⚠️' }) {
+  const isFlag = type === 'over' || type === 'under'
+
   return (
     <div className={`warning-banner warning-banner--${type}`}>
+      <span className={`warning-banner-badge ${isFlag ? 'warning-banner-badge--flag' : 'warning-banner-badge--info'}`}>
+        {isFlag ? 'Flag' : 'Info'}
+      </span>
       <span className="warning-banner-icon">{icon}</span>
       <span className="warning-banner-message">{message}</span>
     </div>
