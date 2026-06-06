@@ -13,6 +13,7 @@ const BLANK_DAY = {
     liveTrapsLocation: '',
     baitProduct: '',
     baitLocation: '',
+    baitQuantity: '',
     birdsOnRange: '',
     correctiveActions: '',
 }
@@ -201,6 +202,7 @@ export default function Form10PestControlRecords() {
                         liveTrapsLocation: daily.trap_location ?? '',
                         baitProduct: daily.bait_product ?? '',
                         baitLocation: daily.bait_location ?? '',
+                        baitQuantity: daily.bait_quantity?.toString() ?? '',
                         birdsOnRange: daily.birds_on_range ?? '',
                         correctiveActions: daily.corrective_actions ?? '',
                     },
@@ -254,6 +256,7 @@ export default function Form10PestControlRecords() {
                     trap_location: d.liveTrapsLocation || null,
                     bait_product: d.baitProduct || null,
                     bait_location: d.baitLocation || null,
+                    bait_quantity: d.baitQuantity ? parseInt(d.baitQuantity) : null,
                     birds_on_range: d.birdsOnRange || null,
                     corrective_actions: d.correctiveActions || null,
                 }], { onConflict: 'pest_id,record_date' })
