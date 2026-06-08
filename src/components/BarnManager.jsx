@@ -221,10 +221,10 @@ export default function BarnManager() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '12px 0', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px', border: '1px solid #dee2e6' }}>
                 <div style={{ fontSize: '12px', fontWeight: '700', color: '#555', marginBottom: '4px' }}>BARN CONFIGURATION</div>
                 {[
-                  [newHasFloorEggs, setNewHasFloorEggs, 'Collects floor eggs (Form 07)'],
-                  [newTwoCollections, setNewTwoCollections, 'Two egg collections per day (Form 07)'],
-                  [newHasBedding, setNewHasBedding, 'Uses bedding (Form 08)'],
-                  [newHasChemicals, setNewHasChemicals, 'Uses chemicals (Form 08)'],
+                  [newHasFloorEggs, setNewHasFloorEggs, 'Do you collect floor eggs? (Form 07)'],
+                  [newTwoCollections, setNewTwoCollections, 'Do you collect eggs 2x a day? (Form 07)'],
+                  [newHasBedding, setNewHasBedding, 'Do you use bedding? (Form 08)'],
+                  [newHasChemicals, setNewHasChemicals, 'Do you use chemicals? (Form 08)'],
                 ].map(([value, setter, label]) => (
                   <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                     <input type="checkbox" checked={value} onChange={(e) => setter(e.target.checked)} />
@@ -292,9 +292,9 @@ export default function BarnManager() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px', border: '1px solid #dee2e6' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#555', marginBottom: '4px' }}>BARN CONFIGURATION</div>
               {[
-                [editHasFloorEggs, setEditHasFloorEggs, 'Collects floor eggs (Form 07)'],
-                [editTwoCollections, setEditTwoCollections, 'Two egg collections per day (Form 07)'],
-                [editHasBedding, setEditHasBedding, 'Uses bedding (Form 08)'], [editHasChemicals, setEditHasChemicals, 'Uses chemicals (Form 08)'],].map(([value, setter, label]) => (
+                [editHasFloorEggs, setEditHasFloorEggs, 'Do you collect floor eggs? (Form 07)'],
+                [editTwoCollections, setEditTwoCollections, 'Do you collect eggs 2x a day? (Form 07)'],
+                [editHasBedding, setEditHasBedding, 'Do you use bedding? (Form 08)'], [editHasChemicals, setEditHasChemicals, 'Do you use chemicals? (Form 08)'],].map(([value, setter, label]) => (
                   <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                     <input type="checkbox" checked={value} onChange={(e) => setter(e.target.checked)} />
                     {label}
