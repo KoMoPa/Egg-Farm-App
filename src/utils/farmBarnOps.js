@@ -83,6 +83,7 @@ export async function createBarn(farmId, barnName, options = {}) {
         two_collections_per_day: options.two_collections_per_day ?? false,
         has_bedding: options.has_bedding ?? false,
         has_chemicals: options.has_chemicals ?? false,
+        housing_type: options.housing_type ?? null,
       }])
       .select()
       .single()

@@ -27,6 +27,7 @@ CREATE TABLE barns (
   farm_id UUID NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
   barn_name VARCHAR(255) NOT NULL,
   barn_number VARCHAR(100),
+  housing_type VARCHAR(20) CHECK (housing_type IN ('enriched', 'aviary', 'free_run', 'free_range')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(farm_id, barn_number)
 );

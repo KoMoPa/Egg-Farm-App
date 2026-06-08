@@ -13,12 +13,14 @@ export default function BarnManager() {
   const [newTwoCollections, setNewTwoCollections] = useState(false)
   const [newHasBedding, setNewHasBedding] = useState(false)
   const [newHasChemicals, setNewHasChemicals] = useState(false)
+  const [newHousingType, setNewHousingType] = useState('')
   const [editingBarn, setEditingBarn] = useState(null)
   const [editName, setEditName] = useState('')
   const [editHasFloorEggs, setEditHasFloorEggs] = useState(false)
   const [editTwoCollections, setEditTwoCollections] = useState(false)
   const [editHasBedding, setEditHasBedding] = useState(false)
   const [editHasChemicals, setEditHasChemicals] = useState(false)
+  const [editHousingType, setEditHousingType] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -35,6 +37,7 @@ export default function BarnManager() {
         two_collections_per_day: newTwoCollections,
         has_bedding: newHasBedding,
         has_chemicals: newHasChemicals,
+        housing_type: newHousingType || null,
       })
       setBarns([...barns, newBarn])
       setNewBarnName('')
@@ -42,6 +45,7 @@ export default function BarnManager() {
       setNewTwoCollections(false)
       setNewHasBedding(false)
       setNewHasChemicals(false)
+      setNewHousingType('')
       setShowAddForm(false)
       setSelectedBarn(newBarn)
       setShowBarnSelector(false)
@@ -60,6 +64,7 @@ export default function BarnManager() {
     setEditTwoCollections(barn.two_collections_per_day ?? false)
     setEditHasBedding(barn.has_bedding ?? false)
     setEditHasChemicals(barn.has_chemicals ?? false)
+    setEditHousingType(barn.housing_type ?? '')
   }
 
   const handleSaveEdit = async (e) => {
@@ -74,6 +79,7 @@ export default function BarnManager() {
           two_collections_per_day: editTwoCollections,
           has_bedding: editHasBedding,
           has_chemicals: editHasChemicals,
+          housing_type: editHousingType || null,
         })
         .eq('id', editingBarn.id)
         .select()
@@ -122,6 +128,11 @@ export default function BarnManager() {
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#2D855B' }}>
               {selectedBarn.barn_name}
             </div>
+            {selectedBarn.housing_type && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                Housing Type: {selectedBarn.housing_type.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowBarnSelector(true)}
@@ -220,6 +231,22 @@ export default function BarnManager() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '12px 0', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px', border: '1px solid #dee2e6' }}>
                 <div style={{ fontSize: '12px', fontWeight: '700', color: '#555', marginBottom: '4px' }}>BARN CONFIGURATION</div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '700', color: '#555' }}>
+                    Housing Type
+                  </label>
+                  <select
+                    value={newHousingType}
+                    onChange={(e) => setNewHousingType(e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    <option value="">Select housing type...</option>
+                    <option value="enriched">Enriched</option>
+                    <option value="aviary">Aviary</option>
+                    <option value="free_run">Free Run</option>
+                    <option value="free_range">Free Range</option>
+                  </select>
+                </div>
                 {[
                   [newHasFloorEggs, setNewHasFloorEggs, 'Do you collect floor eggs? (Form 07)'],
                   [newTwoCollections, setNewTwoCollections, 'Do you collect eggs 2x a day? (Form 07)'],
@@ -291,6 +318,22 @@ export default function BarnManager() {
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px', border: '1px solid #dee2e6' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#555', marginBottom: '4px' }}>BARN CONFIGURATION</div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '700', color: '#555' }}>
+                  Housing Type
+                </label>
+                <select
+                  value={editHousingType}
+                  onChange={(e) => setEditHousingType(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                >
+                  <option value="">Select housing type...</option>
+                  <option value="enriched">Enriched</option>
+                  <option value="aviary">Aviary</option>
+                  <option value="free_run">Free Run</option>
+                  <option value="free_range">Free Range</option>
+                </select>
+              </div>
               {[
                 [editHasFloorEggs, setEditHasFloorEggs, 'Do you collect floor eggs? (Form 07)'],
                 [editTwoCollections, setEditTwoCollections, 'Do you collect eggs 2x a day? (Form 07)'],
