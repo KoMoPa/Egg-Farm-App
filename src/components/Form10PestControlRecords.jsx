@@ -522,7 +522,7 @@ export default function Form10PestControlRecords() {
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
                                     <div style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5', fontSize: '16px', fontWeight: 'bold', color: '#333', minHeight: '36px' }}>
-                                        {(() => { const m = parseFloat(miceTotal), t = parseFloat(trapsTotal), d = parseFloat(daysMonitored); return (!isNaN(m) && !isNaN(t) && !isNaN(d) && t !== 0 && d !== 0) ? ((m / t / d) * 12 * 7).toFixed(4) : '—' })()} 
+                                        {(() => { const m = parseFloat(miceTotal), t = parseFloat(trapsTotal), d = parseFloat(daysMonitored); return (!isNaN(m) && !isNaN(t) && !isNaN(d) && t !== 0 && d !== 0) ? ((m / t / d) * 12 * 7).toFixed(4) : '—' })()}
                                     </div>
                                     <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
                                 </div>
