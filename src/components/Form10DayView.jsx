@@ -2,7 +2,7 @@ import DaySelector from './DaySelector'
 
 const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
 
-function DayViewForm({ day, data, onDayChange, locked = false }) {
+function DayViewForm({ day, data, onDayChange, locked = false, showBirdsOnRange = true }) {
     return (
         <div style={{ marginBottom: '30px', opacity: locked ? 0.8 : 1 }}>
             <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
@@ -12,7 +12,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Mice Caught
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" min="0" max="9999999" value={data.micesCaught}
                         onChange={(e) => onDayChange(day, 'micesCaught', e.target.value)}
@@ -22,7 +22,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Traps Checked
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" min="0" max="999" value={data.trapsChecked}
                         onChange={(e) => onDayChange(day, 'trapsChecked', e.target.value)}
@@ -43,7 +43,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Findings
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="text" maxLength={30} value={data.liveTrapsFindings}
                         onChange={(e) => onDayChange(day, 'liveTrapsFindings', e.target.value)}
@@ -53,7 +53,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Live Traps - Location
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="text" maxLength={30} value={data.liveTrapsLocation}
                         onChange={(e) => onDayChange(day, 'liveTrapsLocation', e.target.value)}
@@ -66,7 +66,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Product
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="text" maxLength={30} value={data.baitProduct}
                         onChange={(e) => onDayChange(day, 'baitProduct', e.target.value)}
@@ -76,7 +76,7 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Location
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="text" maxLength={30} value={data.baitLocation}
                         onChange={(e) => onDayChange(day, 'baitLocation', e.target.value)}
@@ -86,9 +86,9 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bait - Quantity
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
-                    <input type="number" min="0" max="9999999"  value={data.baitQuantity}
+                    <input type="number" min="0" max="9999999" value={data.baitQuantity}
                         onChange={(e) => onDayChange(day, 'baitQuantity', e.target.value)}
                         disabled={locked}
                         required
@@ -96,22 +96,24 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-                <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Birds on Range?
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
-                    </label>
-                    <select value={data.birdsOnRange}
-                        onChange={(e) => onDayChange(day, 'birdsOnRange', e.target.value)}
-                        disabled={locked}
-                        required
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
-                        <option value="">Select...</option>
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
-                        <option value="na">N/A</option>
-                    </select>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: showBirdsOnRange ? '1fr 1fr' : '1fr', gap: '20px', marginBottom: '30px' }}>
+                {showBirdsOnRange && (
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Birds on Range?
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
+                        </label>
+                        <select value={data.birdsOnRange}
+                            onChange={(e) => onDayChange(day, 'birdsOnRange', e.target.value)}
+                            disabled={locked}
+                            required={showBirdsOnRange}
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
+                            <option value="">Select...</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                            <option value="na">N/A</option>
+                        </select>
+                    </div>
+                )}
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Corrective Actions</label>
                     <input type="text" maxLength={60} value={data.correctiveActions}
@@ -135,6 +137,7 @@ export default function Form10DayView({
     lockedDays,
     loadingDay,
     onSelectDay,
+    showBirdsOnRange,
 }) {
     return (
         <div>
@@ -174,6 +177,7 @@ export default function Form10DayView({
                 data={data}
                 onDayChange={onDayChange}
                 locked={isLocked}
+                showBirdsOnRange={showBirdsOnRange}
             />
 
             {!isLocked && (
