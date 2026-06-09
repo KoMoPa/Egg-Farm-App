@@ -3,7 +3,11 @@ import DaySelector from './DaySelector'
 const inputLocked = { backgroundColor: '#f0f0f0', color: '#888', cursor: 'not-allowed' }
 const selectLocked = { backgroundColor: '#f0f0f0', color: '#888', cursor: 'not-allowed' }
 
-function DayViewForm({ day, data, onDayChange, locked = false }) {
+function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null }) {
+    const isAugerMethod = feedMethod === 'auger_minutes'
+    const feedUnitLabel = isAugerMethod ? 'minutes' : 'kg'
+    const feedStep = isAugerMethod ? '1' : '0.1'
+
     return (
         <div style={{ marginBottom: '30px', opacity: locked ? 0.8 : 1 }}>
             <h3 style={{ fontSize: '18px', marginBottom: '20px', borderBottom: '2px solid #666', paddingBottom: '10px' }}>
@@ -12,17 +16,17 @@ function DayViewForm({ day, data, onDayChange, locked = false }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'normal', fontSize: '12px', color: '#A07800' }}>Feed Daily Target</label>
-                    <input type="number" step="0.1" value={data.feedDaily}
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'normal', fontSize: '12px', color: '#A07800' }}>Feed Daily Target ({feedUnitLabel})</label>
+                    <input type="number" step={feedStep} value={data.feedDaily}
                         onChange={(e) => onDayChange(day, 'feedDaily', e.target.value)}
                         disabled={locked}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '13px', color: locked ? undefined : '#A07800', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '15px', color: '#2D855B' }}>Feed Actual
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '15px', color: '#2D855B' }}>Feed Actual ({feedUnitLabel})
                         <span style={{color: 'red', fontSize: '30px'}}>*</span>
                     </label>
-                    <input type="number" step="0.1" value={data.feedActual}
+                    <input type="number" step={feedStep} value={data.feedActual}
                         onChange={(e) => onDayChange(day, 'feedActual', e.target.value)}
                         disabled={locked}
                         required
@@ -167,6 +171,7 @@ export default function Form09DayView({
     lockedDays,
     loadingDay,
     onSelectDay,
+    feedMethod,
 }) {
     return (
         <div>
@@ -206,6 +211,7 @@ export default function Form09DayView({
                 data={data}
                 onDayChange={onDayChange}
                 locked={isLocked}
+                feedMethod={feedMethod}
             />
 
             {!isLocked && (

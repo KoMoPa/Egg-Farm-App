@@ -4,6 +4,14 @@ import { useSupabase } from '../contexts/SupabaseContext'
 import { useFarmContext } from '../contexts/FarmContext'
 
 export default function BarnManager() {
+  const FEED_METHOD_OPTIONS = [
+    { value: 'bin_scale_weight', label: 'Daily Bin Scale Weights (kg)' },
+    { value: 'auger_minutes', label: 'Cross-Auger Run Time (minutes)' },
+    { value: 'hopper_weight_computed', label: 'Dump Hopper Computed Daily Weight (kg)' },
+  ]
+
+  const formatOptionLabel = (value, options) => options.find(option => option.value === value)?.label || value
+
   const supabase = useSupabase()
   const { farm, barns, selectedBarn, setSelectedBarn, setBarns } = useFarmContext()
   const [showAddForm, setShowAddForm] = useState(false)
@@ -14,6 +22,7 @@ export default function BarnManager() {
   const [newHasBedding, setNewHasBedding] = useState(false)
   const [newHasChemicals, setNewHasChemicals] = useState(false)
   const [newHousingType, setNewHousingType] = useState('')
+  const [newFeedMethod, setNewFeedMethod] = useState('')
   const [editingBarn, setEditingBarn] = useState(null)
   const [editName, setEditName] = useState('')
   const [editHasFloorEggs, setEditHasFloorEggs] = useState(false)
@@ -21,6 +30,7 @@ export default function BarnManager() {
   const [editHasBedding, setEditHasBedding] = useState(false)
   const [editHasChemicals, setEditHasChemicals] = useState(false)
   const [editHousingType, setEditHousingType] = useState('')
+  const [editFeedMethod, setEditFeedMethod] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -38,6 +48,7 @@ export default function BarnManager() {
         has_bedding: newHasBedding,
         has_chemicals: newHasChemicals,
         housing_type: newHousingType || null,
+        feed_method: newFeedMethod || null,
       })
       setBarns([...barns, newBarn])
       setNewBarnName('')
@@ -46,6 +57,7 @@ export default function BarnManager() {
       setNewHasBedding(false)
       setNewHasChemicals(false)
       setNewHousingType('')
+      setNewFeedMethod('')
       setShowAddForm(false)
       setSelectedBarn(newBarn)
       setShowBarnSelector(false)
@@ -65,6 +77,7 @@ export default function BarnManager() {
     setEditHasBedding(barn.has_bedding ?? false)
     setEditHasChemicals(barn.has_chemicals ?? false)
     setEditHousingType(barn.housing_type ?? '')
+    setEditFeedMethod(barn.feed_method ?? '')
   }
 
   const handleSaveEdit = async (e) => {
@@ -80,6 +93,7 @@ export default function BarnManager() {
           has_bedding: editHasBedding,
           has_chemicals: editHasChemicals,
           housing_type: editHousingType || null,
+          feed_method: editFeedMethod || null,
         })
         .eq('id', editingBarn.id)
         .select()
@@ -131,6 +145,11 @@ export default function BarnManager() {
             {selectedBarn.housing_type && (
               <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
                 Housing Type: {selectedBarn.housing_type.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </div>
+            )}
+            {selectedBarn.feed_method && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                Feed Method: {formatOptionLabel(selectedBarn.feed_method, FEED_METHOD_OPTIONS)}
               </div>
             )}
           </div>
@@ -247,6 +266,21 @@ export default function BarnManager() {
                     <option value="free_range">Free Range</option>
                   </select>
                 </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '700', color: '#555' }}>
+                    Feed Method
+                  </label>
+                  <select
+                    value={newFeedMethod}
+                    onChange={(e) => setNewFeedMethod(e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    <option value="">Select feed method...</option>
+                    {FEED_METHOD_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
                 {[
                   [newHasFloorEggs, setNewHasFloorEggs, 'Do you collect floor eggs? (Form 07)'],
                   [newTwoCollections, setNewTwoCollections, 'Do you collect eggs 2x a day? (Form 07)'],
@@ -332,6 +366,21 @@ export default function BarnManager() {
                   <option value="aviary">Aviary</option>
                   <option value="free_run">Free Run</option>
                   <option value="free_range">Free Range</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '700', color: '#555' }}>
+                  Feed Method
+                </label>
+                <select
+                  value={editFeedMethod}
+                  onChange={(e) => setEditFeedMethod(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                >
+                  <option value="">Select feed method...</option>
+                  {FEED_METHOD_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </div>
               {[

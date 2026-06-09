@@ -23,6 +23,7 @@ const selectLocked = { backgroundColor: '#f0f0f0', color: '#888', cursor: 'not-a
 export default function Form09FeedWaterRecords() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear, setMonthYear } = useFarmContext()
+    const feedMethod = selectedBarn?.feed_method || null
 
     // isCurrentMonth: true when the selected month is the current real-world month
     const today = new Date()
@@ -327,6 +328,11 @@ export default function Form09FeedWaterRecords() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '16px' }}>
                     <div><strong>Farm Name:</strong> {farm?.farm_name}</div>
                     <div><strong>Barn:</strong> {selectedBarn?.barn_name}</div>
+                    {feedMethod && (
+                        <div style={{ gridColumn: '1 / -1', fontSize: '13px', color: '#666' }}>
+                            <strong>Feed Method:</strong> {feedMethod === 'auger_minutes' ? 'Cross-Auger Run Time (minutes)' : feedMethod === 'hopper_weight_computed' ? 'Dump Hopper Computed Daily Weight (kg)' : 'Daily Bin Scale Weights (kg)'}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -373,6 +379,7 @@ export default function Form09FeedWaterRecords() {
                     lockedDays={lockedDays}
                     loadingDay={loadingDay}
                     onSelectDay={setSelectedDay}
+                    feedMethod={feedMethod}
                 />
             )}
 

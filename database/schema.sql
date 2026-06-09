@@ -28,6 +28,7 @@ CREATE TABLE barns (
   barn_name VARCHAR(255) NOT NULL,
   barn_number VARCHAR(100),
   housing_type VARCHAR(20) CHECK (housing_type IN ('enriched', 'aviary', 'free_run', 'free_range')),
+  feed_method VARCHAR(30) CHECK (feed_method IN ('bin_scale_weight', 'auger_minutes', 'hopper_weight_computed')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(farm_id, barn_number)
 );
