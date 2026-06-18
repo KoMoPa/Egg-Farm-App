@@ -24,7 +24,7 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '15px', color: '#2D855B' }}>Feed Actual ({feedUnitLabel})
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" step={feedStep} value={data.feedActual}
                         onChange={(e) => onDayChange(day, 'feedActual', e.target.value)}
@@ -44,7 +44,7 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '15px', color: '#2D855B' }}>Water Actual
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" min="0" max="9999999999" value={data.waterActual}
                         onChange={(e) => onDayChange(day, 'waterActual', e.target.value)}
@@ -58,7 +58,7 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Flush
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <select value={data.flush ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'flush', e.target.value === 'true')}
@@ -71,7 +71,7 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Meds/Vit
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <select value={data.medsVit ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'medsVit', e.target.value === 'true')}
@@ -84,7 +84,7 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Treatment
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <select value={data.treatment ? 'true' : 'false'}
                         onChange={(e) => onDayChange(day, 'treatment', e.target.value === 'true')}
@@ -111,7 +111,7 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Daily Mortality Count
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" min="0" max="99999999" value={data.mortalityDaily}
                         onChange={(e) => onDayChange(day, 'mortalityDaily', e.target.value)}
@@ -120,13 +120,10 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Reason
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
-                    </label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Reason</label>
                     <select value={data.mortalityReason}
                         onChange={(e) => onDayChange(day, 'mortalityReason', e.target.value)}
                         disabled={locked}
-                        required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && selectLocked) }}>
                         <option value="">Select...</option>
                         <option value="natural">Natural</option>
