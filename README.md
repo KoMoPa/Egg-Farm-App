@@ -17,6 +17,17 @@ When dependencies change, regenerate lockfile with npm 10 before committing:
 
 This avoids recurring `npm ci` failures for missing transitive deps in Railway builds.
 
+## Key Benefits
+
+- **Digital forms on iPad** – Fill out all compliance forms on tablet instead of paper; data syncs to cloud.
+- **Real-time alerts** – Dashboard shows trends instantly; orange badge alerts warn when 7-day rolling feed/water deviations exceed 25%.
+- **Automatic calculations** – Egg production %, mortality rates, totals compute automatically; no manual math errors.
+- **Multi-barn management** – Switch between barns in one app; all records linked and accessible.
+- **Offline capability** – PWA install means the app works on iPad even without internet; syncs when connection returns.
+- **Compliance-ready** – Forms structured around egg farm welfare standards; generate audit reports on demand.
+- **Configurable per barn** – Housing type and feed method dropdowns adapt form labels and calculations for different setups.
+- **Data never lost** – Supabase stores everything permanently with audit trail instead of risking damaged/misplaced paper forms.
+
 ## Install on phone (PWA)
 
 The web app can be installed to home screen and will use the app icon.
