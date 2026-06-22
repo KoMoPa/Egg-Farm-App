@@ -23,6 +23,7 @@ const inputLocked = { backgroundColor: '#f5f5f5', color: '#666' }
 export default function Form10PestControlRecords() {
     const supabase = useSupabase()
     const { farm, selectedBarn, monthYear, setMonthYear } = useFarmContext()
+    const isRangeHousing = selectedBarn?.housing_type === 'free_run' || selectedBarn?.housing_type === 'free_range'
 
     // isCurrentMonth: true when the selected month is the current real-world month
     const today = new Date()
@@ -257,7 +258,7 @@ export default function Form10PestControlRecords() {
                     bait_product: d.baitProduct || null,
                     bait_location: d.baitLocation || null,
                     bait_quantity: d.baitQuantity ? parseInt(d.baitQuantity) : null,
-                    birds_on_range: d.birdsOnRange || null,
+                    birds_on_range: isRangeHousing ? (d.birdsOnRange || null) : null,
                     corrective_actions: d.correctiveActions || null,
                 }], { onConflict: 'pest_id,record_date' })
             if (dailyError) throw dailyError
@@ -303,12 +304,12 @@ export default function Form10PestControlRecords() {
                     exterior_inspection_observation: exteriorInspectionObservation || null,
                     wild_birds_observation: wildBirdsObservation || null,
                     fly_monitoring: flyMonitoring || null,
-                    range_grass: rangeGrass || null,
-                    range_ponding_water: rangePondingWater || null,
-                    range_rotation_harrow: rangeRotationHarrow || null,
-                    range_wild_bird_deterrents: rangeWildBirdDeterrents || null,
-                    range_gravel_fences: rangeGravelFences || null,
-                    range_other: rangeOther || null,
+                    range_grass: isRangeHousing ? (rangeGrass || null) : null,
+                    range_ponding_water: isRangeHousing ? (rangePondingWater || null) : null,
+                    range_rotation_harrow: isRangeHousing ? (rangeRotationHarrow || null) : null,
+                    range_wild_bird_deterrents: isRangeHousing ? (rangeWildBirdDeterrents || null) : null,
+                    range_gravel_fences: isRangeHousing ? (rangeGravelFences || null) : null,
+                    range_other: isRangeHousing ? (rangeOther || null) : null,
                     interior_inspection_date: interiorInspectionDate ? new Date(interiorInspectionDate).toISOString().split('T')[0] : null,
                     interior_inspection_observation: interiorInspectionObservation || null,
                     mice_total: miceTotal ? parseInt(miceTotal) : null,
@@ -387,6 +388,7 @@ export default function Form10PestControlRecords() {
                     lockedDays={lockedDays}
                     loadingDay={loadingDay}
                     onSelectDay={setSelectedDay}
+                    showBirdsOnRange={isRangeHousing}
                 />
             )}
 
@@ -440,36 +442,37 @@ export default function Form10PestControlRecords() {
                             </select>
                         </div>
 
-                        {/* Range Management */}
-                        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                {[
-                                    ['Grass:', rangeGrass, setRangeGrass, true],
-                                    ['Ponding Water:', rangePondingWater, setRangePondingWater, true],
-                                    ['Rotation/Harrow:', rangeRotationHarrow, setRangeRotationHarrow, false],
-                                    ['Wild Bird Deterrents:', rangeWildBirdDeterrents, setRangeWildBirdDeterrents, false],
-                                    ['Gravel/Fences:', rangeGravelFences, setRangeGravelFences, false],
-                                    ['Other:', rangeOther, setRangeOther, false],
-                                ].map(([label, value, setter, useTextarea]) => (
-                                    <div key={label}>
-                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>{label}</label>
-                                        {useTextarea ? (
-                                            <textarea value={value}
-                                                onChange={(e) => setter(e.target.value)}
-                                                maxLength="500"
-                                                rows="2"
-                                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
-                                        ) : (
-                                            <input type="text" value={value}
-                                                onChange={(e) => setter(e.target.value)}
-                                                maxLength="500"
-                                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
-                                        )}
-                                    </div>
-                                ))}
+                        {isRangeHousing && (
+                            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                                <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Range Management</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    {[
+                                        ['Grass:', rangeGrass, setRangeGrass, true],
+                                        ['Ponding Water:', rangePondingWater, setRangePondingWater, true],
+                                        ['Rotation/Harrow:', rangeRotationHarrow, setRangeRotationHarrow, false],
+                                        ['Wild Bird Deterrents:', rangeWildBirdDeterrents, setRangeWildBirdDeterrents, false],
+                                        ['Gravel/Fences:', rangeGravelFences, setRangeGravelFences, false],
+                                        ['Other:', rangeOther, setRangeOther, false],
+                                    ].map(([label, value, setter, useTextarea]) => (
+                                        <div key={label}>
+                                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>{label}</label>
+                                            {useTextarea ? (
+                                                <textarea value={value}
+                                                    onChange={(e) => setter(e.target.value)}
+                                                    maxLength="500"
+                                                    rows="2"
+                                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontFamily: 'Arial', ...(monthlyLocked && inputLocked) }} />
+                                            ) : (
+                                                <input type="text" value={value}
+                                                    onChange={(e) => setter(e.target.value)}
+                                                    maxLength="500"
+                                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(monthlyLocked && inputLocked) }} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Interior Inspection */}
                         <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
@@ -519,7 +522,7 @@ export default function Form10PestControlRecords() {
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rodent Index</label>
                                     <div style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5', fontSize: '16px', fontWeight: 'bold', color: '#333', minHeight: '36px' }}>
-                                        {(() => { const m = parseFloat(miceTotal), t = parseFloat(trapsTotal), d = parseFloat(daysMonitored); return (!isNaN(m) && !isNaN(t) && !isNaN(d) && t !== 0 && d !== 0) ? ((m / t / d) * 12 * 7).toFixed(4) : '—' })()} 
+                                        {(() => { const m = parseFloat(miceTotal), t = parseFloat(trapsTotal), d = parseFloat(daysMonitored); return (!isNaN(m) && !isNaN(t) && !isNaN(d) && t !== 0 && d !== 0) ? ((m / t / d) * 12 * 7).toFixed(4) : '—' })()}
                                     </div>
                                     <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0' }}>(mice ÷ traps ÷ days) × 12 × 7</p>
                                 </div>

@@ -82,7 +82,7 @@ export default function Form07DayView({
                 <div style={{ display: 'grid', gridTemplateColumns: twoCollections ? '1fr 1fr 1fr' : '1fr 1fr', gap: '15px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number"
@@ -95,7 +95,7 @@ export default function Form07DayView({
                     </div>
                     {twoCollections && <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number"
@@ -122,7 +122,7 @@ export default function Form07DayView({
                 <div style={{ display: 'grid', gridTemplateColumns: twoCollections ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: '15px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#1
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number"
@@ -136,7 +136,7 @@ export default function Form07DayView({
                     </div>
                     {twoCollections && <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>#2
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number"
@@ -156,7 +156,7 @@ export default function Form07DayView({
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>% Daily
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number"
@@ -194,7 +194,7 @@ export default function Form07DayView({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '15px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp HI (°C)
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number" step="0.1" min="-99.9" max="999.9"
@@ -207,7 +207,7 @@ export default function Form07DayView({
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Temp LO (°C)
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number" step="0.1" min="-99.9" max="999.9"
@@ -220,7 +220,7 @@ export default function Form07DayView({
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% HI
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number" step="0.1" min="0" max="100"
@@ -233,7 +233,7 @@ export default function Form07DayView({
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>RH% LO
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="number" step="0.1" min="0" max="100"
@@ -246,7 +246,7 @@ export default function Form07DayView({
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Time
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                            <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                         </label>
                         <input
                             type="time"
@@ -269,7 +269,7 @@ export default function Form07DayView({
             <div style={{ marginBottom: '30px' }}>
                 <label style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
                     Dirty Trays (Daily count)
-                    <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                    <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                 </label>
                 <input
                     type="number"
@@ -289,14 +289,11 @@ export default function Form07DayView({
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Egg Cooler
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
-                        </label>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Egg Cooler</label>
                         <select
                             value={data.eggCoolerSanitationCode || ''}
                             onChange={(e) => setField('eggCoolerSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            required
                             style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
                         >
                             <option value="">-- Not done --</option>
@@ -306,14 +303,11 @@ export default function Form07DayView({
                         </select>
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Pack Room
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
-                        </label>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Pack Room</label>
                         <select
                             value={data.packRoomSanitationCode || ''}
                             onChange={(e) => setField('packRoomSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            required
                             style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
                         >
                             <option value="">-- Not done --</option>
@@ -323,14 +317,11 @@ export default function Form07DayView({
                         </select>
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Tables/Packing Equip
-                            <span style={{color: 'red', fontSize: '30px'}}>*</span>
-                        </label>
+                        <label style={{ display: 'block', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Tables/Packing Equip</label>
                         <select
                             value={data.equipSanitationCode || ''}
                             onChange={(e) => setField('equipSanitationCode', e.target.value)}
                             disabled={isLocked}
-                            required
                             style={{ width: '100%', padding: '12px', fontSize: '16px', border: '2px solid #ddd', borderRadius: '8px', ...(isLocked && inputLocked), cursor: isLocked ? 'default' : 'pointer' }}
                         >
                             <option value="">-- Not done --</option>
