@@ -17,6 +17,19 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         const checkUser = async () => {
             try {
+                // First, handle any auth redirect (e.g., email confirmation)
+                // Supabase redirect URLs have #access_token=... in the hash
+                if (window.location.hash) {
+                    // getSession() will parse the hash and validate the tokens
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (session) {
+                        setUser(session.user)
+                        setLoading(false)
+                        return
+                    }
+                }
+
+                // Normal session check
                 const { data: { session } } = await supabase.auth.getSession()
                 setUser(session?.user || null)
             } catch (err) {
@@ -55,7 +68,10 @@ export function AuthProvider({ children }) {
             setError(null)
             const { data, error } = await supabase.auth.signUp({
                 email,
-                password
+                password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/`
+                }
             })
             if (error) throw error
             // If the user is immediately authenticated (email confirmation disabled),
