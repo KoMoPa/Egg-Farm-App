@@ -305,9 +305,70 @@ export async function getCurrentFlockForBarn(barnId) {
       .single()
 
     if (error) throw error
-    return barn?.current_flock_id
+    return { flockId: barn?.current_flock_id }
   } catch (err) {
     console.error('Error getting current flock for barn:', err)
+    throw err
+  }
+}
+
+/**
+ * Close current active flock (set depletion_date and status='closed')
+ */
+export async function closeCurrentFlock(flockId) {
+  try {
+    if (!flockId) return { success: true }
+    const { error } = await supabase
+      .from('flocks')
+      .update({
+        depletion_date: new Date().toISOString().split('T')[0],
+        status: 'closed'
+      })
+      .eq('id', flockId)
+    if (error) throw error
+    return { success: true }
+  } catch (err) {
+    console.error('Error closing flock:', err)
+    throw err
+  }
+}
+
+/**
+ * Create a new active flock for a barn (status='active', arrival_date=today)
+ */
+export async function createNewFlock(barnId) {
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    const { data: newFlock, error } = await supabase
+      .from('flocks')
+      .insert([{
+        barn_id: barnId,
+        arrival_date: today,
+        status: 'active'
+      }])
+      .select()
+      .single()
+    if (error) throw error
+    return { flock: newFlock }
+  } catch (err) {
+    console.error('Error creating new flock:', err)
+    throw err
+  }
+}
+
+/**
+ * Update barn's current_flock_id reference
+ */
+export async function updateBarnCurrentFlockId(barnId, flockId) {
+  try {
+    const { error } = await supabase
+      .from('barns')
+      .update({ current_flock_id: flockId })
+      .eq('id', barnId)
+    if (error) throw error
+    return { success: true }
+  } catch (err) {
+    console.error('Error updating barn current flock:', err)
     throw err
   }
 }

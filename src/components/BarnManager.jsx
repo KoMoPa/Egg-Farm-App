@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getFarmBarns, createBarn } from '../utils/farmBarnOps'
+import { getFarmBarns, createBarn, getCurrentFlockForBarn, closeCurrentFlock, createNewFlock, updateBarnCurrentFlockId } from '../utils/farmBarnOps'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { useFarmContext } from '../contexts/FarmContext'
 
@@ -33,6 +33,8 @@ export default function BarnManager() {
   const [editFeedMethod, setEditFeedMethod] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [currentFlockInfo, setCurrentFlockInfo] = useState(null)
+  const [flockLoading, setFlockLoading] = useState(false)
 
   const handleAddBarn = async (e) => {
     e.preventDefault()
@@ -112,12 +114,60 @@ export default function BarnManager() {
     setShowBarnSelector(false)
   }
 
-  // When selectedBarn changes, collapse the selector
+  const loadFlockInfo = async (barnId) => {
+    try {
+      setFlockLoading(true)
+      const { flockId } = await getCurrentFlockForBarn(barnId)
+      if (!flockId) {
+        setCurrentFlockInfo(null)
+        return
+      }
+      const { data: flock, error } = await supabase
+        .from('flocks')
+        .select('id, arrival_date, status')
+        .eq('id', flockId)
+        .single()
+      if (error && error.code !== 'PGRST116') throw error
+      setCurrentFlockInfo(flock || null)
+    } catch (err) {
+      console.error('Error loading flock info:', err)
+      setCurrentFlockInfo(null)
+    } finally {
+      setFlockLoading(false)
+    }
+  }
+
+  const handleNewFlock = async () => {
+    if (!window.confirm(`Start a new flock in ${selectedBarn.barn_name}?\n\nThis will close the current flock (if any) and create a new active flock starting today.`)) return
+    try {
+      setFlockLoading(true)
+      // Close current flock if it exists
+      if (currentFlockInfo?.id) {
+        await closeCurrentFlock(currentFlockInfo.id)
+      }
+      // Create new flock
+      const { flock: newFlock } = await createNewFlock(selectedBarn.id)
+      // Update barn reference
+      await updateBarnCurrentFlockId(selectedBarn.id, newFlock.id)
+      // Reload flock info
+      await loadFlockInfo(selectedBarn.id)
+      alert(`✅ New flock created in ${selectedBarn.barn_name}`)
+    } catch (err) {
+      alert('Error creating new flock: ' + err.message)
+      console.error(err)
+    } finally {
+      setFlockLoading(false)
+    }
+  }
+
+  // When selectedBarn changes, collapse the selector and load flock info
   useEffect(() => {
     if (selectedBarn) {
       setShowBarnSelector(false)
+      loadFlockInfo(selectedBarn.id)
     } else {
       setShowBarnSelector(true)
+      setCurrentFlockInfo(null)
     }
   }, [selectedBarn])
 
@@ -152,21 +202,48 @@ export default function BarnManager() {
                 Feed Method: {formatOptionLabel(selectedBarn.feed_method, FEED_METHOD_OPTIONS)}
               </div>
             )}
+            {flockLoading ? (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '6px' }}>Loading flock info...</div>
+            ) : currentFlockInfo ? (
+              <div style={{ fontSize: '12px', color: '#2D855B', fontWeight: '600', marginTop: '6px' }}>
+                🐔 Active Flock: Arrived {new Date(currentFlockInfo.arrival_date).toLocaleDateString()}
+              </div>
+            ) : (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '6px' }}>No active flock</div>
+            )}
           </div>
-          <button
-            onClick={() => setShowBarnSelector(true)}
-            style={{
-              padding: '8px 12px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              backgroundColor: '#2D855B',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-            Change Barn
-          </button>
+          <div style={{ display: 'flex', gap: '6px', flexDirection: 'column' }}>
+            <button
+              onClick={() => setShowBarnSelector(true)}
+              style={{
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                backgroundColor: '#2D855B',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+              Change Barn
+            </button>
+            <button
+              onClick={handleNewFlock}
+              disabled={flockLoading}
+              style={{
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                backgroundColor: '#155724',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: flockLoading ? 'not-allowed' : 'pointer',
+                opacity: flockLoading ? 0.6 : 1
+              }}>
+              {flockLoading ? '⏳...' : '➕ New Flock'}
+            </button>
+          </div>
         </div>
       )}
 
