@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
-import { getOrCreateMonthlyAudit, getOrCreateFeedWaterRecord } from '../utils/farmBarnOps'
+import { getOrCreateMonthlyAudit, getOrCreateFeedWaterRecord, getCurrentFlockForBarn } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
 import Form09DayView from './Form09DayView'
 import MonthSelector from './MonthSelector'
@@ -117,7 +117,8 @@ export default function Form09FeedWaterRecords() {
         const fetchSum = async () => {
             try {
                 const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-                const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+                const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+                const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id, flockId)
                 const { data } = await supabase
                     .from('feed_water_health')
                     .select('mortality_daily')
@@ -152,7 +153,8 @@ export default function Form09FeedWaterRecords() {
                     return
                 }
 
-                const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+                const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+                const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id, flockId)
 
                 if (!fwr || cancelled) {
                     if (!cancelled) {
@@ -227,7 +229,8 @@ export default function Form09FeedWaterRecords() {
         setSaving(true)
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+            const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id, flockId)
             const fwId = feedWaterRecord.id
             const monthPrefix = monthYear.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
@@ -276,7 +279,8 @@ export default function Form09FeedWaterRecords() {
         e.preventDefault()
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id)
+            const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+            const { record: feedWaterRecord } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id, flockId)
             const fwId = feedWaterRecord.id
 
             const { error } = await supabase
