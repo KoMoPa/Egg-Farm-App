@@ -39,8 +39,10 @@ async function goToForm08(page) {
 }
 
 async function selectDay(page, day) {
-  const tile = page.locator('.day-selector-calendar .react-calendar__month-view__days button')
+  const tile = page
+    .locator('.day-selector-calendar .react-calendar__month-view__days button.react-calendar__tile:not(.react-calendar__month-view__days__day--neighboringMonth)')
     .filter({ has: page.locator(`abbr:text-is("${day}")`) })
+  await expect(tile.first()).toBeVisible()
   await tile.first().click()
   await page.waitForTimeout(700)
 }
@@ -76,24 +78,16 @@ test.describe.serial('Form 08 — day view CRUD', () => {
   })
 
   test('CREATE — fills all daily check fields and inspection criteria, then saves', async ({ page }) => {
-    page.on('dialog', d => d.accept())
+    const dialogs = []
+    page.on('dialog', d => { dialogs.push(d.message()); d.accept() })
     await goToForm08(page)
     await selectDay(page, TEST_DAY)
+    await expect(page.locator(`text=Daily Tracking - Day ${TEST_DAY}`)).toBeVisible({ timeout: 8_000 })
 
-    // Barn temperatures
-    await page.fill('input[placeholder=""] >> nth=0', '')  // clear in case pre-filled
-    // Use label-based targeting for barn temps
-    await page.fill('label:has-text("Barn Temp HI") + div input, label:has-text("Barn Temp HI") ~ input', '22.5').catch(() => {})
-
-    // Fill all number inputs in the temperature grid via order (HI, LO, Exterior)
-    const tempGrid = page.locator('.dashboard-card').filter({ hasText: 'Daily Tracking' }).locator('input[type="number"]')
-    // More reliable: use aria / label
-    await page.locator('label:has-text("Barn Temp HI")').locator('.. >> input').first().fill('22.5').catch(async () => {
-      // fallback: fill by position within the form
-      await page.locator('input[type="number"]').nth(0).fill('22.5')
-    })
-    await page.locator('input[type="number"]').nth(1).fill('18.0')  // LO
-    await page.locator('input[type="number"]').nth(2).fill('-5.0')  // Exterior
+    // Barn temperatures (target exact labeled fields)
+    await page.locator('label:has-text("Barn Temp HI") + input').fill('22.5')
+    await page.locator('label:has-text("Barn Temp LO") + input').fill('18.0')
+    await page.locator('label:has-text("Exterior Temp") + input').fill('-5.0')
 
     // Sanitation checkboxes — Floors, Walls, Manure
     const sanCheckboxes = page.locator('label:has-text("Floors Checked"), label:has-text("Walls"), label:has-text("Manure")')
@@ -102,16 +96,16 @@ test.describe.serial('Form 08 — day view CRUD', () => {
     }
 
     // Bedding/Chemicals selects — choose 'Yes'
-    const selects = page.locator('select')
-    const selCount = await selects.count()
-    for (let i = 0; i < Math.min(selCount, 2); i++) {
-      await selects.nth(i).selectOption('true')
-    }
+    await page.locator('label:has-text("Bedding Used") + select').selectOption('true')
+    await page.locator('label:has-text("Chemicals Used") + select').selectOption('true')
+
+    // Required type fields when bedding/chemicals are used
+    await page.locator('label:has-text("Bedding Type") + input').fill('Wood shavings')
+    await page.locator('label:has-text("Chemicals Type") + input').fill('Peroxide')
 
     // AM and PM initials
-    const initialInputs = page.locator('input[maxLength="6"]')
-    await initialInputs.nth(0).fill('AB')
-    await initialInputs.nth(1).fill('CD')
+    await page.locator('label:has-text("AM Initial") + input').fill('AB')
+    await page.locator('label:has-text("PM Initial") + input').fill('CD')
 
     // Select All inspection criteria using the "Select All" button
     await page.click('button:has-text("Select All")')
@@ -123,6 +117,9 @@ test.describe.serial('Form 08 — day view CRUD', () => {
     // Save
     await page.click(`button[type="submit"]:has-text("Save Day ${TEST_DAY} Record")`)
     await page.waitForTimeout(1500)
+
+    // Keep error guard only; persisted values are verified in READ tests.
+    expect(dialogs.some(m => /error saving/i.test(m) || /^error:/i.test(m))).toBeFalsy()
     await expect(page.locator(`text=Already recorded for Day ${TEST_DAY}`)).toBeVisible({ timeout: 10_000 })
   })
 
@@ -130,9 +127,16 @@ test.describe.serial('Form 08 — day view CRUD', () => {
     const admin = createAdminClient()
     const { farm } = await getTestFarm(admin)
     const barn = await getTestBarn(admin, farm.id)
+    await expect.poll(async () => {
+      const data = await getWelfareRecords(admin, barn.id, TEST_DAY)
+      return !!(data?.dailyCheck && data?.weeklyInspection)
+    }, { timeout: 20_000 }).toBe(true)
+
     const rec = await getWelfareRecords(admin, barn.id, TEST_DAY)
 
     expect(rec).not.toBeNull()
+    expect(rec.dailyCheck).not.toBeNull()
+    expect(rec.weeklyInspection).not.toBeNull()
     // Daily check temps
     expect(parseFloat(rec.dailyCheck?.barn_temp_hi)).toBeCloseTo(22.5, 1)
     expect(parseFloat(rec.dailyCheck?.barn_temp_lo)).toBeCloseTo(18.0, 1)
@@ -142,8 +146,8 @@ test.describe.serial('Form 08 — day view CRUD', () => {
     expect(rec.dailyCheck?.walls_sanitation_code).toBeTruthy()
     expect(rec.dailyCheck?.manure_sanitation_code).toBeTruthy()
     // Bedding / chemicals
-    expect(rec.dailyCheck?.bedding_notes).toBe('Yes')
-    expect(rec.dailyCheck?.chemicals_notes).toBe('Yes')
+    expect(rec.dailyCheck?.bedding_notes).toBe('Wood shavings')
+    expect(rec.dailyCheck?.chemicals_notes).toBe('Peroxide')
     // Initials
     expect(rec.dailyCheck?.hen_inspection_am).toBe('AB')
     expect(rec.dailyCheck?.hen_inspection_pm).toBe('CD')
@@ -176,9 +180,11 @@ test.describe.serial('Form 08 — day view CRUD', () => {
   })
 
   test('UPDATE — modifies temperatures and comments, re-saves day 3', async ({ page }) => {
-    page.on('dialog', d => d.accept())
+    const dialogs = []
+    page.on('dialog', d => { dialogs.push(d.message()); d.accept() })
     await goToForm08(page)
     await selectDay(page, TEST_DAY)
+    await expect(page.locator(`text=Daily Tracking - Day ${TEST_DAY}`)).toBeVisible({ timeout: 8_000 })
     await page.click('button:has-text("Re-enter data")')
     await page.waitForTimeout(300)
 
@@ -197,6 +203,8 @@ test.describe.serial('Form 08 — day view CRUD', () => {
 
     await page.click(`button[type="submit"]:has-text("Save Day ${TEST_DAY} Record")`)
     await page.waitForTimeout(1500)
+
+    expect(dialogs.some(m => /error saving/i.test(m) || /^error:/i.test(m))).toBeFalsy()
     await expect(page.locator(`text=Already recorded for Day ${TEST_DAY}`)).toBeVisible({ timeout: 10_000 })
   })
 
@@ -206,6 +214,8 @@ test.describe.serial('Form 08 — day view CRUD', () => {
     const barn = await getTestBarn(admin, farm.id)
     const rec = await getWelfareRecords(admin, barn.id, TEST_DAY)
 
+    expect(rec.dailyCheck).not.toBeNull()
+    expect(rec.weeklyInspection).not.toBeNull()
     expect(parseFloat(rec.dailyCheck?.barn_temp_hi)).toBeCloseTo(24.0, 1)
     expect(parseFloat(rec.dailyCheck?.barn_temp_lo)).toBeCloseTo(20.0, 1)
     expect(parseFloat(rec.dailyCheck?.exterior_temp)).toBeCloseTo(-8.0, 1)
@@ -225,7 +235,8 @@ test.describe.serial('Form 08 — monthly checks CRUD', () => {
   }
 
   test('CREATE — fills all monthly welfare check fields and saves', async ({ page }) => {
-    page.on('dialog', d => d.accept())
+    const dialogs = []
+    page.on('dialog', d => { dialogs.push(d.message()); d.accept() })
     await goToMonthlyTab(page)
 
     // Ammonia range select
@@ -249,16 +260,33 @@ test.describe.serial('Form 08 — monthly checks CRUD', () => {
     // Alarm check date and initials
     const dateInputs = page.locator('input[type="date"]')
     await dateInputs.nth(0).fill('2026-05-05')
-    await textInputs.nth(1).fill('MJ').catch(() => {})
+    await textInputs.nth(1).fill('MJ').catch(() => { })
 
     // Generator check date and initials
-    await dateInputs.nth(1).fill('2026-05-06').catch(() => {})
-    await textInputs.nth(2).fill('MJ').catch(() => {})
+    await dateInputs.nth(1).fill('2026-05-06').catch(() => { })
+    await textInputs.nth(2).fill('MJ').catch(() => { })
 
     // Save monthly checks
     await page.click('button:has-text("Save Monthly Checks")')
     await page.waitForTimeout(1500)
-    await expect(page.locator('button:has-text("✏️ Edit Monthly Checks")')).toBeVisible({ timeout: 10_000 })
+
+    expect(dialogs.some(m => /^error:/i.test(m) || /error saving/i.test(m))).toBeFalsy()
+
+    // Validate persistence directly to avoid false negatives from dialog timing/text
+    const admin = createAdminClient()
+    const { farm } = await getTestFarm(admin)
+    const barn = await getTestBarn(admin, farm.id)
+    const recDate = recordDate(TEST_DAY)
+
+    await expect.poll(async () => {
+      const { data: audit } = await admin.from('monthly_audits').select('id')
+        .eq('month_year', recDate.substring(0, 7) + '-01').maybeSingle()
+      const { data: wr } = await admin.from('welfare_records').select('id')
+        .eq('barn_id', barn.id).eq('audit_id', audit?.id).maybeSingle()
+      const { data: mc } = await admin.from('welfare_monthly_checks').select('ammonia_ppm_range')
+        .eq('welfare_id', wr?.id).maybeSingle()
+      return mc?.ammonia_ppm_range || null
+    }, { timeout: 15_000 }).toBe('5-10')
   })
 
   test('READ — Supabase has correct monthly welfare check values after CREATE', async ({ page }) => {
@@ -282,20 +310,41 @@ test.describe.serial('Form 08 — monthly checks CRUD', () => {
   })
 
   test('UPDATE — edits ammonia range and re-saves monthly welfare checks', async ({ page }) => {
-    page.on('dialog', d => d.accept())
+    const dialogs = []
+    page.on('dialog', d => { dialogs.push(d.message()); d.accept() })
     await goToMonthlyTab(page)
-
-    // Unlock if locked
-    const editBtn = page.locator('button:has-text("Edit Monthly Checks")')
-    if (await editBtn.isVisible({ timeout: 2000 }).catch(() => false)) await editBtn.click()
-    await page.waitForTimeout(300)
 
     // Change ammonia range
     const ammoniaSelect = page.locator('select').first()
+    if (!(await ammoniaSelect.isEnabled())) {
+      const editBtn = page.locator('button').filter({ hasText: /Edit Monthly Checks/i }).first()
+      if (await editBtn.isVisible({ timeout: 10_000 }).catch(() => false)) {
+        await editBtn.click()
+      }
+    }
+    await expect(ammoniaSelect).toBeEnabled({ timeout: 10_000 })
     await ammoniaSelect.selectOption('10-15')
 
     await page.click('button:has-text("Save Monthly Checks")')
     await page.waitForTimeout(1500)
+
+    expect(dialogs.some(m => /^error:/i.test(m) || /error saving/i.test(m))).toBeFalsy()
+
+    // Ensure persistence before moving to READ-after-UPDATE test.
+    const admin = createAdminClient()
+    const { farm } = await getTestFarm(admin)
+    const barn = await getTestBarn(admin, farm.id)
+    const recDate = recordDate(TEST_DAY)
+
+    await expect.poll(async () => {
+      const { data: audit } = await admin.from('monthly_audits').select('id')
+        .eq('month_year', recDate.substring(0, 7) + '-01').maybeSingle()
+      const { data: wr } = await admin.from('welfare_records').select('id')
+        .eq('barn_id', barn.id).eq('audit_id', audit?.id).maybeSingle()
+      const { data: mc } = await admin.from('welfare_monthly_checks').select('ammonia_ppm_range')
+        .eq('welfare_id', wr?.id).maybeSingle()
+      return mc?.ammonia_ppm_range || null
+    }, { timeout: 15_000 }).toBe('10-15')
   })
 
   test('READ after UPDATE — Supabase reflects updated monthly welfare check values', async ({ page }) => {

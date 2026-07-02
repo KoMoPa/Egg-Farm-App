@@ -95,15 +95,6 @@ test.describe.serial('Dashboard and barn creation', () => {
     await expect(page.locator('.dashboard')).toBeVisible()
   })
 
-  test('Analytics section renders all three chart titles', async ({ page }) => {
-    await page.goto('http://localhost:5173')
-    await page.waitForSelector('.dashboard', { timeout: 20_000 })
-
-    await expect(page.locator('text=⚙️ Auger Run Time')).toBeVisible()
-    await expect(page.locator('text=🌾 Feed')).toBeVisible()
-    await expect(page.locator('text=💧 Water')).toBeVisible()
-  })
-
   test('Analytics shows "No goal set" and allows setting a goal', async ({ page }) => {
     await page.goto('http://localhost:5173')
     await page.waitForSelector('.dashboard', { timeout: 20_000 })
@@ -114,29 +105,34 @@ test.describe.serial('Dashboard and barn creation', () => {
     await page.reload({ waitUntil: 'networkidle' })
     await page.waitForSelector('.dashboard')
 
-    // "No goal set" should appear for at least one chart
-    const noGoal = page.locator('text=No goal set').first()
+    const feedCard = page
+      .locator('.analytics-segment--chart')
+      .filter({ has: page.locator('.analytics-segment-title:has-text("Feed")') })
+      .first()
+
+    // "No goal set" should appear for feed chart
+    const noGoal = feedCard.locator('text=No goal set')
     await expect(noGoal).toBeVisible()
 
-    // Click "Set goal" for the first chart (Auger Run Time)
-    const setGoalBtn = page.locator('button:has-text("Set goal")').first()
+    // Click "Set goal" for feed chart
+    const setGoalBtn = feedCard.locator('button:has-text("Set goal")')
     await setGoalBtn.click()
 
     // Input should appear
-    const goalInput = page.locator('.chart-goal-input')
+    const goalInput = feedCard.locator('.chart-goal-input')
     await expect(goalInput).toBeVisible()
     await goalInput.fill('45')
 
     // Confirm save
-    await page.click('button.chart-goal-btn--save')
+    await feedCard.locator('button.chart-goal-btn--save').click()
 
     // Goal value should now be displayed
-    await expect(page.locator('text=Goal: 45')).toBeVisible()
+    await expect(feedCard.locator('text=Goal: 45')).toBeVisible()
 
     // Verify persisted in localStorage
     const stored = await page.evaluate(() => localStorage.getItem('analytics_goals'))
     const goals = JSON.parse(stored)
-    expect(goals.auger_run_time_minutes).toBe(45)
+    expect(goals.feed_actual).toBe(45)
   })
 
   test('Analytics allows editing an existing goal', async ({ page }) => {
@@ -144,37 +140,48 @@ test.describe.serial('Dashboard and barn creation', () => {
     await page.goto('http://localhost:5173')
     await page.waitForSelector('.dashboard', { timeout: 20_000 })
 
-    // Pre-set a known goal
-    await page.evaluate(() => localStorage.setItem('analytics_goals', JSON.stringify({ auger_run_time_minutes: 45 })))
+    // Pre-set a known goal on first chart key (Feed)
+    await page.evaluate(() => localStorage.setItem('analytics_goals', JSON.stringify({ feed_actual: 45 })))
     await page.reload({ waitUntil: 'networkidle' })
     await page.waitForSelector('.dashboard')
 
-    const editBtn = page.locator('button:has-text("Edit")').first()
-    await editBtn.click()
-    const goalInput = page.locator('.chart-goal-input')
-    await goalInput.fill('60')
-    await page.click('button.chart-goal-btn--save')
+    const feedCard = page
+      .locator('.analytics-segment--chart')
+      .filter({ has: page.locator('.analytics-segment-title:has-text("Feed")') })
+      .first()
 
-    await expect(page.locator('text=Goal: 60')).toBeVisible()
+    const editBtn = feedCard.locator('button:has-text("Edit")')
+    await editBtn.click()
+    const goalInput = feedCard.locator('.chart-goal-input')
+    await expect(goalInput).toBeVisible()
+    await goalInput.fill('60')
+    await feedCard.locator('button.chart-goal-btn--save').click()
+
+    await expect(feedCard.locator('text=Goal: 60')).toBeVisible()
     const stored = await page.evaluate(() => localStorage.getItem('analytics_goals'))
-    expect(JSON.parse(stored).auger_run_time_minutes).toBe(60)
+    expect(JSON.parse(stored).feed_actual).toBe(60)
   })
 
   test('Analytics allows clearing a goal', async ({ page }) => {
     await page.goto('http://localhost:5173')
     await page.waitForSelector('.dashboard', { timeout: 20_000 })
 
-    await page.evaluate(() => localStorage.setItem('analytics_goals', JSON.stringify({ auger_run_time_minutes: 60 })))
+    await page.evaluate(() => localStorage.setItem('analytics_goals', JSON.stringify({ feed_actual: 60 })))
     await page.reload({ waitUntil: 'networkidle' })
     await page.waitForSelector('.dashboard')
 
-    const editBtn = page.locator('button:has-text("Edit")').first()
-    await editBtn.click()
-    await page.click('button.chart-goal-btn--clear')
+    const feedCard = page
+      .locator('.analytics-segment--chart')
+      .filter({ has: page.locator('.analytics-segment-title:has-text("Feed")') })
+      .first()
 
-    await expect(page.locator('text=No goal set').first()).toBeVisible()
+    const editBtn = feedCard.locator('button:has-text("Edit")')
+    await editBtn.click()
+    await feedCard.locator('button.chart-goal-btn--clear').click()
+
+    await expect(feedCard.locator('text=No goal set')).toBeVisible()
     const stored = await page.evaluate(() => localStorage.getItem('analytics_goals'))
     const goals = JSON.parse(stored)
-    expect(goals.auger_run_time_minutes).toBeUndefined()
+    expect(goals.feed_actual).toBeUndefined()
   })
 })
