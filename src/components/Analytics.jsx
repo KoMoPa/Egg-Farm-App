@@ -3,6 +3,7 @@ import MonthSelector from './MonthSelector'
 import { useFarmContext } from '../contexts/FarmContext'
 import AnalyticsChart from './analytics/AnalyticsChart'
 import CumulativeEggChart from './analytics/CumulativeEggChart'
+import EggAgeComparisonSummary from './analytics/EggAgeComparisonSummary'
 
 const CHARTS = [
   {
@@ -116,7 +117,7 @@ export default function Analytics() {
       <div className="analytics-charts-grid">
         <section className="analytics-segment analytics-segment--chart analytics-segment--full-width">
           <h3 className="analytics-segment-title">
-            <img src="/egg-icon.png" alt="" className="analytics-segment-title-icon" />
+            <img src="/production-icon.png" alt="" className="analytics-segment-title-icon" />
             <span>Monthly Egg Production</span>
           </h3>
           <CumulativeEggChart />
@@ -144,6 +145,14 @@ export default function Analytics() {
             />
           </section>
         ))}
+
+        <section className="analytics-segment analytics-segment--chart analytics-segment--full-width">
+          <h3 className="analytics-segment-title">
+            <img src="/production-icon.png" alt="" className="analytics-segment-title-icon" />
+            <span>Egg Production: Current vs. Previous Flock</span>
+          </h3>
+          <EggAgeComparisonSummary />
+        </section>
       </div>
     </div>
   )
