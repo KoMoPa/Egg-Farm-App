@@ -144,7 +144,7 @@ export async function getOrCreateMonthlyAudit(farmId, monthYear) {
 /**
  * Get or create production cooler records parent
  */
-export async function getOrCreateProductionRecord(barnId, auditId) {
+export async function getOrCreateProductionRecord(barnId, auditId, flockId) {
   try {
     const { data: existingRecord, error: fetchError } = await supabase
       .from('production_cooler_records')
@@ -165,7 +165,8 @@ export async function getOrCreateProductionRecord(barnId, auditId) {
       .from('production_cooler_records')
       .insert([{
         barn_id: barnId,
-        audit_id: auditId
+        audit_id: auditId,
+        flock_id: flockId
       }])
       .select()
       .single()
@@ -181,7 +182,7 @@ export async function getOrCreateProductionRecord(barnId, auditId) {
 /**
  * Get or create welfare records parent
  */
-export async function getOrCreateWelfareRecord(barnId, auditId) {
+export async function getOrCreateWelfareRecord(barnId, auditId, flockId) {
   try {
     const { data: existingRecord, error: fetchError } = await supabase
       .from('welfare_records')
@@ -202,7 +203,8 @@ export async function getOrCreateWelfareRecord(barnId, auditId) {
       .from('welfare_records')
       .insert([{
         barn_id: barnId,
-        audit_id: auditId
+        audit_id: auditId,
+        flock_id: flockId
       }])
       .select()
       .single()
@@ -218,7 +220,7 @@ export async function getOrCreateWelfareRecord(barnId, auditId) {
 /**
  * Get or create feed/water records parent
  */
-export async function getOrCreateFeedWaterRecord(barnId, auditId) {
+export async function getOrCreateFeedWaterRecord(barnId, auditId, flockId) {
   try {
     const { data: existingRecord, error: fetchError } = await supabase
       .from('feed_water_records')
@@ -239,7 +241,8 @@ export async function getOrCreateFeedWaterRecord(barnId, auditId) {
       .from('feed_water_records')
       .insert([{
         barn_id: barnId,
-        audit_id: auditId
+        audit_id: auditId,
+        flock_id: flockId
       }])
       .select()
       .single()
@@ -255,7 +258,7 @@ export async function getOrCreateFeedWaterRecord(barnId, auditId) {
 /**
  * Get or create pest control records parent
  */
-export async function getOrCreatePestControlRecord(barnId, auditId) {
+export async function getOrCreatePestControlRecord(barnId, auditId, flockId) {
   try {
     const { data: existingRecord, error: fetchError } = await supabase
       .from('pest_control_records')
@@ -276,7 +279,8 @@ export async function getOrCreatePestControlRecord(barnId, auditId) {
       .from('pest_control_records')
       .insert([{
         barn_id: barnId,
-        audit_id: auditId
+        audit_id: auditId,
+        flock_id: flockId
       }])
       .select()
       .single()
@@ -285,6 +289,86 @@ export async function getOrCreatePestControlRecord(barnId, auditId) {
     return { record: newRecord, created: true }
   } catch (err) {
     console.error('Error getting/creating pest control record:', err)
+    throw err
+  }
+}
+
+/**
+ * Get current active flock for a barn
+ */
+export async function getCurrentFlockForBarn(barnId) {
+  try {
+    const { data: barn, error } = await supabase
+      .from('barns')
+      .select('current_flock_id')
+      .eq('id', barnId)
+      .single()
+
+    if (error) throw error
+    return { flockId: barn?.current_flock_id }
+  } catch (err) {
+    console.error('Error getting current flock for barn:', err)
+    throw err
+  }
+}
+
+/**
+ * Close current active flock (set depletion_date and status='closed')
+ */
+export async function closeCurrentFlock(flockId) {
+  try {
+    if (!flockId) return { success: true }
+    const { error } = await supabase
+      .from('flocks')
+      .update({
+        depletion_date: new Date().toISOString().split('T')[0],
+        status: 'closed'
+      })
+      .eq('id', flockId)
+    if (error) throw error
+    return { success: true }
+  } catch (err) {
+    console.error('Error closing flock:', err)
+    throw err
+  }
+}
+
+/**
+ * Create a new active flock for a barn (status='active', arrival_date=today)
+ */
+export async function createNewFlock(barnId) {
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    const { data: newFlock, error } = await supabase
+      .from('flocks')
+      .insert([{
+        barn_id: barnId,
+        arrival_date: today,
+        status: 'active'
+      }])
+      .select()
+      .single()
+    if (error) throw error
+    return { flock: newFlock }
+  } catch (err) {
+    console.error('Error creating new flock:', err)
+    throw err
+  }
+}
+
+/**
+ * Update barn's current_flock_id reference
+ */
+export async function updateBarnCurrentFlockId(barnId, flockId) {
+  try {
+    const { error } = await supabase
+      .from('barns')
+      .update({ current_flock_id: flockId })
+      .eq('id', barnId)
+    if (error) throw error
+    return { success: true }
+  } catch (err) {
+    console.error('Error updating barn current flock:', err)
     throw err
   }
 }

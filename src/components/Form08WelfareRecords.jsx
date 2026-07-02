@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
-import { getOrCreateMonthlyAudit, getOrCreateWelfareRecord } from '../utils/farmBarnOps'
+import { getOrCreateMonthlyAudit, getOrCreateWelfareRecord, getCurrentFlockForBarn } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
 import Form08DayView from './Form08DayView'
 import MonthSelector from './MonthSelector'
@@ -172,7 +172,8 @@ export default function Form08WelfareRecords() {
     const load = async () => {
       try {
         const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-        const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+        const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+        const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id, flockId)
         if (cancelled) return
 
         const welfareId = welfareRecord.id
@@ -231,7 +232,8 @@ export default function Form08WelfareRecords() {
         const recDate = `${monthStr}-${String(selectedDay).padStart(2, '0')}`
 
         const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-        const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+        const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+        const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id, flockId)
         if (cancelled) return
 
         const welfareId = welfareRecord.id
@@ -339,7 +341,8 @@ export default function Form08WelfareRecords() {
     setSaving(true)
     try {
       const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+      const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id, flockId)
       const welfareId = welfareRecord.id
       const monthPrefix = monthYear.substring(0, 7)
       const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
@@ -405,7 +408,8 @@ export default function Form08WelfareRecords() {
       }
 
       const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id)
+      const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+      const { record: welfareRecord } = await getOrCreateWelfareRecord(selectedBarn.id, audit.id, flockId)
       const welfareId = welfareRecord.id
 
       // Update monthly comments

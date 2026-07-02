@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
-import { getOrCreateMonthlyAudit, getOrCreateProductionRecord } from '../utils/farmBarnOps'
+import { getOrCreateMonthlyAudit, getOrCreateProductionRecord, getCurrentFlockForBarn } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
 import DaySelector from './DaySelector'
 import Form07DayView from './Form07DayView'
@@ -159,7 +159,8 @@ export default function Form07DailyProduction() {
                     return
                 }
 
-                const { record: prod } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
+                const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+                const { record: prod } = await getOrCreateProductionRecord(selectedBarn.id, audit.id, flockId)
 
                 if (!prod || cancelled) {
                     if (!cancelled) {
@@ -263,7 +264,8 @@ export default function Form07DailyProduction() {
         }
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
+            const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+            const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id, flockId)
             const productionId = productionRecord.id
             const monthPrefix = monthYear.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
@@ -344,7 +346,8 @@ export default function Form07DailyProduction() {
         e.preventDefault()
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id)
+            const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+            const { record: productionRecord } = await getOrCreateProductionRecord(selectedBarn.id, audit.id, flockId)
             const productionId = productionRecord.id
 
             if (thermCalDate) {

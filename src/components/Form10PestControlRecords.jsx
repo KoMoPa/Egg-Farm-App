@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
-import { getOrCreateMonthlyAudit, getOrCreatePestControlRecord } from '../utils/farmBarnOps'
+import { getOrCreateMonthlyAudit, getOrCreatePestControlRecord, getCurrentFlockForBarn } from '../utils/farmBarnOps'
 import { useFarmContext } from '../contexts/FarmContext'
 import Form10DayView from './Form10DayView'
 import MonthSelector from './MonthSelector'
@@ -170,7 +170,8 @@ export default function Form10PestControlRecords() {
                     return
                 }
 
-                const { record: pest } = await getOrCreatePestControlRecord(selectedBarn.id, audit.id)
+                const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+                const { record: pest } = await getOrCreatePestControlRecord(selectedBarn.id, audit.id, flockId)
 
                 if (!pest || cancelled) {
                     if (!cancelled) {
@@ -239,7 +240,8 @@ export default function Form10PestControlRecords() {
         setSaving(true)
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: pestControlRecord } = await getOrCreatePestControlRecord(selectedBarn.id, audit.id)
+            const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+            const { record: pestControlRecord } = await getOrCreatePestControlRecord(selectedBarn.id, audit.id, flockId)
             const pestId = pestControlRecord.id
             const monthPrefix = monthYear.substring(0, 7)
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
@@ -293,7 +295,8 @@ export default function Form10PestControlRecords() {
     const handleMonthlySubmit = async () => {
         try {
             const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
-            const { record: pestControlRecord } = await getOrCreatePestControlRecord(selectedBarn.id, audit.id)
+            const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+            const { record: pestControlRecord } = await getOrCreatePestControlRecord(selectedBarn.id, audit.id, flockId)
             const pestId = pestControlRecord.id
 
             const { error: auditError } = await supabase
