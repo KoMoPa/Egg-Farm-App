@@ -10,6 +10,12 @@
 
 ---
 
+## 📸 Screenshot
+
+![Dashboard screenshot](public/screenshot.png)
+
+---
+
 ## 🛠 Tech Stack
 
 <table>
