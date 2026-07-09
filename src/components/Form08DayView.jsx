@@ -19,7 +19,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp HI (°C)
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" step="0.1" value={data.barnTempHi}
                         onChange={(e) => onDayChange(day, 'barnTempHi', e.target.value)}
@@ -30,7 +30,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Barn Temp LO (°C)
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" step="0.1" value={data.barnTempLo}
                         onChange={(e) => onDayChange(day, 'barnTempLo', e.target.value)}
@@ -41,7 +41,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                 </div>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exterior Temp (°C)
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <input type="number" step="0.1" value={data.exteriorTemp}
                         onChange={(e) => onDayChange(day, 'exteriorTemp', e.target.value)}
@@ -77,10 +77,14 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
             <div style={{ display: 'grid', gridTemplateColumns: (hasBedding && hasChemicals) ? '1fr 1fr' : '1fr', gap: '20px', marginBottom: '30px' }}>
                 {hasBedding && <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Used
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <select value={data.beddingUsed ? 'true' : 'false'}
-                        onChange={(e) => onDayChange(day, 'beddingUsed', e.target.value === 'true')}
+                        onChange={(e) => {
+                            const beddingUsed = e.target.value === 'true'
+                            onDayChange(day, 'beddingUsed', beddingUsed)
+                            if (!beddingUsed) onDayChange(day, 'beddingType', '')
+                        }}
                         disabled={locked}
                         required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
@@ -88,20 +92,24 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="true">Yes</option>
                     </select>
                     <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Bedding Type
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        {data.beddingUsed && <span style={{ color: 'red', fontSize: '30px' }}>*</span>}
                     </label>
                     <input type="text" maxLength={20} value={data.beddingType}
                         onChange={(e) => onDayChange(day, 'beddingType', e.target.value)}
-                        disabled={locked}
-                        required
+                        disabled={locked || !data.beddingUsed}
+                        required={data.beddingUsed}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>}
                 {hasChemicals && <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Used
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        <span style={{ color: 'red', fontSize: '30px' }}>*</span>
                     </label>
                     <select value={data.chemicalsUsed ? 'true' : 'false'}
-                        onChange={(e) => onDayChange(day, 'chemicalsUsed', e.target.value === 'true')}
+                        onChange={(e) => {
+                            const chemicalsUsed = e.target.value === 'true'
+                            onDayChange(day, 'chemicalsUsed', chemicalsUsed)
+                            if (!chemicalsUsed) onDayChange(day, 'chemicalsType', '')
+                        }}
                         disabled={locked}
                         required
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }}>
@@ -109,12 +117,12 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
                         <option value="true">Yes</option>
                     </select>
                     <label style={{ display: 'block', marginTop: '10px', marginBottom: '5px', fontWeight: 'bold' }}>Chemicals Type
-                        <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                        {data.chemicalsUsed && <span style={{ color: 'red', fontSize: '30px' }}>*</span>}
                     </label>
                     <input type="text" maxLength={20} value={data.chemicalsType}
                         onChange={(e) => onDayChange(day, 'chemicalsType', e.target.value)}
-                        disabled={locked}
-                        required
+                        disabled={locked || !data.chemicalsUsed}
+                        required={data.chemicalsUsed}
                         style={{ width: '100%', padding: '8px', border: '1px solid #ccc', ...(locked && inputLocked) }} />
                 </div>}
             </div>
@@ -125,7 +133,7 @@ function DayViewForm({ day, data, onDayChange, onDayCheckbox, onSelectAllCriteri
             </div>
 
             <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '15px' }}>Hen Inspection
-                <span style={{color: 'red', fontSize: '30px'}}>*</span>
+                <span style={{ color: 'red', fontSize: '30px' }}>*</span>
             </h4>
             <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginBottom: '50px' }}>
                 <div style={{ textAlign: 'center' }}>
