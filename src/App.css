@@ -145,7 +145,8 @@ body,
   border-top: 1px solid #e0e0e0;
   flex-shrink: 0;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* padding-bottom: env(safe-area-inset-bottom); */
+  padding-bottom: 10px;
 }
 
 .app-tab-item {
