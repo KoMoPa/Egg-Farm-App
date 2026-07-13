@@ -611,6 +611,8 @@ CREATE POLICY "Users manage their own push subscriptions"
 
 CREATE INDEX idx_push_subscriptions_user_id ON push_subscriptions(user_id);
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE push_subscriptions TO authenticated;
+
 -- Audit log of sent notifications (used for deduplication)
 CREATE TABLE notification_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

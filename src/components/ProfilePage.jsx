@@ -8,6 +8,57 @@ export default function ProfilePage({ user, onClose }) {
     const { farm, barns, reloadFarm } = useFarmContext()
     const { isSupported: pushSupported, isSubscribed, isLoading: pushLoading, error: pushError, subscribe, unsubscribe } = usePushNotifications()
 
+    // Demo notification
+    const [demoLoading, setDemoLoading] = useState(false)
+    const [demoMsg, setDemoMsg] = useState(null)
+
+    const handleDemoNotification = async () => {
+        setDemoLoading(true)
+        setDemoMsg(null)
+        try {
+            if (Notification.permission !== 'granted') {
+                setDemoMsg({ type: 'error', text: 'Enable notifications first, then try again.' })
+                return
+            }
+            const today = new Date()
+            const monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+            const monthLabel = today.toLocaleString('default', { month: 'long', year: 'numeric' })
+
+            const { data: audit } = await supabase
+                .from('monthly_audits')
+                .select('form_07_completed, form_08_completed, form_09_completed, form_10_completed')
+                .eq('farm_id', farm.id)
+                .eq('month_year', monthYear)
+                .maybeSingle()
+
+            const anyCompleted = audit && (
+                audit.form_07_completed ||
+                audit.form_08_completed ||
+                audit.form_09_completed ||
+                audit.form_10_completed
+            )
+
+            if (anyCompleted) {
+                setDemoMsg({ type: 'error', text: `At least one form is already completed for ${monthLabel} — complete the demo with a fresh month or incomplete records.` })
+                return
+            }
+
+            const registration = await navigator.serviceWorker.ready
+            await registration.showNotification('Compliance Forms Due', {
+                body: `No compliance forms have been recorded yet for ${monthLabel}. Tap to stay on track.`,
+                icon: '/pwa-192x192.png',
+                badge: '/pwa-192x192.png',
+                data: { url: '/' },
+                tag: 'demo-reminder',
+            })
+            setDemoMsg({ type: 'success', text: 'Demo notification sent!' })
+        } catch (err) {
+            setDemoMsg({ type: 'error', text: err.message })
+        } finally {
+            setDemoLoading(false)
+        }
+    }
+
     // Farm name edit
     const [farmName, setFarmName] = useState(farm?.farm_name ?? '')
     const [farmSaving, setFarmSaving] = useState(false)
@@ -214,40 +265,74 @@ export default function ProfilePage({ user, onClose }) {
                         Push notifications are not supported by this browser.
                     </p>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                                Form 10 Pest Control Reminders
+                    <>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                                    Form 10 Pest Control Reminders
+                                </div>
+                                <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.5' }}>
+                                    Receive a push notification on the 15th and 25th of each month if your Form 10 monthly pest control check is not yet complete.
+                                </div>
+                                {pushError && (
+                                    <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#c00', fontWeight: '600' }}>{pushError}</p>
+                                )}
                             </div>
-                            <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.5' }}>
-                                Receive a push notification on the 15th and 25th of each month if your Form 10 monthly pest control check is not yet complete.
+                            <button
+                                type="button"
+                                disabled={pushLoading}
+                                onClick={isSubscribed ? unsubscribe : subscribe}
+                                style={{
+                                    padding: '9px 20px',
+                                    background: isSubscribed ? '#ddd' : '#2D855B',
+                                    color: isSubscribed ? '#333' : 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    cursor: pushLoading ? 'not-allowed' : 'pointer',
+                                    flexShrink: 0,
+                                    opacity: pushLoading ? 0.6 : 1,
+                                }}
+                            >
+                                {pushLoading ? '…' : isSubscribed ? 'Disable' : 'Enable'}
+                            </button>
+                        </div>
+
+                        {/* Demo trigger for promotional video */}
+                        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f0f0f0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                                <div style={{ fontSize: '13px', color: '#888' }}>
+                                    No forms completed this month? Fire a sample notification for demo purposes.
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={demoLoading}
+                                    onClick={handleDemoNotification}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: 'white',
+                                        color: '#2D855B',
+                                        border: '1.5px solid #2D855B',
+                                        borderRadius: '6px',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        cursor: demoLoading ? 'not-allowed' : 'pointer',
+                                        flexShrink: 0,
+                                        opacity: demoLoading ? 0.6 : 1,
+                                    }}
+                                >
+                                    {demoLoading ? '…' : 'Send Demo'}
+                                </button>
                             </div>
-                            {pushError && (
-                                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#c00', fontWeight: '600' }}>{pushError}</p>
+                            {demoMsg && (
+                                <p style={{ margin: '8px 0 0 0', fontSize: '13px', fontWeight: '600', color: demoMsg.type === 'success' ? '#2D855B' : '#c00' }}>
+                                    {demoMsg.text}
+                                </p>
                             )}
                         </div>
-                        <button
-                            type="button"
-                            disabled={pushLoading}
-                            onClick={isSubscribed ? unsubscribe : subscribe}
-                            style={{
-                                padding: '9px 20px',
-                                background: isSubscribed ? '#ddd' : '#2D855B',
-                                color: isSubscribed ? '#333' : 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                cursor: pushLoading ? 'not-allowed' : 'pointer',
-                                flexShrink: 0,
-                                opacity: pushLoading ? 0.6 : 1,
-                            }}
-                        >
-                            {pushLoading ? '…' : isSubscribed ? 'Disable' : 'Enable'}
-                        </button>
-                    </div>
+                    </>
                 )}
-            </section>
 
             {/* ── Barns section ── */}
             <section style={{ background: 'white', borderRadius: '10px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
