@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { useFarmContext } from '../contexts/FarmContext'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 
 export default function ProfilePage({ user, onClose }) {
     const supabase = useSupabase()
     const { farm, barns, reloadFarm } = useFarmContext()
+    const { isSupported: pushSupported, isSubscribed, isLoading: pushLoading, error: pushError, subscribe, unsubscribe } = usePushNotifications()
 
     // Farm name edit
     const [farmName, setFarmName] = useState(farm?.farm_name ?? '')
@@ -201,6 +203,50 @@ export default function ProfilePage({ user, onClose }) {
                         </p>
                     )}
                 </div>
+            </section>
+
+            {/* ── Notifications section ── */}
+            <section style={{ background: 'white', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: '700', color: '#333', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>Notifications</h3>
+
+                {!pushSupported ? (
+                    <p style={{ margin: 0, fontSize: '14px', color: '#888' }}>
+                        Push notifications are not supported by this browser.
+                    </p>
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                                Form 10 Pest Control Reminders
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.5' }}>
+                                Receive a push notification on the 15th and 25th of each month if your Form 10 monthly pest control check is not yet complete.
+                            </div>
+                            {pushError && (
+                                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#c00', fontWeight: '600' }}>{pushError}</p>
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            disabled={pushLoading}
+                            onClick={isSubscribed ? unsubscribe : subscribe}
+                            style={{
+                                padding: '9px 20px',
+                                background: isSubscribed ? '#ddd' : '#2D855B',
+                                color: isSubscribed ? '#333' : 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: pushLoading ? 'not-allowed' : 'pointer',
+                                flexShrink: 0,
+                                opacity: pushLoading ? 0.6 : 1,
+                            }}
+                        >
+                            {pushLoading ? '…' : isSubscribed ? 'Disable' : 'Enable'}
+                        </button>
+                    </div>
+                )}
             </section>
 
             {/* ── Barns section ── */}

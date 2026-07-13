@@ -585,3 +585,42 @@ CREATE INDEX idx_pest_control_audit_id ON pest_control_records(audit_id);
 CREATE INDEX idx_archived_reports_farm_id ON archived_audit_reports(farm_id);
 CREATE INDEX idx_archived_reports_audit_id ON archived_audit_reports(audit_id);
 CREATE INDEX idx_barn_form_prefs_barn_id ON barn_form_preferences(barn_id);
+
+-- =============================================
+-- PUSH NOTIFICATIONS
+-- =============================================
+
+-- Stores browser push subscriptions per user (one per browser/device)
+CREATE TABLE push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(endpoint)
+);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage their own push subscriptions"
+  ON push_subscriptions
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_push_subscriptions_user_id ON push_subscriptions(user_id);
+
+-- Audit log of sent notifications (used for deduplication)
+CREATE TABLE notification_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  notification_type VARCHAR(50) NOT NULL,
+  month_year DATE NOT NULL,
+  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Only the service role (Edge Function) writes here; no client access needed
+ALTER TABLE notification_log ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX idx_notification_log_user_month ON notification_log(user_id, notification_type, month_year);
