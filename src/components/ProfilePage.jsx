@@ -333,6 +333,7 @@ export default function ProfilePage({ user, onClose }) {
                         </div>
                     </>
                 )}
+            </section>
 
             {/* ── Barns section ── */}
             <section style={{ background: 'white', borderRadius: '10px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
