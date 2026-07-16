@@ -46,14 +46,14 @@ async function fetchFlockEggAgeSeries(supabase, barnId, flockId) {
     const [eggRes, ageRes] = await Promise.all([
         supabase
             .from('production_egg_output')
-            .select('production_id, record_date, egg_production_daily, production_cooler_records!inner(barn_id, flock_id)')
+            .select('production_id, record_date, egg_production_daily, production_cooler_records(barn_id, flock_id)')
             .eq('production_cooler_records.barn_id', barnId)
             .eq('production_cooler_records.flock_id', flockId)
             .not('egg_production_daily', 'is', null)
             .order('record_date', { ascending: true }),
         supabase
             .from('production_flock_age')
-            .select('production_id, record_date, flock_age_weeks, production_cooler_records!inner(barn_id, flock_id)')
+            .select('production_id, record_date, flock_age_weeks, production_cooler_records(barn_id, flock_id)')
             .eq('production_cooler_records.barn_id', barnId)
             .eq('production_cooler_records.flock_id', flockId)
             .not('flock_age_weeks', 'is', null)
