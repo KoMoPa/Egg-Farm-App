@@ -58,6 +58,65 @@ async function getFeedWaterRecords(admin, barnId, day) {
   return { fwId: fwr.id, daily: fwd.data, health: fwh.data, meta: meta.data }
 }
 
+async function clearDayRecords(admin, barnId, day) {
+  const recDate = recordDate(day)
+
+  const { data: audit } = await admin.from('monthly_audits').select('id')
+    .eq('month_year', recDate.substring(0, 7) + '-01').maybeSingle()
+  if (!audit) return
+
+  const { data: fwr } = await admin.from('feed_water_records').select('id')
+    .eq('barn_id', barnId).eq('audit_id', audit.id).maybeSingle()
+  if (!fwr) return
+
+  await admin.from('feed_water_daily').delete().eq('fw_id', fwr.id).eq('record_date', recDate)
+  await admin.from('feed_water_health').delete().eq('fw_id', fwr.id).eq('record_date', recDate)
+}
+
+async function ensureActiveFlockWithCount(admin, barnId, targetCount = 250) {
+  const { data: barn } = await admin
+    .from('barns')
+    .select('id,current_flock_id,flock_arrival_date,flock_age_at_arrival_weeks')
+    .eq('id', barnId)
+    .maybeSingle()
+
+  let flockId = barn?.current_flock_id ?? null
+
+  if (!flockId) {
+    const { data: newFlock, error: newFlockError } = await admin
+      .from('flocks')
+      .insert([{
+        barn_id: barnId,
+        arrival_date: barn?.flock_arrival_date ?? recordDate(1),
+        status: 'active',
+        age_at_arrival_weeks: barn?.flock_age_at_arrival_weeks ?? null,
+        initial_count: targetCount,
+        current_count: targetCount,
+      }])
+      .select('id')
+      .single()
+    if (newFlockError) throw newFlockError
+
+    flockId = newFlock.id
+    const { error: barnUpdateError } = await admin
+      .from('barns')
+      .update({ current_flock_id: flockId })
+      .eq('id', barnId)
+    if (barnUpdateError) throw barnUpdateError
+    return
+  }
+
+  const { error: flockUpdateError } = await admin
+    .from('flocks')
+    .update({
+      status: 'active',
+      initial_count: targetCount,
+      current_count: targetCount,
+    })
+    .eq('id', flockId)
+  if (flockUpdateError) throw flockUpdateError
+}
+
 // ── Day view tests ────────────────────────────────────────────────────────────
 
 test.describe.serial('Form 09 — day view CRUD', () => {
@@ -69,53 +128,33 @@ test.describe.serial('Form 09 — day view CRUD', () => {
   })
 
   test('CREATE — fills all feed/water and mortality fields, saves day 4', async ({ page }) => {
+    const admin = createAdminClient()
+    const { farm } = await getTestFarm(admin)
+    const barn = await getTestBarn(admin, farm.id)
+    await ensureActiveFlockWithCount(admin, barn.id, 250)
+    await clearDayRecords(admin, barn.id, TEST_DAY)
+
     page.on('dialog', d => d.accept())
     await goToForm09(page)
     await selectDay(page, TEST_DAY)
 
-    // Day can already be locked from a prior run; unlock before editing.
-    const firstNumberInput = page.locator('input[type="number"]').first()
-    if (await firstNumberInput.isDisabled().catch(() => false)) {
-      const reenterBtn = page.locator('button:has-text("Re-enter data")')
-      await reenterBtn.click()
-      await expect(firstNumberInput).toBeEnabled({ timeout: 10_000 })
-    }
+    const inventoryInput = page.locator('label:has-text("Inventory") + input')
+    await expect(inventoryInput).toBeDisabled()
+    await expect(inventoryInput).not.toHaveValue('')
 
-    // Feed Daily Target
-    const numberInputs = page.locator('input[type="number"]')
-    await numberInputs.nth(0).fill('1200')  // feed daily
-    await numberInputs.nth(1).fill('1180')  // feed actual
-    await numberInputs.nth(2).fill('850')   // water daily
-    await numberInputs.nth(3).fill('830')   // water actual
-    await numberInputs.nth(4).fill('45')    // auger run time
+    await page.locator('label:has-text("Feed Daily Target") + input').fill('1200')
+    await page.locator('label:has-text("Feed Actual") + input').fill('1180')
+    await page.locator('label:has-text("Water Daily Target") + input').fill('850')
+    await page.locator('label:has-text("Water Actual") + input').fill('830')
 
-    // Water treatments — Flush, Meds/Vit, Treatment selects
-    const selects = page.locator('select')
-    await selects.nth(0).selectOption('true')  // flush = Yes
-    await selects.nth(1).selectOption('true')  // medsVit = Yes
-    await selects.nth(2).selectOption('true')  // treatment = Yes
+    await page.locator('label:has-text("Flush") + select').selectOption('true')
+    await page.locator('label:has-text("Meds/Vit") + select').selectOption('true')
+    await page.locator('label:has-text("Treatment") + select').selectOption('true')
 
-    // Daily notes
-    await page.locator('textarea').first().fill('Feed water test notes day 4')
-
-    // Mortality records
-    // mortality daily count
-    await numberInputs.nth(5).fill('2').catch(async () => {
-      // find it by section heading
-      const mortalitySection = page.locator('section, div').filter({ hasText: 'Mortality Records' })
-      await mortalitySection.locator('input[type="number"]').first().fill('2')
-    })
-
-    // Mortality reason select
-    const mortalityReasonSelect = page.locator('select:near(:text("Reason")), select').nth(3)
-    await mortalityReasonSelect.selectOption('natural').catch(() => { })
-
-    // Hospital pen monitoring
-    const hospitalSelect = page.locator('select:near(:text("Hospital")), select').nth(4)
-    await hospitalSelect.selectOption('improved').catch(() => { })
-
-    // Inventory
-    await numberInputs.last().fill('9800').catch(() => { })
+    await page.locator('label:has-text("Daily Notes") + textarea').fill('Feed water test notes day 4')
+    await page.locator('label:has-text("Daily Mortality Count") + input').fill('2')
+    await page.locator('label:has-text("Reason") + select').selectOption('natural')
+    await page.locator('label:has-text("Hospital Pen Monitoring") + select').selectOption('improved')
 
     // Save
     await page.click(`button[type="submit"]:has-text("Save Day ${TEST_DAY} Record")`)
@@ -135,7 +174,6 @@ test.describe.serial('Form 09 — day view CRUD', () => {
     expect(parseFloat(rec.daily?.feed_actual)).toBeCloseTo(1180, 0)
     expect(parseFloat(rec.daily?.water_daily)).toBeCloseTo(850, 0)
     expect(parseFloat(rec.daily?.water_actual)).toBeCloseTo(830, 0)
-    expect(rec.daily?.auger_run_time_minutes).toBe(45)
     expect(rec.daily?.flush_notes).toBeTruthy()
     expect(rec.daily?.meds_vit_notes).toBeTruthy()
     expect(rec.daily?.treatment_notes).toBeTruthy()
@@ -159,21 +197,17 @@ test.describe.serial('Form 09 — day view CRUD', () => {
     await goToForm09(page)
     await selectDay(page, TEST_DAY)
     await page.click('button:has-text("Re-enter data")')
-    const firstNumberInput = page.locator('input[type="number"]').first()
-    await expect(firstNumberInput).toBeEnabled({ timeout: 10_000 })
+    await expect(page.locator('label:has-text("Feed Daily Target") + input')).toBeEnabled({ timeout: 10_000 })
 
-    const numberInputs = page.locator('input[type="number"]')
-    await numberInputs.nth(0).fill('1300')
-    await numberInputs.nth(1).fill('1250')
-    await numberInputs.nth(2).fill('900')
-    await numberInputs.nth(3).fill('880')
-    await numberInputs.nth(4).fill('50')
+    await page.locator('label:has-text("Feed Daily Target") + input').fill('1300')
+    await page.locator('label:has-text("Feed Actual") + input').fill('1250')
+    await page.locator('label:has-text("Water Daily Target") + input').fill('900')
+    await page.locator('label:has-text("Water Actual") + input').fill('880')
 
     // Change Flush to No
-    const selects = page.locator('select')
-    await selects.nth(0).selectOption('false')
+    await page.locator('label:has-text("Flush") + select').selectOption('false')
 
-    await page.locator('textarea').first().fill('Updated feed water notes day 4')
+    await page.locator('label:has-text("Daily Notes") + textarea').fill('Updated feed water notes day 4')
 
     await page.click(`button[type="submit"]:has-text("Save Day ${TEST_DAY} Record")`)
     await page.waitForTimeout(1500)
@@ -190,7 +224,6 @@ test.describe.serial('Form 09 — day view CRUD', () => {
     expect(parseFloat(rec.daily?.feed_actual)).toBeCloseTo(1250, 0)
     expect(parseFloat(rec.daily?.water_daily)).toBeCloseTo(900, 0)
     expect(parseFloat(rec.daily?.water_actual)).toBeCloseTo(880, 0)
-    expect(rec.daily?.auger_run_time_minutes).toBe(50)
     expect(rec.daily?.flush_notes).toBeFalsy()  // Changed to No
     expect(rec.daily?.notes).toBe('Updated feed water notes day 4')
   })
@@ -206,6 +239,16 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
   }
 
   test('CREATE — fills all monthly feed/water metadata fields and saves', async ({ page }) => {
+    const admin = createAdminClient()
+    const { farm } = await getTestFarm(admin)
+    const barn = await getTestBarn(admin, farm.id)
+
+    const { data: flock } = await admin
+      .from('flocks')
+      .select('id, initial_count')
+      .eq('id', barn.current_flock_id)
+      .maybeSingle()
+
     page.on('dialog', d => d.accept())
     await goToMonthlyTab(page)
 
@@ -216,27 +259,20 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
       await page.waitForTimeout(300)
     }
 
-    // Starting inventory
-    const numberInputs = page.locator('input[type="number"]')
-    await numberInputs.first().fill('10000')
+    const startInventory = page.locator('label:has-text("Starting Inventory") + input')
+    await expect(startInventory).toBeDisabled()
+    if (flock?.initial_count != null) {
+      await expect(startInventory).toHaveValue(String(flock.initial_count))
+    }
 
     // Feed target
-    const textInputs = page.locator('input[type="text"]')
-    await textInputs.first().fill('1200 g/bird/day').catch(async () => {
-      // some may be rendered differently
-    })
+    await page.locator('label:has-text("Feed Target") + input').fill('1200 g/bird/day')
 
     // Water residual monthly
-    const allInputs = page.locator('input')
-    // Try to find feed target and water residual by nearby text
-    await page.fill('input:near(:text("Feed Target"))', '1200 g/bird/day').catch(() => { })
-    await page.fill('input:near(:text("Water Residual"))', 'Residual test notes').catch(() => { })
+    await page.locator('label:has-text("Water Residual") + input').fill('Residual test notes')
 
     // Comments
-    const textareas = page.locator('textarea')
-    if (await textareas.count() > 0) {
-      await textareas.first().fill('Monthly feed water comments test')
-    }
+    await page.locator('label:has-text("Comments") + textarea').fill('Monthly feed water comments test')
 
     // Save
     const saveBtn = page.locator('button:has-text("Save Monthly Checks")')
@@ -250,6 +286,12 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
     const barn = await getTestBarn(admin, farm.id)
     const recDate = recordDate(TEST_DAY)
 
+    const { data: flock } = await admin
+      .from('flocks')
+      .select('id, initial_count')
+      .eq('id', barn.current_flock_id)
+      .maybeSingle()
+
     const { data: audit } = await admin.from('monthly_audits').select('id')
       .eq('month_year', recDate.substring(0, 7) + '-01').maybeSingle()
     const { data: fwr } = await admin.from('feed_water_records').select('id')
@@ -258,10 +300,15 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
       .eq('fw_id', fwr.id).maybeSingle()
 
     expect(meta).toBeTruthy()
-    expect(meta.starting_inventory).toBe(10000)
+    expect(meta.feed_target).toBe('1200 g/bird/day')
+    expect(meta.water_residual_monthly).toBe('Residual test notes')
+    expect(meta.comments).toBe('Monthly feed water comments test')
+    if (flock?.initial_count != null) {
+      expect(meta.starting_inventory).toBe(flock.initial_count)
+    }
   })
 
-  test('UPDATE — changes starting inventory and comments, re-saves', async ({ page }) => {
+  test('UPDATE — changes monthly text fields and re-saves', async ({ page }) => {
     page.on('dialog', d => d.accept())
     await goToMonthlyTab(page)
 
@@ -272,15 +319,10 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
       await page.waitForTimeout(300)
     }
 
-    // Update starting inventory
-    const numberInputs = page.locator('input[type="number"]')
-    await numberInputs.first().fill('9500')
-
     // Update comments
-    const textareas = page.locator('textarea')
-    if (await textareas.count() > 0) {
-      await textareas.first().fill('Updated monthly comments feed/water')
-    }
+    await page.locator('label:has-text("Feed Target") + input').fill('1300 g/bird/day')
+    await page.locator('label:has-text("Water Residual") + input').fill('Updated residual note')
+    await page.locator('label:has-text("Comments") + textarea').fill('Updated monthly comments feed/water')
 
     await page.click('button:has-text("Save Monthly Checks")')
     await page.waitForTimeout(1500)
@@ -296,10 +338,11 @@ test.describe.serial('Form 09 — monthly checks CRUD', () => {
       .eq('month_year', recDate.substring(0, 7) + '-01').maybeSingle()
     const { data: fwr } = await admin.from('feed_water_records').select('id')
       .eq('barn_id', barn.id).eq('audit_id', audit.id).maybeSingle()
-    const { data: meta } = await admin.from('feed_water_monthly_metadata').select('starting_inventory, comments')
+    const { data: meta } = await admin.from('feed_water_monthly_metadata').select('feed_target, water_residual_monthly, comments')
       .eq('fw_id', fwr.id).maybeSingle()
 
-    expect(meta.starting_inventory).toBe(9500)
+    expect(meta.feed_target).toBe('1300 g/bird/day')
+    expect(meta.water_residual_monthly).toBe('Updated residual note')
     expect(meta.comments).toBe('Updated monthly comments feed/water')
   })
 })

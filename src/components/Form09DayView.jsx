@@ -148,9 +148,12 @@ function DayViewForm({ day, data, onDayChange, locked = false, feedMethod = null
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Inventory</label>
                     <input type="number" value={data.inventory}
-                        onChange={(e) => onDayChange(day, 'inventory', e.target.value)}
-                        disabled={locked}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...(locked && inputLocked) }} />
+                        readOnly
+                        disabled
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', boxSizing: 'border-box', ...inputLocked }} />
+                    <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#666' }}>
+                        Auto-calculated from flock count minus cumulative mortality.
+                    </p>
                 </div>
             </div>
         </div>

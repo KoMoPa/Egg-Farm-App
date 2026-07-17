@@ -339,12 +339,23 @@ export async function closeCurrentFlock(flockId) {
 export async function createNewFlock(barnId) {
   try {
     const today = new Date().toISOString().split('T')[0]
+
+    const { data: barnDefaults, error: barnError } = await supabase
+      .from('barns')
+      .select('flock_age_at_arrival_weeks')
+      .eq('id', barnId)
+      .maybeSingle()
+    if (barnError) throw barnError
+
     const { data: newFlock, error } = await supabase
       .from('flocks')
       .insert([{
         barn_id: barnId,
         arrival_date: today,
-        status: 'active'
+        status: 'active',
+        age_at_arrival_weeks: barnDefaults?.flock_age_at_arrival_weeks ?? null,
+        initial_count: null,
+        current_count: null,
       }])
       .select()
       .single()

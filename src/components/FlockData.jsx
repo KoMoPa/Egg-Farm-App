@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { useFarmContext } from '../contexts/FarmContext'
+import { getCurrentFlockForBarn, createNewFlock, updateBarnCurrentFlockId } from '../utils/farmBarnOps'
 
 export default function FlockData() {
   const supabase = useSupabase()
@@ -8,20 +9,74 @@ export default function FlockData() {
 
   const [arrivalDate, setArrivalDate] = useState('')
   const [ageAtArrival, setAgeAtArrival] = useState('')
+  const [flockCount, setFlockCount] = useState('')
+  const [activeFlockId, setActiveFlockId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [refreshTick, setRefreshTick] = useState(0)
 
   // Sync local state when selected barn changes
   useEffect(() => {
-    if (selectedBarn) {
-      setArrivalDate(selectedBarn.flock_arrival_date ?? '')
-      setAgeAtArrival(selectedBarn.flock_age_at_arrival_weeks?.toString() ?? '')
-      setSaved(!!(selectedBarn.flock_arrival_date && selectedBarn.flock_age_at_arrival_weeks != null))
-    } else {
+    if (!selectedBarn) {
       setArrivalDate('')
       setAgeAtArrival('')
+      setFlockCount('')
+      setActiveFlockId(null)
       setSaved(false)
+      return
     }
+
+    let cancelled = false
+
+    const loadFlockData = async () => {
+      const fallbackArrival = selectedBarn.flock_arrival_date ?? ''
+      const fallbackAge = selectedBarn.flock_age_at_arrival_weeks?.toString() ?? ''
+      const fallbackCount = ''
+
+      setArrivalDate(fallbackArrival)
+      setAgeAtArrival(fallbackAge)
+      setFlockCount(fallbackCount)
+      setActiveFlockId(selectedBarn.current_flock_id ?? null)
+      setSaved(!!(fallbackArrival && fallbackAge !== '' && fallbackCount !== ''))
+
+      if (!selectedBarn.current_flock_id) return
+
+      try {
+        const { data: flock, error } = await supabase
+          .from('flocks')
+          .select('*')
+          .eq('id', selectedBarn.current_flock_id)
+          .maybeSingle()
+        if (error) throw error
+        if (!flock || cancelled) return
+
+        setActiveFlockId(flock.id)
+        setArrivalDate(flock.arrival_date ?? fallbackArrival)
+        setAgeAtArrival((flock.age_at_arrival_weeks ?? selectedBarn.flock_age_at_arrival_weeks ?? '')?.toString())
+
+        const resolvedCount =
+          flock.current_count ??
+          flock.initial_count ??
+          ''
+        setFlockCount(resolvedCount?.toString() ?? '')
+        setSaved(!!((flock.arrival_date ?? fallbackArrival) && resolvedCount !== ''))
+      } catch (err) {
+        console.error('Error loading active flock data:', err)
+      }
+    }
+
+    loadFlockData()
+    return () => { cancelled = true }
+  }, [selectedBarn?.id, selectedBarn?.current_flock_id, refreshTick])
+
+  useEffect(() => {
+    const handleFlockDataUpdated = (event) => {
+      if (event?.detail?.barnId && event.detail.barnId !== selectedBarn?.id) return
+      setRefreshTick(tick => tick + 1)
+    }
+
+    window.addEventListener('flock-data-updated', handleFlockDataUpdated)
+    return () => window.removeEventListener('flock-data-updated', handleFlockDataUpdated)
   }, [selectedBarn?.id])
 
   // Calculate current flock age in weeks as of today
@@ -40,19 +95,59 @@ export default function FlockData() {
     if (!selectedBarn) return
     setSaving(true)
     try {
+      const parsedAge = ageAtArrival !== '' ? parseInt(ageAtArrival, 10) : null
+      const parsedCount = flockCount !== '' ? parseInt(flockCount, 10) : null
+
+      let flockIdToUpdate = activeFlockId
+      if (!flockIdToUpdate) {
+        const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+        flockIdToUpdate = flockId ?? null
+      }
+
+      if (!flockIdToUpdate) {
+        const { flock: newFlock } = await createNewFlock(selectedBarn.id)
+        flockIdToUpdate = newFlock.id
+        await updateBarnCurrentFlockId(selectedBarn.id, flockIdToUpdate)
+      }
+
       const { data: updated, error } = await supabase
         .from('barns')
         .update({
           flock_arrival_date: arrivalDate || null,
-          flock_age_at_arrival_weeks: ageAtArrival !== '' ? parseInt(ageAtArrival) : null,
+          flock_age_at_arrival_weeks: parsedAge,
         })
         .eq('id', selectedBarn.id)
         .select()
         .single()
       if (error) throw error
+
+      const flockPayload = {
+        arrival_date: arrivalDate || null,
+        status: 'active',
+        age_at_arrival_weeks: parsedAge,
+        initial_count: parsedCount,
+        current_count: parsedCount,
+      }
+
+      if (flockIdToUpdate) {
+        const { error: flockUpdateError } = await supabase
+          .from('flocks')
+          .update(flockPayload)
+          .eq('id', flockIdToUpdate)
+        if (flockUpdateError) throw flockUpdateError
+      }
+
+      setActiveFlockId(flockIdToUpdate)
+
       // Propagate updated barn into context so Form07 picks it up
       setBarns(barns.map(b => b.id === updated.id ? updated : b))
       setSelectedBarn(updated)
+      window.dispatchEvent(new CustomEvent('flock-data-updated', {
+        detail: {
+          barnId: selectedBarn.id,
+          flockId: flockIdToUpdate,
+        },
+      }))
       setSaved(true)
     } catch (err) {
       alert('Error saving flock data: ' + err.message)
@@ -97,6 +192,21 @@ export default function FlockData() {
       )}
 
       <form onSubmit={handleSave}>
+        {flockCount === '' && (
+          <div style={{
+            backgroundColor: '#fff4e5',
+            border: '1px solid #f0ad4e',
+            borderRadius: '8px',
+            padding: '10px 12px',
+            marginBottom: '14px',
+            color: '#8a5a00',
+            fontSize: '13px',
+            fontWeight: '600',
+          }}>
+            Enter Flock Count to enable Form 09 inventory auto-calculation.
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
@@ -136,21 +246,41 @@ export default function FlockData() {
               }}
             />
           </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+              Flock Count
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={flockCount}
+              onChange={(e) => { setFlockCount(e.target.value); setSaved(false) }}
+              placeholder="e.g. 10000"
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '15px',
+                border: '2px solid #ddd',
+                borderRadius: '8px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             type="submit"
-            disabled={saving || !arrivalDate || ageAtArrival === ''}
+            disabled={saving || !arrivalDate || ageAtArrival === '' || flockCount === ''}
             style={{
-              backgroundColor: saving || !arrivalDate || ageAtArrival === '' ? '#ccc' : '#2D855B',
+              backgroundColor: saving || !arrivalDate || ageAtArrival === '' || flockCount === '' ? '#ccc' : '#2D855B',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               padding: '10px 20px',
               fontSize: '15px',
               fontWeight: '600',
-              cursor: saving || !arrivalDate || ageAtArrival === '' ? 'not-allowed' : 'pointer',
+              cursor: saving || !arrivalDate || ageAtArrival === '' || flockCount === '' ? 'not-allowed' : 'pointer',
             }}
           >
             {saving ? 'Saving…' : 'Save Flock Data'}
@@ -160,9 +290,9 @@ export default function FlockData() {
           )}
         </div>
 
-        {arrivalDate && ageAtArrival !== '' && (
+        {arrivalDate && ageAtArrival !== '' && flockCount !== '' && (
           <p style={{ fontSize: '13px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
-            Flock age is auto-calculated for each day in Form 07 based on these values.
+            Flock count is used to auto-calculate Form 09 inventory and monthly mortality percentage.
           </p>
         )}
       </form>

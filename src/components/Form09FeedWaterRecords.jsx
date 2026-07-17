@@ -49,12 +49,69 @@ export default function Form09FeedWaterRecords() {
     const [comments, setComments] = useState('')
     const [monthlySaved, setMonthlySaved] = useState(false)
     const [monthlyLocked, setMonthlyLocked] = useState(false)
+    const [activeFlock, setActiveFlock] = useState(null)
+    const [refreshTick, setRefreshTick] = useState(0)
 
     const daysInMonth = new Date(
         parseInt(monthYear.substring(0, 4)),
         parseInt(monthYear.substring(5, 7)),
         0
     ).getDate()
+
+    const getFlockStartCount = (flock) => {
+        if (!flock) return null
+        if (flock.initial_count != null) return flock.initial_count
+        return null
+    }
+
+    const getFlockRecordIds = async (flockId) => {
+        if (!flockId) return []
+        const { data, error } = await supabase
+            .from('feed_water_records')
+            .select('id')
+            .eq('flock_id', flockId)
+        if (error) throw error
+        return (data || []).map(r => r.id)
+    }
+
+    const getCumulativeMortalityForFlock = async (flockId, endDate = null) => {
+        const fwIds = await getFlockRecordIds(flockId)
+        if (!fwIds.length) return 0
+
+        let query = supabase
+            .from('feed_water_health')
+            .select('mortality_daily,record_date')
+            .in('fw_id', fwIds)
+
+        if (endDate) query = query.lte('record_date', endDate)
+
+        const { data, error } = await query
+        if (error) throw error
+
+        return (data || []).reduce((sum, row) => sum + (row.mortality_daily || 0), 0)
+    }
+
+    const computeInventoryForDate = async (flock, recDate) => {
+        const startCount = getFlockStartCount(flock)
+        if (startCount == null || !flock?.id) return null
+        const cumulativeMortality = await getCumulativeMortalityForFlock(flock.id, recDate)
+        return Math.max(startCount - cumulativeMortality, 0)
+    }
+
+    const syncActiveFlockCurrentCount = async (flock) => {
+        const startCount = getFlockStartCount(flock)
+        if (startCount == null || !flock?.id) return
+        const totalMortality = await getCumulativeMortalityForFlock(flock.id)
+        const nextCurrentCount = Math.max(startCount - totalMortality, 0)
+
+        const { error } = await supabase
+            .from('flocks')
+            .update({ current_count: nextCurrentCount })
+            .eq('id', flock.id)
+        if (error) throw error
+
+        setActiveFlock(prev => prev ? { ...prev, current_count: nextCurrentCount } : prev)
+    }
 
     // Scroll to top on view/month changes
     useEffect(() => {
@@ -77,7 +134,68 @@ export default function Form09FeedWaterRecords() {
         setComments('')
         setMonthlySaved(false)
         setMonthlyLocked(false)
+        setActiveFlock(null)
     }, [selectedBarn?.id, monthYear])
+
+    useEffect(() => {
+        const handleFlockDataUpdated = (event) => {
+            if (event?.detail?.barnId && event.detail.barnId !== selectedBarn?.id) return
+
+            setRefreshTick(tick => tick + 1)
+            setDayData({})
+            setLockedDays({})
+            setFeedTarget('')
+            setStartingInventory('')
+            setWaterResidualMonthly('')
+            setCalculatedMortalityTotal(null)
+            setMonthlyEfoNotified(false)
+            setComments('')
+            setMonthlySaved(false)
+            setMonthlyLocked(false)
+            setActiveFlock(null)
+        }
+
+        window.addEventListener('flock-data-updated', handleFlockDataUpdated)
+        return () => window.removeEventListener('flock-data-updated', handleFlockDataUpdated)
+    }, [selectedBarn?.id])
+
+    useEffect(() => {
+        if (!selectedBarn?.id) return
+        let cancelled = false
+
+        const loadActiveFlock = async () => {
+            try {
+                const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
+                if (!flockId || cancelled) {
+                    if (!cancelled) setActiveFlock(null)
+                    return
+                }
+
+                const { data: flock, error } = await supabase
+                    .from('flocks')
+                    .select('*')
+                    .eq('id', flockId)
+                    .maybeSingle()
+                if (error) throw error
+                if (cancelled) return
+
+                setActiveFlock(flock || null)
+                const defaultStart = flock?.initial_count ?? null
+                if (defaultStart != null) setStartingInventory(defaultStart.toString())
+
+                setDayData({})
+                setLockedDays({})
+            } catch (e) {
+                if (!cancelled) {
+                    console.error('Error loading active flock for Form 09:', e)
+                    setActiveFlock(null)
+                }
+            }
+        }
+
+        loadActiveFlock()
+        return () => { cancelled = true }
+    }, [selectedBarn?.id, refreshTick])
 
     // Load monthly checks data from DB
     useEffect(() => {
@@ -97,7 +215,8 @@ export default function Form09FeedWaterRecords() {
                 if (cancelled) return
                 if (meta) {
                     setFeedTarget(meta.feed_target ?? '')
-                    setStartingInventory(meta.starting_inventory?.toString() ?? '')
+                    const startFromFlock = activeFlock?.initial_count ?? null
+                    setStartingInventory((startFromFlock ?? meta.starting_inventory)?.toString() ?? '')
                     setWaterResidualMonthly(meta.water_residual_monthly ?? '')
                     setMonthlyEfoNotified(meta.monthly_efo_notified ?? false)
                     setComments(meta.comments ?? '')
@@ -108,7 +227,7 @@ export default function Form09FeedWaterRecords() {
         }
         load()
         return () => { cancelled = true }
-    }, [selectedBarn?.id, monthYear])
+    }, [selectedBarn?.id, monthYear, activeFlock?.id, activeFlock?.initial_count, refreshTick])
 
     // Auto-calculate monthly mortality total from all daily records
     useEffect(() => {
@@ -119,6 +238,16 @@ export default function Form09FeedWaterRecords() {
                 const { audit } = await getOrCreateMonthlyAudit(farm.id, monthYear)
                 const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
                 const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id, flockId)
+
+                let flockForInventory = null
+                if (flockId) {
+                    const { data: flock } = await supabase
+                        .from('flocks')
+                        .select('*')
+                        .eq('id', flockId)
+                        .maybeSingle()
+                    flockForInventory = flock || null
+                }
                 const { data } = await supabase
                     .from('feed_water_health')
                     .select('mortality_daily')
@@ -130,7 +259,7 @@ export default function Form09FeedWaterRecords() {
         }
         fetchSum()
         return () => { cancelled = true }
-    }, [viewMode, selectedBarn?.id, monthYear])
+    }, [viewMode, selectedBarn?.id, monthYear, refreshTick])
 
     // Lazy-load selected day data from DB
     useEffect(() => {
@@ -156,9 +285,32 @@ export default function Form09FeedWaterRecords() {
                 const { flockId } = await getCurrentFlockForBarn(selectedBarn.id)
                 const { record: fwr } = await getOrCreateFeedWaterRecord(selectedBarn.id, audit.id, flockId)
 
+                let flockForInventory = null
+                if (flockId) {
+                    const { data: flock } = await supabase
+                        .from('flocks')
+                        .select('*')
+                        .eq('id', flockId)
+                        .maybeSingle()
+                    flockForInventory = flock || null
+                }
+
+                let computedInventory = null
+                try {
+                    computedInventory = await computeInventoryForDate(flockForInventory || activeFlock, recDate)
+                } catch (invErr) {
+                    console.error('Error computing inventory for day view:', invErr)
+                }
+
                 if (!fwr || cancelled) {
                     if (!cancelled) {
-                        setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
+                        setDayData(p => ({
+                            ...p,
+                            [selectedDay]: {
+                                ...BLANK_DAY,
+                                inventory: computedInventory != null ? computedInventory.toString() : '',
+                            },
+                        }))
                         setLockedDays(p => ({ ...p, [selectedDay]: false }))
                     }
                     return
@@ -173,7 +325,13 @@ export default function Form09FeedWaterRecords() {
 
                 if (!fwd || cancelled) {
                     if (!cancelled) {
-                        setDayData(p => ({ ...p, [selectedDay]: { ...BLANK_DAY } }))
+                        setDayData(p => ({
+                            ...p,
+                            [selectedDay]: {
+                                ...BLANK_DAY,
+                                inventory: computedInventory != null ? computedInventory.toString() : '',
+                            },
+                        }))
                         setLockedDays(p => ({ ...p, [selectedDay]: false }))
                     }
                     return
@@ -195,7 +353,9 @@ export default function Form09FeedWaterRecords() {
                         mortalityDaily: fwh?.mortality_daily?.toString() ?? '',
                         mortalityReason: fwh?.mortality_reason ?? '',
                         hospitalPenMonitoring: fwh?.hospital_pen_monitoring ?? '',
-                        inventory: fwh?.inventory?.toString() ?? '',
+                        inventory: computedInventory != null
+                            ? computedInventory.toString()
+                            : (fwh?.inventory?.toString() ?? ''),
                     },
                 }))
                 setLockedDays(p => ({ ...p, [selectedDay]: true }))
@@ -212,7 +372,7 @@ export default function Form09FeedWaterRecords() {
 
         load()
         return () => { cancelled = true }
-    }, [selectedDay, selectedBarn?.id, monthYear])
+    }, [selectedDay, selectedBarn?.id, monthYear, refreshTick, activeFlock?.id, activeFlock?.initial_count])
 
     const currentDayData = dayData[selectedDay] ?? { ...BLANK_DAY }
     const isLocked = lockedDays[selectedDay] === true
@@ -236,6 +396,17 @@ export default function Form09FeedWaterRecords() {
             const recDate = `${monthPrefix}-${String(selectedDay).padStart(2, '0')}`
             const d = dayData[selectedDay] ?? BLANK_DAY
 
+            let flockForInventory = activeFlock
+            if (flockId && (!flockForInventory || flockForInventory.id !== flockId)) {
+                const { data: flock } = await supabase
+                    .from('flocks')
+                    .select('*')
+                    .eq('id', flockId)
+                    .maybeSingle()
+                flockForInventory = flock || null
+                if (flockForInventory) setActiveFlock(flockForInventory)
+            }
+
             const { error: feedError } = await supabase.from('feed_water_daily').upsert([{
                 fw_id: fwId,
                 record_date: recDate,
@@ -257,9 +428,38 @@ export default function Form09FeedWaterRecords() {
                 mortality_daily: d.mortalityDaily ? parseInt(d.mortalityDaily) : 0,
                 mortality_reason: d.mortalityReason || null,
                 hospital_pen_monitoring: d.hospitalPenMonitoring || null,
-                inventory: d.inventory ? parseInt(d.inventory) : null,
+                inventory: null,
             }], { onConflict: 'fw_id,record_date' })
             if (healthError) throw healthError
+
+            const computedInventory = await computeInventoryForDate(flockForInventory, recDate)
+            if (computedInventory != null) {
+                const { error: invError } = await supabase
+                    .from('feed_water_health')
+                    .update({ inventory: computedInventory })
+                    .eq('fw_id', fwId)
+                    .eq('record_date', recDate)
+                if (invError) throw invError
+            }
+
+            if (flockForInventory?.id) {
+                await syncActiveFlockCurrentCount(flockForInventory)
+            }
+
+            setDayData(prev => ({
+                ...prev,
+                [selectedDay]: {
+                    ...(prev[selectedDay] ?? BLANK_DAY),
+                    inventory: computedInventory != null ? computedInventory.toString() : '',
+                },
+            }))
+
+            window.dispatchEvent(new CustomEvent('flock-data-updated', {
+                detail: {
+                    barnId: selectedBarn.id,
+                    flockId: flockForInventory?.id ?? flockId ?? null,
+                },
+            }))
 
             alert(`✅ Day ${selectedDay} record saved!`)
             setLockedDays(p => ({ ...p, [selectedDay]: true }))
@@ -298,6 +498,13 @@ export default function Form09FeedWaterRecords() {
             if (error) throw error
             setMonthlySaved(true)
             setMonthlyLocked(true)
+
+            window.dispatchEvent(new CustomEvent('flock-data-updated', {
+                detail: {
+                    barnId: selectedBarn.id,
+                    flockId: flockId ?? null,
+                },
+            }))
         } catch (err) {
             alert('Error saving monthly checks: ' + err.message)
         }
@@ -396,10 +603,16 @@ export default function Form09FeedWaterRecords() {
 
                     <fieldset disabled={monthlyLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
                         <div style={{ marginBottom: '20px' }}>
-                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Starting Inventory</label>
+                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Starting Inventory (from current flock count)</label>
                             <input type="number" value={startingInventory}
-                                onChange={(e) => setStartingInventory(e.target.value)}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...(monthlyLocked && inputLocked) }} />
+                                readOnly
+                                disabled
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', ...inputLocked }} />
+                            {startingInventory === '' && (
+                                <p style={{ fontSize: '12px', color: '#b26a00', marginTop: '4px' }}>
+                                    Set flock count in Dashboard Flock Data to enable mortality % calculations.
+                                </p>
+                            )}
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>
