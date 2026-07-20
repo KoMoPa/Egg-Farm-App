@@ -1,6 +1,11 @@
 /* ── App shell layout ── */
 /* Fix: 100vh on iOS Safari includes the browser chrome, cutting off the bottom tab bar.
    100dvh (dynamic viewport height) shrinks when the address bar is visible. */
+
+.dev-branch {
+  color: black;
+}
+   
 html,
 body,
 #root {

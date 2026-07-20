@@ -145,7 +145,7 @@ function AppContent({ signOut, user }) {
       {/* ── Scrollable content area ── */}
       <main className="app-content" ref={contentRef}>
         <div className="app-content-inner">
-
+          <h1 className="dev-branch"> DEV BRANCH </h1>
           {/* Profile page (overlays tab content) */}
           {showProfile && <ProfilePage user={user} onClose={() => setShowProfile(false)} />}
 

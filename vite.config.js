@@ -40,6 +40,6 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: process.env.PORT ? parseInt(process.env.PORT) : 4173,
-    allowedHosts: ['egg-farm-app-production.up.railway.app', 'all'],
+    allowedHosts: ['egg-farm-app-production.up.railway.app', 'egg-farm-app-dev.up.railway.app', 'all'],
   },
 })
