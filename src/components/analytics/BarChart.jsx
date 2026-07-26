@@ -15,6 +15,13 @@ export default function BarChart({ data, labels = [], height = 90, highlightLast
     return { max, avg }
   }, [data])
 
+  const tickStep = useMemo(() => {
+    if (!data || data.length <= 7) return 1
+    if (data.length <= 14) return 2
+    if (data.length <= 24) return 3
+    return 5
+  }, [data])
+
   if (!stats) return <div className="bar-chart-empty">No data</div>
 
   const { max, avg } = stats
@@ -38,7 +45,7 @@ export default function BarChart({ data, labels = [], height = 90, highlightLast
       <div className="bar-chart-x-labels">
         {data.map((_, i) => (
           <div key={i} className="bar-chart-x-label">
-            {labels[i] != null && (i % 5 === 0 || i === data.length - 1) ? labels[i] : ''}
+            {labels[i] != null && (i % tickStep === 0 || i === data.length - 1) ? labels[i] : ''}
           </div>
         ))}
       </div>
