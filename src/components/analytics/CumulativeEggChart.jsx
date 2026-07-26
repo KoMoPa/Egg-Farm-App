@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSupabase } from '../../contexts/SupabaseContext'
 import { useFarmContext } from '../../contexts/FarmContext'
 import BarChart from './BarChart'
+import LineChart from './LineChart'
 
 /**
  * Shows daily egg production for the selected month as a bar chart,
@@ -12,6 +13,23 @@ export default function CumulativeEggChart() {
   const { selectedBarn, monthYear } = useFarmContext()
   const [rows, setRows] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [chartType, setChartType] = useState(() => {
+    try {
+      const saved = localStorage.getItem('egg_production_chart_type')
+      return saved === 'bar' || saved === 'line' ? saved : 'line'
+    } catch {
+      return 'line'
+    }
+  })
+
+  function handleChartTypeChange(type) {
+    setChartType(type)
+    try {
+      localStorage.setItem('egg_production_chart_type', type)
+    } catch {
+      // Ignore localStorage failures and keep in-memory state.
+    }
+  }
 
   useEffect(() => {
     if (!selectedBarn?.id || !monthYear) {
@@ -22,12 +40,12 @@ export default function CumulativeEggChart() {
     // Parse monthYear (format: "YYYY-MM-01")
     const [year, month] = monthYear.split('-').map(Number)
     const firstOfMonth = `${year}-${String(month).padStart(2, '0')}-01`
-    
+
     // Determine end of month: either last day of the month or today, whichever is earlier
     const today = new Date()
     const currentYear = today.getFullYear()
     const currentMonth = today.getMonth() + 1
-    
+
     let endOfMonth
     if (year < currentYear || (year === currentYear && month < currentMonth)) {
       // Past month: show entire month
@@ -90,7 +108,31 @@ export default function CumulativeEggChart() {
           <div className="chart-mini-lbl">Days recorded</div>
         </div>
       </div>
-      <BarChart data={dailyValues} labels={dayLabels} height={90} />
+
+      <div className="chart-type-toggle" role="group" aria-label="Egg production chart type">
+        <button
+          type="button"
+          className={`chart-type-toggle-btn${chartType === 'line' ? ' chart-type-toggle-btn--active' : ''}`}
+          onClick={() => handleChartTypeChange('line')}
+          aria-pressed={chartType === 'line'}
+        >
+          Line
+        </button>
+        <button
+          type="button"
+          className={`chart-type-toggle-btn${chartType === 'bar' ? ' chart-type-toggle-btn--active' : ''}`}
+          onClick={() => handleChartTypeChange('bar')}
+          aria-pressed={chartType === 'bar'}
+        >
+          Bar
+        </button>
+      </div>
+
+      {chartType === 'bar' ? (
+        <BarChart data={dailyValues} labels={dayLabels} height={90} />
+      ) : (
+        <LineChart data={dailyValues} labels={dayLabels} height={90} />
+      )}
     </>
   )
 }

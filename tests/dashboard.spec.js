@@ -34,7 +34,7 @@ test.describe.serial('Dashboard and barn creation', () => {
 
   test('creates a barn via UI and verifies in Supabase', async ({ page }) => {
     // Use a separate name so it doesn't conflict with the global-setup infrastructure barn
-    const UI_BARN = 'E2E UI Test Barn'
+    const UI_BARN = `E2E UI Test Barn ${Date.now()}-${Math.floor(Math.random() * 1000)}`
     page.on('dialog', d => d.accept())
     await page.goto('http://localhost:5173')
     await page.waitForSelector('.dashboard', { timeout: 20_000 })
