@@ -4,11 +4,12 @@ import { useMemo } from 'react'
  * Lightweight SVG line chart for 4 data points
  * @param {Object} props
  * @param {number[]} props.data - Array of 4 numeric values
+ * @param {number[]} props.labels - Optional day-of-month labels matching data length
  * @param {number} props.height - SVG height in pixels (default: 120)
  * @param {number} props.width - SVG width in pixels (default: 100%)
  * @param {string} props.label - Chart label (e.g., "Auger Time (min)")
  */
-export default function LineChart({ data, height = 120, width = '100%', label = '', goal = null }) {
+export default function LineChart({ data, labels = [], height = 120, width = '100%', label = '', goal = null }) {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return null
 
@@ -22,7 +23,9 @@ export default function LineChart({ data, height = 120, width = '100%', label = 
 
     // Normalize points to SVG coordinates
     const points = data.map((value, i) => {
-      const x = (i / (data.length - 1)) * (300 - padding * 2) + padding
+      const x = data.length === 1
+        ? 150
+        : (i / (data.length - 1)) * (300 - padding * 2) + padding
       const y = height - padding - ((value - min) / range) * plotHeight
       return { x, y, value }
     })
@@ -44,6 +47,13 @@ export default function LineChart({ data, height = 120, width = '100%', label = 
       goalY,
     }
   }, [data, height, goal])
+
+  const tickStep = useMemo(() => {
+    if (!data || data.length <= 7) return 1
+    if (data.length <= 14) return 2
+    if (data.length <= 24) return 3
+    return 5
+  }, [data])
 
   if (!chartData) {
     return <div className="line-chart-empty">No data</div>
@@ -89,6 +99,14 @@ export default function LineChart({ data, height = 120, width = '100%', label = 
           <circle key={i} cx={p.x} cy={p.y} r="2.5" className="line-chart-point" />
         ))}
       </svg>
+
+      <div className="bar-chart-x-labels">
+        {data.map((_, i) => (
+          <div key={i} className="bar-chart-x-label">
+            {labels[i] != null && (i % tickStep === 0 || i === data.length - 1) ? labels[i] : ''}
+          </div>
+        ))}
+      </div>
 
       {/* Legend */}
       <div className="line-chart-legend">

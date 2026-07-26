@@ -1,6 +1,10 @@
 /* ── App shell layout ── */
 /* Fix: 100vh on iOS Safari includes the browser chrome, cutting off the bottom tab bar.
    100dvh (dynamic viewport height) shrinks when the address bar is visible. */
+
+.dev-branch {
+  color: black;
+}
 html,
 body,
 #root {
@@ -1037,6 +1041,38 @@ body,
   text-align: center;
 }
 
+.chart-type-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f4f7f5;
+  border: 1px solid #d6e4db;
+  border-radius: 999px;
+  padding: 3px;
+  margin: 8px 0 2px;
+}
+
+.chart-type-toggle-btn {
+  border: none;
+  background: transparent;
+  color: #4f5d55;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.chart-type-toggle-btn:hover {
+  background: #e7efe9;
+}
+
+.chart-type-toggle-btn--active {
+  background: #2D855B;
+  color: #fff;
+}
+
 /* ── Bar Chart ── */
 .bar-chart-container {
   display: flex;
@@ -1101,8 +1137,15 @@ body,
 }
 
 @keyframes barGrow {
-  from { transform: scaleY(0); opacity: 0; }
-  to   { transform: scaleY(1); opacity: 1; }
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 /* ── StatCard Component ── */
