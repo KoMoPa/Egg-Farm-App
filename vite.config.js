@@ -11,6 +11,11 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate',
+      injectManifest: {
+        // Railway build currently produces a main bundle slightly above 2 MiB.
+        // Raise Workbox precache limit to prevent deploy failures.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      },
       includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'SCSC Compliance Tracker',
