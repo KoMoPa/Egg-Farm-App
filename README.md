@@ -144,6 +144,27 @@ npm run lockfile:check     # Verify the lockfile is clean
 
 Then commit `package-lock.json` (and `package.json` if it changed). This prevents `npm ci` failures on Railway caused by missing transitive dependencies.
 
+### PWA build failure on Railway (2 MiB precache limit)
+
+If Railway fails with a message like:
+
+```
+Assets exceeding the limit ... won't be precached
+Configure "injectManifest.maximumFileSizeToCacheInBytes"
+```
+
+the failure is coming from `vite-plugin-pwa` (Workbox default precache limit is 2 MiB), not from Railway branch settings.
+
+This project sets the fix in [vite.config.js](vite.config.js):
+
+```js
+injectManifest: {
+  maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+}
+```
+
+Long term, consider reducing bundle size with code-splitting (`import()`), especially for heavy report/PDF modules.
+
 ---
 
 ## 📱 Install on mobile (PWA)
