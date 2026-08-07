@@ -484,6 +484,13 @@ body,
   font-size: 12px;
 }
 
+@media (max-width: 390px) {
+  .chart-mini-stats {
+    flex-wrap: wrap;
+    flex: 0 0 calc(50% - 6px)
+  }
+}
+
 .chart-mini-stat {
   flex: 1;
   display: flex;

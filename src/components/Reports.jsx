@@ -21,6 +21,12 @@ function Reports() {
                 setBarnFormStatus({ f07: 0, f08: 0, f09: 0, f10: 0 })
                 return
             }
+            // Build date range for the selected month (e.g. "2026-05-01" to "2026-05-31")
+            const [myYear, myMonth] = monthYear.split('-').map(Number)
+            const monthStart = `${myYear}-${String(myMonth).padStart(2, '0')}-01`
+            const lastDay = new Date(myYear, myMonth, 0).getDate()
+            const monthEnd = `${myYear}-${String(myMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+
             const [r07, r08, r09, r10] = await Promise.all([
                 supabase.from('production_cooler_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
                 supabase.from('welfare_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
@@ -28,20 +34,20 @@ function Reports() {
                 supabase.from('pest_control_records').select('id').eq('barn_id', selectedBarn.id).eq('audit_id', selectedAuditId).maybeSingle(),
             ])
             const [c07, c08, c09, c10] = await Promise.all([
-                r07.data ? supabase.from('production_egg_output').select('record_date', { count: 'exact', head: true }).eq('production_id', r07.data.id) : Promise.resolve({ count: 0 }),
-                r08.data ? supabase.from('welfare_daily_checks').select('record_date', { count: 'exact', head: true }).eq('welfare_id', r08.data.id) : Promise.resolve({ count: 0 }),
-                r09.data ? supabase.from('feed_water_daily').select('record_date', { count: 'exact', head: true }).eq('fw_id', r09.data.id) : Promise.resolve({ count: 0 }),
-                r10.data ? supabase.from('pest_daily_observations').select('record_date', { count: 'exact', head: true }).eq('pest_id', r10.data.id) : Promise.resolve({ count: 0 }),
+                r07.data ? supabase.from('production_egg_output').select('record_date').eq('production_id', r07.data.id).gte('record_date', monthStart).lte('record_date', monthEnd) : Promise.resolve({ data: [] }),
+                r08.data ? supabase.from('welfare_daily_checks').select('record_date').eq('welfare_id', r08.data.id).gte('record_date', monthStart).lte('record_date', monthEnd) : Promise.resolve({ data: [] }),
+                r09.data ? supabase.from('feed_water_daily').select('record_date').eq('fw_id', r09.data.id).gte('record_date', monthStart).lte('record_date', monthEnd) : Promise.resolve({ data: [] }),
+                r10.data ? supabase.from('pest_daily_observations').select('record_date').eq('pest_id', r10.data.id).gte('record_date', monthStart).lte('record_date', monthEnd) : Promise.resolve({ data: [] }),
             ])
             setBarnFormStatus({
-                f07: c07.count ?? 0,
-                f08: c08.count ?? 0,
-                f09: c09.count ?? 0,
-                f10: c10.count ?? 0,
+                f07: new Set((c07.data || []).map(r => r.record_date)).size,
+                f08: new Set((c08.data || []).map(r => r.record_date)).size,
+                f09: new Set((c09.data || []).map(r => r.record_date)).size,
+                f10: new Set((c10.data || []).map(r => r.record_date)).size,
             })
         }
         checkBarnForms()
-    }, [selectedBarn?.id, selectedAuditId])
+    }, [selectedBarn?.id, selectedAuditId, monthYear])
 
     // Fetch all monthly audits for the farm
     useEffect(() => {

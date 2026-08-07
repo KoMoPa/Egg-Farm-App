@@ -166,3 +166,14 @@
   color: white;
   font-weight: bold;
 }
+
+@media (max-width: 767px) {
+  .month-selector-month-btn, .month-selector-year-btn {
+    font-size: 16px;
+  }
+
+  .month-selector-nav-btn {
+    padding: 10px 16px;
+    font-size: 16px;
+  }
+}
