@@ -45,7 +45,7 @@ export default function ProfilePage({ user, onClose }) {
 
             const registration = await navigator.serviceWorker.ready
             await registration.showNotification('Compliance Forms Due', {
-                body: `No compliance forms have been recorded yet for ${monthLabel}. Tap to stay on track.`,
+                body: `Forms 07–10 have not been recorded yet for ${monthLabel}. Tap to stay on track.`,
                 icon: '/pwa-192x192.png',
                 badge: '/pwa-192x192.png',
                 data: { url: '/' },
@@ -269,33 +269,48 @@ export default function ProfilePage({ user, onClose }) {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                                    Form 10 Pest Control Reminders
+                                    Monthly Record Reminders
                                 </div>
                                 <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.5' }}>
-                                    Receive a push notification on the 15th and 25th of each month if your Form 10 monthly pest control check is not yet complete.
+                                    Receive reminders on the 15th and 25th of each month for any Forms 07–10 that haven't been completed yet. Enabling or disabling applies to all form reminders.
                                 </div>
                                 {pushError && (
                                     <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#c00', fontWeight: '600' }}>{pushError}</p>
                                 )}
                             </div>
+                            {/* iOS-style toggle switch */}
                             <button
                                 type="button"
                                 disabled={pushLoading}
                                 onClick={isSubscribed ? unsubscribe : subscribe}
+                                aria-pressed={isSubscribed}
                                 style={{
-                                    padding: '9px 20px',
-                                    background: isSubscribed ? '#ddd' : '#2D855B',
-                                    color: isSubscribed ? '#333' : 'white',
+                                    position: 'relative',
+                                    display: 'inline-block',
+                                    width: '51px',
+                                    height: '31px',
+                                    borderRadius: '31px',
                                     border: 'none',
-                                    borderRadius: '6px',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
+                                    background: isSubscribed ? '#2D855B' : '#ccc',
                                     cursor: pushLoading ? 'not-allowed' : 'pointer',
                                     flexShrink: 0,
                                     opacity: pushLoading ? 0.6 : 1,
+                                    transition: 'background 0.2s ease',
+                                    padding: 0,
                                 }}
                             >
-                                {pushLoading ? '…' : isSubscribed ? 'Disable' : 'Enable'}
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '3px',
+                                    left: isSubscribed ? '23px' : '3px',
+                                    width: '25px',
+                                    height: '25px',
+                                    borderRadius: '50%',
+                                    background: 'white',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                    transition: 'left 0.2s ease',
+                                    display: 'block',
+                                }} />
                             </button>
                         </div>
 
