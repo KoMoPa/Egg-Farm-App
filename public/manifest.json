@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "id": "/",
+  "name": "SCSC Compliance Tracker",
+  "short_name": "SCSC Tracker",
+  "description": "Egg farm compliance and production tracking — record daily production, welfare, feed/water, and pest control data.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2D855B",
+  "background_color": "#f5f5f5",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/pwa-192x192_dev.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512_dev.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512_dev.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot.png",
+      "type": "image/png",
+      "sizes": "2048x2732",
+      "form_factor": "wide",
+      "label": "SCSC Compliance Tracker Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Production",
+      "short_name": "Production",
+      "description": "Log daily egg production records",
+      "url": "/?tab=form07",
+      "icons": [
+        { "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Welfare Records",
+      "short_name": "Welfare",
+      "description": "Log hen welfare records",
+      "url": "/?tab=form08",
+      "icons": [
+        { "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Feed & Water",
+      "short_name": "Feed/Water",
+      "description": "Log feed and water records",
+      "url": "/?tab=form09",
+      "icons": [
+        { "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Reports",
+      "short_name": "Reports",
+      "description": "View compliance reports",
+      "url": "/?tab=reports",
+      "icons": [
+        { "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    }
+  ]
+}
